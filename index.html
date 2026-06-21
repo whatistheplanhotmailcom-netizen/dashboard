@@ -19,8 +19,11 @@
   button,input,select,textarea{font-family:inherit}
   /* lock */
   #lock{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px}
-  .vault{width:100%;max-width:420px;background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:22px}
-  .vault h1{margin:0 0 4px;font-size:19px;font-weight:650}
+  .vault{width:100%;max-width:420px;background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:26px 24px}
+  .vlogo{width:46px;height:46px;border-radius:12px;background:var(--accent);color:var(--ink);display:grid;place-items:center;font-weight:700;font-size:16px;margin-bottom:14px}
+  .vbrand{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  .vbrand .ar{font-family:var(--sans);letter-spacing:0}
+  .vault h1{margin:0 0 4px;font-size:21px;font-weight:650}
   .vault .ar{color:var(--muted);font-weight:600;font-size:15px;margin-left:5px}
   .vault p{color:var(--muted);font-size:13px;margin:8px 0 16px}
   .vault label{display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;font-weight:600}
@@ -99,7 +102,7 @@
   .ae:first-child{border-top:none}
   .ae .at{font-family:var(--mono);font-size:10px;color:var(--accent)}
   .backlinks{margin-top:6px;font-size:12px;color:var(--muted)}
-  .shell{display:flex;align-items:flex-start;min-height:100vh}
+  .shell{display:flex;align-items:stretch;height:100vh;overflow:hidden}
   .sidebar{width:204px;flex:none;align-self:stretch;position:sticky;top:0;height:100vh;box-sizing:border-box;border-right:1px solid var(--line2);background:rgba(15,26,46,.55);display:flex;flex-direction:column;padding:14px 10px}
   .sidebar .brand{display:flex;align-items:center;gap:9px;padding:4px 8px 14px}
   .sidebar .logo{width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--ink);display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
@@ -110,8 +113,8 @@
   .nav a:hover{background:var(--ink3);color:var(--text)}
   .nav a.on{background:var(--accent);color:var(--ink);font-weight:600}
   .sidefoot{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--line2)}
-  .content{flex:1;min-width:0;box-sizing:border-box;padding:16px 20px;max-width:1040px}
-  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .content{flex:1;min-width:0;box-sizing:border-box;padding:0 20px 24px;max-width:1040px;height:100vh;overflow-y:auto}
+  .topbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding:16px 0 12px;background:linear-gradient(var(--ink) 80%,transparent)}
   .topbar h2{margin:0;font-size:18px;font-weight:650}
   .topactions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
   .card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:12px}
@@ -123,13 +126,14 @@
   .kv td:first-child{color:var(--muted);width:45%}
   .kv tr:first-child td{border-top:none}
   @media (max-width:760px){
-    .shell{flex-direction:column;min-height:0}
-    .sidebar{position:static;height:auto;width:auto;flex-direction:row;align-items:center;border-right:none;border-bottom:1px solid var(--line2);overflow-x:auto;padding:8px 10px}
+    .shell{flex-direction:column;height:100vh;overflow:hidden}
+    .sidebar{position:static;height:auto;width:auto;flex:none;flex-direction:row;align-items:center;border-right:none;border-bottom:1px solid var(--line2);overflow-x:auto;padding:8px 10px}
     .sidebar .brand{padding:0 8px 0 2px}.sidebar .ar{display:none}.sidebar .bn{font-size:12.5px}
     .nav{flex-direction:row;gap:4px;overflow:visible}
     .nav a{white-space:nowrap;padding:7px 10px}
     .sidefoot{flex-direction:row;border-top:none;padding-top:0;margin-left:auto}
-    .content{padding:12px;max-width:none}
+    .content{height:auto;flex:1;min-height:0;overflow-y:auto;padding:0 12px 16px;max-width:none}
+    .topbar{padding:12px 0 10px}
   }
   .d-pending{border:1px solid var(--line);border-radius:var(--r);background:var(--ink2);padding:9px 12px;margin-bottom:12px}
   .d-pending.alert{border-color:rgba(216,162,79,.45);background:rgba(216,162,79,.07)}
@@ -291,17 +295,22 @@ var App=(function(){
     var l=$("#lock");l.hidden=false;
     l.innerHTML=
       '<div class="vault">'
-      +'<h1>CISO Workspace<span class="ar" dir="rtl" lang="ar">مساحة العمل</span></h1>'
-      +'<p>'+(first?"Set a passphrase to create your encrypted vault. It never leaves this device and cannot be recovered if lost.":"Enter your passphrase to decrypt the local vault.")+'</p>'
+      +'<div class="vlogo">CW</div>'
+      +'<div class="vbrand">CISO Workspace · <span class="ar" dir="rtl" lang="ar">مساحة العمل</span></div>'
+      +'<h1>'+(first?"Create your vault":"Sign in")+'</h1>'
+      +'<p>'+(first?"Set a passphrase to create your encrypted vault. It never leaves this device and cannot be recovered if lost.":"Enter your passphrase to unlock your workspace.")+'</p>'
       +'<label for="vp">Passphrase</label><input id="vp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">'
       +(first?'<div class="pwmeter" id="pwmeter"><div class="pwbar"><i id="pwfill"></i></div><span id="pwlbl">Use a passphrase of 14+ characters</span></div>':'')
       +(first?'<label for="vp2">Confirm passphrase</label><input id="vp2" type="password" autocomplete="off">':'')
       +'<div class="err" id="verr">'+esc(errMsg||"")+'</div>'
-      +'<button class="btn block" data-action="'+(first?"create":"unlock")+'">'+(first?"Create vault":"Unlock")+'</button>'
+      +'<button class="btn block" data-action="'+(first?"create":"unlock")+'">'+(first?"Create vault":"Sign in")+'</button>'
       +'<div class="note">Encryption: AES-GCM-256, key derived from your passphrase (PBKDF2-SHA-256, '+Vault.ITER.toLocaleString()+' iterations, per current OWASP guidance). KDF parameters are stored with the vault so they can be raised later without breaking it. This protects data at rest on this device — it is not an access-control gate (that arrives with hosted auth). Nothing is uploaded.</div>'
       +'</div>';
     var ip=$("#vp");if(ip)ip.focus();
     if(first&&ip)ip.addEventListener("input",updateMeter);
+    Array.prototype.forEach.call(l.querySelectorAll("input"),function(inp){
+      inp.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();if(first)createVault();else unlock();}});
+    });
   }
 
   async function createVault(){
