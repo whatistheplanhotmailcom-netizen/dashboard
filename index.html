@@ -56,6 +56,21 @@
   .spacer{flex:1}
   .lockpill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:#9bd3b1;background:rgba(95,174,134,.08);border:1px solid rgba(95,174,134,.28);padding:5px 8px;border-radius:999px}
   .lockpill .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+  .statuspill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.04em;padding:5px 8px;border-radius:999px;border:1px solid transparent}
+  .statuspill .dot{width:7px;height:7px;border-radius:50%}
+  .statuspill.on{color:#9bd3b1;background:rgba(95,174,134,.1);border-color:rgba(95,174,134,.3)}
+  .statuspill.on .dot{background:var(--green);box-shadow:0 0 6px rgba(95,174,134,.9)}
+  .statuspill.off{color:#e6a39c;background:rgba(216,104,95,.1);border-color:rgba(216,104,95,.32)}
+  .statuspill.off .dot{background:var(--red)}
+  .att-thumb{width:42px;height:42px;border-radius:6px;object-fit:cover;border:1px solid var(--line);cursor:pointer;flex:none;background:var(--ink3)}
+  .att-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);background:var(--ink3);border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+  .att-ext{font-family:var(--mono);font-size:9px;text-transform:uppercase;color:var(--accent)}
+  .imgprev{max-width:100%;max-height:70vh;border-radius:8px;display:block;margin:0 auto;border:1px solid var(--line)}
+  .impact{width:100%;font-size:12.5px;border-collapse:collapse}.impact td{padding:5px 0;border-top:1px solid var(--line2)}.impact td:first-child{color:var(--muted)}.impact td:last-child{text-align:right;font-family:var(--mono)}.impact tr:first-child td{border-top:none}
+  .warnbox{display:flex;align-items:center;gap:10px;background:rgba(216,104,95,.08);border:1px solid rgba(216,104,95,.4);border-radius:var(--r);padding:9px 12px;margin-bottom:12px;font-size:13px;color:#e6a39c}
+  .dash-meta{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin:0 0 12px}
+  .sevtag{font-family:var(--mono);font-size:8.5px;text-transform:uppercase;letter-spacing:.04em;padding:1px 5px;border-radius:4px;margin-left:6px}
+  .catpill{font-family:var(--mono);font-size:9px;color:var(--accent);background:rgba(143,184,232,.1);border:1px solid rgba(143,184,232,.28);border-radius:4px;padding:1px 5px;margin-left:6px}
   main{flex:1;padding:14px 16px;max-width:1080px;width:100%;margin:0 auto}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
   .toolbar select,.toolbar input{background:var(--ink3);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:7px 9px;font-size:13px;outline:none}
@@ -191,6 +206,7 @@
         <a href="#/settings" data-nav="settings">Settings</a>
       </nav>
       <div class="sidefoot">
+        <span class="statuspill on" id="vstatus" title="Reflects vault unlock state (not authentication)."><span class="dot"></span>Unlocked</span>
         <span class="lockpill" id="lockpill" title="Vault encrypted with your passphrase (AES-GCM). Data at rest is ciphertext."><span class="dot"></span>ENCRYPTED</span>
         <button class="btn ghost sm" data-action="lock">Lock vault</button>
       </div>
@@ -221,7 +237,7 @@ function ab2b64(buf){var b="",x=new Uint8Array(buf);for(var i=0;i<x.length;i++)b
 function b642ab(s){var bin=atob(s),x=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)x[i]=bin.charCodeAt(i);return x.buffer;}
 var APP_VERSION="1.0";
 /* ISO-8601 timestamp WITH local timezone offset, e.g. 2026-06-21T14:33:07+03:00 */
-function nowTZ(){var d=new Date(),off=-d.getTimezoneOffset(),s=off>=0?"+":"-",a=Math.abs(off);function p(n){return ("0"+n).slice(-2);}return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds())+s+p((a/60)|0)+":"+p(a%60);}
+function nowTZ(d){d=d||new Date();var off=-d.getTimezoneOffset(),s=off>=0?"+":"-",a=Math.abs(off);function p(n){return ("0"+n).slice(-2);}return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds())+s+p((a/60)|0)+":"+p(a%60);}
 function fmtTs(ts){if(!ts)return "—";var d=new Date(ts);return isNaN(d.getTime())?String(ts):d.toLocaleString();}
 /* SHA-256 hex via WebCrypto (used only for the advisory log hash-chain — not the Vault) */
 async function sha256hex(str){var buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));var x=new Uint8Array(buf),h="";for(var i=0;i<x.length;i++)h+=("0"+x[i].toString(16)).slice(-2);return h;}
@@ -372,10 +388,18 @@ var Repo={
    The signature is extended (action,target,details) — not parallel logging. */
 var Audit=(function(){
   var MAX=5000;
-  function canon(e){return JSON.stringify([e.ts,e.action,e.target||null,e.details||"",e.deviceId||"",e.deviceLabel||"",e.prevHash||null]);}
-  function log(s,action,target,details){
-    var m=s.meta||{};
-    var e={ts:nowTZ(),action:action,target:target||null,details:details||"",deviceId:m.deviceId||"",deviceLabel:m.deviceLabel||"",prevHash:null,hash:null};
+  /* canon is versioned (cv) so older pre-category entries keep verifying under the legacy shape */
+  function canon(e){
+    if(e.cv===2)return JSON.stringify(["2",e.ts,e.timestamp_utc||"",e.action,e.target||null,e.details||"",e.category||"",e.severity||"",e.result||"",e.deviceId||"",e.deviceLabel||"",e.prevHash||null]);
+    return JSON.stringify([e.ts,e.action,e.target||null,e.details||"",e.deviceId||"",e.deviceLabel||"",e.prevHash||null]);
+  }
+  /* log(state, action, {target, details, category, severity, result}) — append-only */
+  function log(s,action,o){
+    o=o||{};var m=s.meta||{};var d=new Date(),local=nowTZ(d);
+    var e={cv:2,ts:local,timestamp_local:local,timestamp_utc:d.toISOString(),action:action,
+      target:o.target||null,details:o.details||"",
+      category:o.category||"system",severity:o.severity||"low",result:o.result||"success",
+      deviceId:m.deviceId||"",deviceLabel:m.deviceLabel||"",prevHash:null,hash:null};
     s.audit.push(e);
     if(s.audit.length>MAX)s.audit=s.audit.slice(-MAX);
     return e;
@@ -408,9 +432,9 @@ var Authz={can:function(action,record){return true;}};
 /* ---------- App: UI controller ---------- */
 var App=(function(){
   var state=null,editingId=null,work=null,saveTimer=null,idleTimer=null,vmeta=null,pendingRestore=null,view="dashboard";
-  var formSel=null,fType=null,fEditId=null,emailDraft=null,_pdflibP=null;
+  var formSel=null,fType=null,fEditId=null,emailDraft=null,_pdflibP=null,appStarted=false,storageWarned=false;
   var filter={type:"all",fw:"all",q:""};
-  var actFilter={action:"all",from:"",to:""};
+  var actFilter={action:"all",from:"",to:"",category:"all"};
   var IDLE_MS=15*60*1000, MAX_IMPORT=25*1024*1024;
   function denied(){alert("Not permitted by the current authorization policy.");}
   function pwScore(p){var s=0;if(p.length>=14)s++;if(p.length>=20){s+=2;}else{var c=(/[a-z]/.test(p)?1:0)+(/[A-Z]/.test(p)?1:0)+(/\d/.test(p)?1:0)+(/[^A-Za-z0-9]/.test(p)?1:0);if(c>=3)s++;}return s;}
@@ -425,6 +449,7 @@ var App=(function(){
       '<div class="vault">'
       +'<div class="vlogo">TP</div>'
       +'<div class="vbrand">Test page</div>'
+      +'<div style="margin:0 0 10px"><span class="statuspill off" title="Reflects vault unlock state (not authentication)."><span class="dot"></span>Locked</span></div>'
       +'<h1>'+(first?"Create your vault":"Sign in")+'</h1>'
       +'<p>'+(first?"Set a passphrase to create your encrypted vault. It never leaves this device and cannot be recovered if lost.":"Enter your passphrase to unlock your workspace.")+'</p>'
       +'<label for="vp">Passphrase</label><input id="vp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">'
@@ -440,6 +465,7 @@ var App=(function(){
     Array.prototype.forEach.call(l.querySelectorAll("input"),function(inp){
       inp.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();if(first)createVault();else unlock();}});
     });
+    if(!first){var cd=cooldownRemaining();if(cd>0)startCooldownUI(cd);}
   }
 
   async function createVault(){
@@ -453,28 +479,40 @@ var App=(function(){
     vmeta={salt:Array.from(salt),kdf:kdf,version:2,created:now()};
     await Store.put(Object.assign({id:"meta"},vmeta));
     var dev=(crypto.randomUUID?crypto.randomUUID():uid()),label=deviceLabelFromUA(navigator.userAgent),names={};names[dev]=label;
-    state={records:[],audit:[],staging:[],meta:{version:2,created:now(),deviceId:dev,deviceLabel:label,deviceNames:names}};
-    Audit.log(state,"vault.created",null,"Encrypted vault initialised on “"+label+"” (PBKDF2 "+kdf.iterations.toLocaleString()+")");
+    state={records:[],audit:[],staging:[],meta:{version:2,created:now(),deviceId:dev,deviceLabel:label,deviceNames:names,retentionDays:180}};
+    var am=authMetaGet();am.lastUnlock=new Date().toISOString();am.failCount=0;am.windowStart=null;authMetaSet(am);
+    Audit.log(state,"vault_created",{category:"system",severity:"medium",details:"Encrypted vault initialised on “"+label+"” (PBKDF2 "+kdf.iterations.toLocaleString()+")"});
     await persist();startSession();
   }
   async function unlock(){
+    var rem=cooldownRemaining();if(rem>0){startCooldownUI(rem);return;}
     var p=$("#vp").value;if(!p){return;}
     var m=await Store.get("meta");vmeta=m;
     var iters=(m&&m.kdf&&m.kdf.iterations)||310000;
     Vault.set(await Vault.derive(p,new Uint8Array(m.salt),iters));
     var data=await Store.get("data");
     if(!data||!data.enc){state={records:[],audit:[],staging:[],meta:{version:2}};}
-    else{try{state=await Vault.dec(data.enc);}catch(e){Vault.clear();renderLock(false,"Incorrect passphrase.");return;}}
+    else{try{state=await Vault.dec(data.enc);}catch(e){Vault.clear();recordFailedUnlock();renderLock(false,"Incorrect passphrase.");return;}}
     if(!state.staging)state.staging=[];if(!state.audit)state.audit=[];
     ensureDeviceMeta();
+    if(!state.meta.retentionDays)state.meta.retentionDays=180;
     /* migrate pre-1.0 log entries (detail -> details) so they join the chain cleanly */
     state.audit=state.audit.map(function(e){if(e&&e.details==null&&e.detail!=null)e.details=e.detail;return e;});
-    Audit.log(state,"vault.unlocked",null,"Unlocked on “"+state.meta.deviceLabel+"”");
+    /* unlock telemetry in the plaintext meta — capture threshold state before reset */
+    var am=authMetaGet(),prevFails=am.failCount||0,hadThreshold=prevFails>=FAIL_LIMIT;
+    am.lastUnlock=new Date().toISOString();am.failCount=0;am.windowStart=null;authMetaSet(am);
+    Audit.log(state,"unlock_success",{category:"authentication",severity:"low",result:"success",details:"Unlocked on “"+state.meta.deviceLabel+"”"});
+    if(hadThreshold)Audit.log(state,"threshold_exceeded",{category:"threshold_exceeded",severity:"high",details:prevFails+" failed unlock attempts before this success (UX cooldown only — not a security control)"});
+    purgeAuditLog();
     await persist();startSession();
   }
-  function lock(){
+  async function lock(isIdle){
+    if(state&&Vault.ready()){
+      Audit.log(state,isIdle?"idle_lock":"lock",{category:"authentication",severity:"low",details:isIdle?"Auto-locked after idle timeout":"Vault locked by user"});
+      try{await persist();}catch(e){}
+    }
     Vault.clear();state=null;clearTimeout(idleTimer);closeModal();
-    var p=$("#page");if(p)p.innerHTML="";var sb=$("#stagebar");if(sb)sb.innerHTML="";
+    var pg=$("#page");if(pg)pg.innerHTML="";var sb=$("#stagebar");if(sb)sb.innerHTML="";
     if(location.hash!=="#/unlock")location.hash="#/unlock";
     renderLock(false);
   }
@@ -482,7 +520,7 @@ var App=(function(){
   async function wipeAll(){
     if(!confirm("Permanently DELETE the vault, all records, and metadata from this browser?\n\nThis cannot be undone. If you have not exported an encrypted backup, the data is gone for good."))return;
     if(!confirm("Final confirmation — wipe everything from this device now?"))return;
-    if(state)Audit.log(state,"vault.wiped",null,"All local data deleted from this device");
+    if(state)Audit.log(state,"vault_wiped",{category:"destructive_action",severity:"critical",details:"All local data deleted from this device (Settings wipe)"});
     await Store.clearAll();
     Vault.clear();state=null;vmeta=null;
     clearTimeout(saveTimer);clearTimeout(idleTimer);
@@ -511,8 +549,14 @@ var App=(function(){
   function renameDevice(){
     var el=$("#devlabel");if(!el)return;var v=String(el.value||"").trim().slice(0,60);if(!v)return;
     var old=state.meta.deviceLabel;state.meta.deviceLabel=v;state.meta.deviceNames[state.meta.deviceId]=v;
-    Audit.log(state,"device.renamed",null,"Device label “"+(old||"")+"” → “"+v+"”");
+    Audit.log(state,"device_renamed",{category:"system",severity:"low",details:"Device label “"+(old||"")+"” → “"+v+"”"});
     render();save();
+  }
+  function saveRetention(){
+    var el=$("#retdays");if(!el)return;var v=parseInt(el.value,10)||180;if(v<90)v=90;if(v>3650)v=3650;
+    state.meta.retentionDays=v;
+    Audit.log(state,"retention_changed",{category:"system",severity:"low",details:"Activity-log retention set to "+v+" days"});
+    purgeAuditLog();render();save();
   }
   function tgt(r){return r?{type:r.type,id:r.id,title:r.title}:null;}
   function trunc(s,n){s=String(s==null?"":s);n=n||32;return s.length>n?s.slice(0,n-1)+"…":s;}
@@ -526,16 +570,71 @@ var App=(function(){
     return parts.length?parts.join("; "):"no field changes";
   }
 
+  /* ---- SEPARATE PLAINTEXT auth telemetry (localStorage, never any vault data) ----
+     Needed because failed unlocks happen while the vault is LOCKED, so they can't be
+     written to the encrypted log. Holds only: lastUnlock, lastFailedUnlock, failCount,
+     windowStart. */
+  var AUTHMETA_KEY="ws_authmeta";
+  function authMetaGet(){try{var v=localStorage.getItem(AUTHMETA_KEY);return v?JSON.parse(v):{};}catch(e){return {};}}
+  function authMetaSet(o){try{localStorage.setItem(AUTHMETA_KEY,JSON.stringify(o||{}));}catch(e){}}
+  var FAIL_WINDOW=15*60*1000, FAIL_LIMIT=5, COOLDOWN_MS=30*1000;
+  function recordFailedUnlock(){
+    var am=authMetaGet(),t=Date.now();
+    if(!am.windowStart||(t-am.windowStart)>FAIL_WINDOW){am.windowStart=t;am.failCount=0;}
+    am.failCount=(am.failCount||0)+1;am.lastFailedUnlock=new Date().toISOString();
+    authMetaSet(am);return am;
+  }
+  /* IMPORTANT: this failed-attempt counter is a UX cooldown ONLY — NOT a real security
+     control. An attacker copies the ciphertext and brute-forces PBKDF2 offline, never
+     touching this UI. Do not present it as protection. */
+  function cooldownRemaining(){
+    var am=authMetaGet();
+    if((am.failCount||0)>=FAIL_LIMIT&&am.windowStart&&(Date.now()-am.windowStart)<=FAIL_WINDOW){
+      var since=Date.now()-(Date.parse(am.lastFailedUnlock||0)||0);
+      if(since<COOLDOWN_MS)return Math.ceil((COOLDOWN_MS-since)/1000);
+    }
+    return 0;
+  }
+  function startCooldownUI(rem){
+    var msg=function(n){return "Too many failed attempts — cooldown "+n+"s (UX deterrent only).";};
+    var b0=$('#lock [data-action="unlock"]'),e0=$("#verr");if(e0)e0.textContent=msg(rem);if(b0)b0.disabled=true;
+    var n=rem,iv=setInterval(function(){
+      n--;var b=$('#lock [data-action="unlock"]'),e2=$("#verr");if(!b){clearInterval(iv);return;}
+      if(n<=0){clearInterval(iv);b.disabled=false;if(e2)e2.textContent="";}else if(e2)e2.textContent=msg(n);
+    },1000);
+  }
+  /* Opportunistic retention purge on unlock (no background job in a local app). Keeps
+     destructive_action and high/critical entries for at least a year. Purging breaks the
+     append-only hash chain, so we re-seal the surviving entries. */
+  function purgeAuditLog(){
+    var days=(state.meta&&state.meta.retentionDays)||180;if(days<90)days=90;
+    var t=Date.now(),cut=t-days*86400000,yearCut=t-365*86400000,before=state.audit.length;
+    state.audit=state.audit.filter(function(e){
+      var ts=Date.parse(e.timestamp_utc||e.ts||"")||0;
+      var keepLong=(e.category==="destructive_action")||e.severity==="high"||e.severity==="critical";
+      return ts>=(keepLong?yearCut:cut);
+    });
+    var removed=before-state.audit.length;
+    if(removed>0){state.audit.forEach(function(e){e.prevHash=null;e.hash=null;});Audit.log(state,"log_purged",{category:"system",severity:"low",details:"Purged "+removed+" entr"+(removed===1?"y":"ies")+" past "+days+"-day retention"});}
+  }
+  function storageEstimate(){if(navigator.storage&&navigator.storage.estimate){return navigator.storage.estimate().then(function(e){return {usage:e.usage||0,quota:e.quota||0};}).catch(function(){return null;});}return Promise.resolve(null);}
+  function fmtBytes(n){if(n==null)return "—";var u=["B","KB","MB","GB"],i=0;n=Number(n)||0;while(n>=1024&&i<u.length-1){n/=1024;i++;}return (i?n.toFixed(1):n)+" "+u[i];}
+  /* status pill reflects VAULT UNLOCK STATE only — not authentication/session/tokens */
+  function renderVaultStatus(){var p=$("#vstatus");if(!p)return;var on=Vault.ready();p.className="statuspill "+(on?"on":"off");p.innerHTML='<span class="dot"></span>'+(on?"Unlocked":"Locked");p.title="Reflects vault unlock state (not authentication).";}
+  function b64ToBlob(b64,mime){var bin=atob(b64),u8=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);return new Blob([u8],{type:mime||"application/octet-stream"});}
+
   async function persist(){if(!Vault.ready()||!state)return;await Audit.seal(state);var enc=await Vault.enc(state);await Store.put({id:"data",enc:enc,updatedAt:now()});}
   function save(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,250);resetIdle();}
 
   function startSession(){
     $("#lock").hidden=true;$("#app").hidden=false;
+    if(!appStarted&&state){appStarted=true;Audit.log(state,"app_started",{category:"system",severity:"low",details:"App session started this page load"});}
+    renderVaultStatus();
     if(/^#\/(dashboard|records|vendors|risks|tasks|forms|settings)$/.test(location.hash))route();
     else location.hash="#/dashboard";
     resetIdle();
   }
-  function resetIdle(){clearTimeout(idleTimer);idleTimer=setTimeout(lock,IDLE_MS);}
+  function resetIdle(){clearTimeout(idleTimer);idleTimer=setTimeout(function(){lock(true);},IDLE_MS);}
 
   /* ----- routing ----- */
   var routeType=null;
@@ -543,7 +642,7 @@ var App=(function(){
     if(!Vault.ready())return;
     var h=(location.hash||"").replace(/^#\/?/,"").split("/")[0]||"dashboard";
     if(["dashboard","records","vendors","risks","tasks","forms","settings"].indexOf(h)<0)h="dashboard";
-    view=h;renderNav();renderStaging();renderPage(h);
+    view=h;renderNav();renderVaultStatus();renderStaging();renderPage(h);
     var c=$(".content");if(c)c.scrollTop=0;window.scrollTo(0,0);
   }
   function renderNav(){var n=$(".nav");if(!n)return;Array.prototype.forEach.call(n.querySelectorAll("a"),function(a){a.classList.toggle("on",a.getAttribute("data-nav")===view);});}
@@ -586,7 +685,56 @@ var App=(function(){
     var risks=R.filter(function(r){return r.type==="risk";}).sort(function(a,b){return (rank(a)-rank(b))||recSort(a,b);});
     var projects=R.filter(function(r){return r.type==="project";}).sort(recSort);
     var tasks=R.filter(function(r){return r.type==="task";}).sort(recSort);
-    $("#page").innerHTML=pendHTML+'<div class="dgrid">'+dpanel("Risk register",risks)+dpanel("Projects",projects)+dpanel("Tasks &amp; due",tasks)+'</div>';
+    var am=authMetaGet();
+    var metaLine='<div class="dash-meta">Vault: unlocked · Last unlocked: '+esc(am.lastUnlock?fmtTs(am.lastUnlock):"—")+' · Last failed unlock: '+esc(am.lastFailedUnlock?fmtTs(am.lastFailedUnlock):"none")+'</div>';
+    var dz='<div class="card danger-zone" style="margin-top:14px"><h3>Danger zone</h3>'
+      +'<p class="muted">Permanently delete ALL data (records, attachments, activity log, and metadata) from this browser. This cannot be undone — export an encrypted backup first.</p>'
+      +'<div class="srow"><button class="btn sm danger" data-action="clear-open">Clear all data</button></div></div>';
+    $("#page").innerHTML='<div id="dash-warn"></div>'+metaLine+pendHTML+'<div class="dgrid">'+dpanel("Risk register",risks)+dpanel("Projects",projects)+dpanel("Tasks &amp; due",tasks)+'</div>'+dz;
+    checkStorageWarning();
+  }
+  function checkStorageWarning(){
+    storageEstimate().then(function(s){
+      var w=$("#dash-warn");if(!w||!s||!s.quota)return;
+      var pct=s.usage/s.quota;
+      if(pct>=0.9){
+        w.innerHTML='<div class="warnbox">⚠ Local storage is '+Math.round(pct*100)+'% full ('+esc(fmtBytes(s.usage))+' / '+esc(fmtBytes(s.quota))+'). Export a backup and clear old data.</div>';
+        if(!storageWarned){storageWarned=true;Audit.log(state,"threshold_exceeded",{category:"threshold_exceeded",severity:"medium",details:"Storage usage at "+Math.round(pct*100)+"% of quota"});save();}
+      }
+    });
+  }
+  /* ---- Feature 1: hardened, multi-step Clear all data ---- */
+  function openClearModal(){
+    Audit.log(state,"clear_all_data_requested",{category:"destructive_action",severity:"critical",details:"Clear-all-data dialog opened"});save();
+    var counts={};state.records.forEach(function(r){counts[r.type]=(counts[r.type]||0)+1;});
+    var attach=state.records.filter(function(r){return r.file&&r.file.dataB64;}).length;
+    var rowsHTML=Object.keys(counts).sort().map(function(k){return '<tr><td>'+esc(Schema.typeLabel(k))+'</td><td>'+counts[k]+'</td></tr>';}).join("")||'<tr><td>Records</td><td>0</td></tr>';
+    $("#sheet").innerHTML='<div class="mhead"><span>Clear all data</span><button class="x" data-action="m-close">×</button></div>'
+      +'<div class="warnbox">⚠ This permanently deletes everything on this device and cannot be undone.</div>'
+      +'<table class="impact"><tr><td>Records total</td><td>'+state.records.length+'</td></tr>'+rowsHTML
+      +'<tr><td>Attachments</td><td>'+attach+'</td></tr>'
+      +'<tr><td>Activity log entries</td><td>'+state.audit.length+'</td></tr>'
+      +'<tr><td>Estimated storage used</td><td id="clear-size">…</td></tr></table>'
+      +'<div class="srow" style="margin-top:10px"><button class="btn sm" data-action="backup">Export encrypted backup first</button></div>'
+      +'<label for="clearconfirm" style="display:block;font-size:11px;color:var(--muted);margin:12px 0 4px;font-weight:600">Type <b style="color:var(--red)">CLEAR ALL DATA</b> to enable the button</label>'
+      +'<input id="clearconfirm" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="CLEAR ALL DATA" style="width:100%;background:var(--ink3);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13.5px;outline:none">'
+      +'<div class="mfoot"><span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Cancel</button><button class="btn sm danger" id="clear-confirm-btn" data-action="clear-confirm" disabled>Clear all data</button></div>';
+    $("#modal").classList.add("open");
+    storageEstimate().then(function(s){var el=$("#clear-size");if(el)el.textContent=s?fmtBytes(s.usage):"—";});
+    var ip=$("#clearconfirm");if(ip)ip.focus();
+  }
+  async function doClearAll(){
+    var ip=$("#clearconfirm");if(!ip||ip.value!=="CLEAR ALL DATA")return;
+    Audit.log(state,"clear_all_data_confirmed",{category:"destructive_action",severity:"critical",details:"Confirmation phrase typed"});
+    Audit.log(state,"clear_all_data_completed",{category:"destructive_action",severity:"critical",details:"All local data cleared from this device"});
+    await Store.clearAll();
+    Vault.clear();state=null;vmeta=null;
+    clearTimeout(saveTimer);clearTimeout(idleTimer);
+    closeModal();
+    var pg=$("#page");if(pg)pg.innerHTML="";var sb=$("#stagebar");if(sb)sb.innerHTML="";
+    renderVaultStatus();
+    if(location.hash!=="#/unlock")location.hash="#/unlock";
+    renderLock(true);
   }
   function dpanel(label,items){
     var openN=items.filter(function(r){return r.status!=="done";}).length;
@@ -649,7 +797,36 @@ var App=(function(){
       +'<span class="pill" style="color:'+sc+';background:'+sc+'1a;border-color:'+sc+'40"><span class="dot" style="background:'+sc+'"></span>'+esc(Schema.statusLabel(r.status))+'</span>'
       +(dt?'<span class="due '+dt.c+'">'+esc(dt.t)+'</span>':'')+'</div>'
       +((tags||nl)?'<div class="meta2">'+tags+(nl?'<span class="lk">'+nl+' linked</span>':'')+'</div>':'')
+      +attachmentHTML(r)
       +'</div>';
+  }
+  /* ---- Feature 4: attachment preview in list rows ----
+     DEPENDS ON an attachment model r.file = {name, mime, size, dataB64}.
+     TODO: the upload UI that POPULATES r.file is not built yet, so in practice these rows
+     render nothing today; the rendering contract below is ready for when it lands. */
+  var IMG_MIME={"image/png":1,"image/jpeg":1,"image/webp":1,"image/gif":1};
+  function fileExt(f){var n=(f&&f.name)||"",m=n.lastIndexOf("."),e=m>=0?n.slice(m+1):(((f&&f.mime)||"").split("/")[1]||"file");return e.slice(0,5).toUpperCase();}
+  function attachmentHTML(r){
+    var f=r.file;if(!f||!f.name)return "";
+    var name=esc(f.name),size=f.size?(" · "+esc(fmtBytes(f.size))):"";
+    if(IMG_MIME[f.mime]&&f.dataB64){
+      /* images only: inline thumbnail via data: URL (CSP allows img-src data:, not blob:). Click = larger preview. */
+      return '<div class="meta2"><img class="att-thumb" alt="'+name+'" src="data:'+esc(f.mime)+';base64,'+esc(f.dataB64)+'" data-action="att-preview" data-id="'+r.id+'"><span class="lk">'+name+size+'</span></div>';
+    }
+    /* every non-image type (pdf/svg/office/unknown): badge + download ONLY — never inlined, never inline-SVG */
+    return '<div class="meta2"><span class="att-badge"><span class="att-ext">'+esc(fileExt(f))+'</span>'+name+size+'</span><button class="btn ghost sm" data-action="att-download" data-id="'+r.id+'">Download</button></div>';
+  }
+  function openImagePreview(id){
+    var r=Repo.get(state,id);if(!r||!r.file||!IMG_MIME[r.file.mime]||!r.file.dataB64)return;
+    $("#sheet").innerHTML='<div class="mhead"><span>'+esc(r.file.name||"Image")+'</span><button class="x" data-action="m-close">×</button></div>'
+      +'<img class="imgprev" alt="'+esc(r.file.name||"")+'" src="data:'+esc(r.file.mime)+';base64,'+esc(r.file.dataB64)+'">'
+      +'<div class="mfoot"><span class="spacer"></span><button class="btn ghost sm" data-action="att-download" data-id="'+r.id+'">Download</button><button class="btn ghost sm" data-action="m-close">Close</button></div>';
+    $("#modal").classList.add("open");
+  }
+  function downloadAttachment(id){
+    var r=Repo.get(state,id);if(!r||!r.file||!r.file.dataB64)return;
+    var blob=b64ToBlob(r.file.dataB64,r.file.mime),u=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=u;a.download=r.file.name||"download";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u);},1000);
   }
   function renderSettings(){
     var kdf=(vmeta&&vmeta.kdf)||{hash:"SHA-256",iterations:Vault.ITER};
@@ -675,6 +852,11 @@ var App=(function(){
       +'<table class="kv"><tr><td>Device ID</td><td style="font-family:var(--mono);font-size:11px">'+esc(state.meta.deviceId||"—")+'</td></tr></table>'
       +'<label for="devlabel" style="display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;font-weight:600">Device label</label>'
       +'<div class="frow tight"><div><input id="devlabel" maxlength="60" value="'+esc(state.meta.deviceLabel||"")+'" placeholder="e.g. Work laptop — Edge"></div><button class="btn sm" data-action="device-rename">Save</button></div></div>'
+      +'<div class="card"><h3>Activity log retention</h3>'
+      +'<p class="muted">Local activity log — recorded on this device. Advisory, not a tamper-proof audit trail. Entries older than the retention window are purged opportunistically on unlock; destructive actions and high/critical entries are kept at least a year.</p>'
+      +'<label for="retdays" style="display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;font-weight:600">Retention (days · minimum 90)</label>'
+      +'<div class="frow tight"><div><input id="retdays" type="number" min="90" max="3650" value="'+(((state.meta&&state.meta.retentionDays)||180))+'"></div><button class="btn sm" data-action="retention-save">Save</button>'
+      +'<button class="btn ghost sm" data-action="activity">Open activity log</button></div></div>'
       +'<div class="card danger-zone"><h3>Danger zone</h3>'
       +'<p class="muted">Permanently delete the vault, all records, and metadata from this browser. This cannot be undone and there is no recovery without a backup — export the encrypted backup above first.</p>'
       +'<div class="srow"><button class="btn sm danger" data-action="wipe">Wipe all data from this device</button></div></div>';
@@ -734,18 +916,20 @@ var App=(function(){
     var errs=Schema.validate(data);
     if(errs.length){$("#m-err").innerHTML=errs.map(esc).join("<br>");return;}
     if(!Authz.can(editingId?"update":"create",data)){denied();return;}
-    if(editingId){var oldRec=Repo.get(state,editingId),summary=diffSummary(oldRec,data);Repo.update(state,editingId,data);Audit.log(state,"record.update",tgt(Repo.get(state,editingId)),summary);}
-    else{var r=Repo.create(state,data);Audit.log(state,"record.create",tgt(r),"Created "+r.type);editingId=r.id;}
+    if(editingId){var oldRec=Repo.get(state,editingId),summary=diffSummary(oldRec,data);Repo.update(state,editingId,data);Audit.log(state,"record_update",{category:"data_change",severity:"low",target:tgt(Repo.get(state,editingId)),details:summary});}
+    else{var r=Repo.create(state,data);Audit.log(state,"record_create",{category:"data_change",severity:"low",target:tgt(r),details:"Created "+r.type});editingId=r.id;}
     closeModal();render();save();
   }
-  function delRecord(){if(!editingId)return;var r=Repo.get(state,editingId);if(!Authz.can("delete",r)){denied();return;}if(!confirm("Delete this record? This also removes links to it."))return;Repo.remove(state,editingId);Audit.log(state,"record.delete",tgt(r),"Deleted "+(r?r.type:"record"));closeModal();render();save();}
+  function delRecord(){if(!editingId)return;var r=Repo.get(state,editingId);if(!Authz.can("delete",r)){denied();return;}if(!confirm("Delete this record? This also removes links to it."))return;Repo.remove(state,editingId);Audit.log(state,"record_delete",{category:"data_change",severity:"medium",target:tgt(r),details:"Deleted "+(r?r.type:"record")});closeModal();render();save();}
   function closeModal(){$("#modal").classList.remove("open");editingId=null;work=null;pendingRestore=null;fEditId=null;fType=null;emailDraft=null;}
 
   /* ----- activity (local, advisory log) ----- */
-  function openActivity(){actFilter={action:"all",from:"",to:""};renderActivity();$("#modal").classList.add("open");}
+  var CATEGORIES=["authentication","data_change","destructive_action","backup_restore","system","threshold_exceeded"];
+  function openActivity(){actFilter={action:"all",from:"",to:"",category:"all"};renderActivity();$("#modal").classList.add("open");}
   function activityRows(){
     var f=actFilter;
     return state.audit.slice().reverse().filter(function(e){
+      if(f.category!=="all"&&(e.category||"system")!==f.category)return false;
       if(f.action!=="all"&&e.action!==f.action)return false;
       var d=(e.ts||"").slice(0,10);
       if(f.from&&d<f.from)return false;
@@ -753,12 +937,17 @@ var App=(function(){
       return true;
     });
   }
+  function sevColorLog(s){return {low:"#7e90a8",medium:"#d8a24f",high:"#e0915b",critical:"#d8685f"}[s]||"#7e90a8";}
   function activityListHTML(rows){
     if(!rows.length)return '<div class="empty">No matching activity.</div>';
     return rows.map(function(e){
       var t=e.target,tg=t?(esc(Schema.typeLabel(t.type||""))+(t.title?' · '+esc(trunc(t.title,48)):'')):"";
       var det=e.details||e.detail||"";
-      return '<div class="ae"><span class="at">'+esc(fmtTs(e.ts))+'</span> · '+esc(deviceName(e.deviceId))+' · <b>'+esc(e.action)+'</b>'
+      var sc=sevColorLog(e.severity);
+      var sev=e.severity?'<span class="sevtag" style="color:'+sc+';background:'+sc+'1a;border:1px solid '+sc+'40">'+esc(e.severity)+'</span>':'';
+      var cat=e.category?'<span class="catpill">'+esc(e.category)+'</span>':'';
+      var fail=e.result==="failure"?'<span class="sevtag" style="color:var(--red);background:rgba(216,104,95,.12);border:1px solid rgba(216,104,95,.4)">failure</span>':'';
+      return '<div class="ae"><span class="at">'+esc(fmtTs(e.ts))+'</span> · '+esc(deviceName(e.deviceId))+' · <b>'+esc(e.action)+'</b>'+cat+sev+fail
         +(tg?' — '+tg:'')+(det?'<div class="lk" style="margin-top:2px;color:var(--muted)">'+esc(det)+'</div>':'')+'</div>';
     }).join("");
   }
@@ -769,6 +958,7 @@ var App=(function(){
       +'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:4px">Local activity log — recorded on this device. Advisory, not a tamper-proof audit trail.</div>'
       +'<div class="lk" title="Device identity is self-reported by the browser, not attested. A new browser or cleared storage produces a new device ID." style="color:var(--faint);font-size:11px;margin-bottom:8px">This device: '+esc(deviceName(state.meta.deviceId))+' · identity is self-reported (ⓘ).</div>'
       +'<div class="toolbar">'
+        +'<select id="act-category"><option value="all">All categories</option>'+CATEGORIES.map(function(c){return '<option value="'+c+'"'+(actFilter.category===c?" selected":"")+'>'+c+'</option>';}).join("")+'</select>'
         +'<select id="act-action"><option value="all">All actions</option>'+actions.map(function(a){return '<option value="'+esc(a)+'"'+(actFilter.action===a?" selected":"")+'>'+esc(a)+'</option>';}).join("")+'</select>'
         +'<input type="date" id="act-from" value="'+esc(actFilter.from)+'" title="From date">'
         +'<input type="date" id="act-to" value="'+esc(actFilter.to)+'" title="To date">'
@@ -785,13 +975,13 @@ var App=(function(){
     else el.innerHTML='<span style="color:var(--red)">✗ Integrity check FAILED at entry #'+(res.brokenAt+1)+' ('+esc(res.reason)+'). The log may have been altered.</span>';
   }
   function exportActivityCSV(){
-    var cols=["timestamp","device_id","device_label","action","target_type","target_id","target_title","details","prevHash","hash"];
+    var cols=["timestamp_local","timestamp_utc","device_id","device_label","action","category","severity","result","target_type","target_id","target_title","details","prevHash","hash"];
     function q(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"';}
     var lines=[cols.join(",")];
-    state.audit.forEach(function(e){var t=e.target||{};lines.push([e.ts,e.deviceId,e.deviceLabel,e.action,t.type,t.id,t.title,(e.details||e.detail||""),e.prevHash,e.hash].map(q).join(","));});
+    state.audit.forEach(function(e){var t=e.target||{};lines.push([e.timestamp_local||e.ts,e.timestamp_utc||"",e.deviceId,e.deviceLabel,e.action,e.category||"",e.severity||"",e.result||"",t.type,t.id,t.title,(e.details||e.detail||""),e.prevHash,e.hash].map(q).join(","));});
     var blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
     var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="activity-log-"+now().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);
-    Audit.log(state,"log.export_csv",null,"Exported "+state.audit.length+" entries to CSV");save();
+    Audit.log(state,"log_exported_csv",{category:"system",severity:"low",details:"Exported "+state.audit.length+" entries to CSV"});save();
     var el=$("#act-result");if(el)el.innerHTML='<span style="color:var(--green)">CSV downloaded ('+state.audit.length+' entries).</span>';
   }
 
@@ -804,8 +994,8 @@ var App=(function(){
       +(s.length?'<div class="mfoot"><button class="btn ghost sm danger" data-action="stage-clear">Discard all</button><span class="spacer"></span><button class="btn sm" data-action="stage-commitall">Commit all</button></div>':'');
     $("#modal").classList.add("open");
   }
-  function commitStaged(i){var it=state.staging[i];if(!it)return;if(!Authz.can("create",it)){denied();return;}var r=Repo.create(state,sanitizeImport(it));state.staging.splice(i,1);Audit.log(state,"import.commit",tgt(r),"Committed imported record");openStaging();render();save();}
-  function commitAllStaged(){if(!Authz.can("create",null)){denied();return;}var n=state.staging.length;state.staging.forEach(function(it){Repo.create(state,sanitizeImport(it));});Audit.log(state,"import.commit_all",null,"Committed "+n+" imported record(s)");state.staging=[];closeModal();render();save();}
+  function commitStaged(i){var it=state.staging[i];if(!it)return;if(!Authz.can("create",it)){denied();return;}var r=Repo.create(state,sanitizeImport(it));state.staging.splice(i,1);Audit.log(state,"import_commit",{category:"data_change",severity:"low",target:tgt(r),details:"Committed imported record"});openStaging();render();save();}
+  function commitAllStaged(){if(!Authz.can("create",null)){denied();return;}var n=state.staging.length;state.staging.forEach(function(it){Repo.create(state,sanitizeImport(it));});Audit.log(state,"import_commit_all",{category:"data_change",severity:"low",details:"Committed "+n+" imported record(s)"});state.staging=[];closeModal();render();save();}
   function sanitizeImport(it){
     return {
       title:String(it.title||"").slice(0,200),
@@ -827,7 +1017,7 @@ var App=(function(){
     var out={format:"ciso-ws-backup",v:2,encrypted:true,exported:nowTZ(),app:APP_VERSION,device:{id:(state.meta&&state.meta.deviceId)||"",label:(state.meta&&state.meta.deviceLabel)||""},kdf:(vmeta&&vmeta.kdf)||{algo:"PBKDF2",hash:"SHA-256",iterations:Vault.ITER},salt:(vmeta&&vmeta.salt)||null,payload:enc};
     var blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
     var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="ciso-ws-backup-"+now().slice(0,10)+".enc.json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);
-    Audit.log(state,"backup.export",null,"Encrypted backup of "+state.records.length+" record(s) exported");save();
+    Audit.log(state,"backup_created",{category:"backup_restore",severity:"low",details:"Encrypted backup of "+state.records.length+" record(s) exported"});save();
   }
   function stageRecords(recs,origin){
     if(!recs||!recs.length){alert("No records found in that backup.");return;}
@@ -836,7 +1026,7 @@ var App=(function(){
     if(origin&&(origin.label||origin.id))state.meta.deviceNames[origin.id||("orig-"+origin.label)]=origin.label||("device "+String(origin.id).slice(0,8));
     recs.forEach(function(r){state.staging.push(r);});
     var src=origin&&(origin.label||origin.exported)?(" from “"+(origin.label||"unknown device")+"”"+(origin.exported?" exported "+fmtTs(origin.exported):"")):"";
-    Audit.log(state,"import.restore_staged",null,recs.length+" record(s) staged"+src);
+    Audit.log(state,"restore_completed",{category:"backup_restore",severity:"low",details:recs.length+" record(s) staged for review"+src});
     render();save();openStaging();
   }
   function restore(file){
@@ -845,11 +1035,14 @@ var App=(function(){
     rd.onload=function(){
       var obj;try{obj=JSON.parse(rd.result);}catch(e){alert("That file is not valid JSON.");return;}
       if(obj&&obj.payload&&obj.payload.ct&&obj.salt){
+        Audit.log(state,"restore_started",{category:"backup_restore",severity:"low",details:"Encrypted backup file opened"});save();
         pendingRestore=obj;openRestore();
       }else if(obj&&obj.state&&Array.isArray(obj.state.records)){
         if(!confirm("This is an UNENCRYPTED backup. New backups are encrypted by default. Import it anyway?"))return;
+        Audit.log(state,"restore_started",{category:"backup_restore",severity:"medium",details:"Unencrypted backup file opened"});save();
         stageRecords(obj.state.records);
       }else if(obj&&Array.isArray(obj.records)){
+        Audit.log(state,"restore_started",{category:"backup_restore",severity:"medium",details:"Plain records file opened"});save();
         stageRecords(obj.records);
       }else{alert("This does not look like a workspace backup.");}
     };
@@ -877,7 +1070,7 @@ var App=(function(){
       if(!recs){$("#r-err").textContent="Decrypted, but no records were found in this backup.";return;}
       var origin={id:(b.device&&b.device.id)||"",label:(b.device&&b.device.label)||"",exported:b.exported||""};
       pendingRestore=null;closeModal();stageRecords(recs,origin);
-    }catch(e){$("#r-err").textContent="Incorrect passphrase, or the backup is corrupt.";}
+    }catch(e){$("#r-err").textContent="Incorrect passphrase, or the backup is corrupt.";Audit.log(state,"restore_failed",{category:"backup_restore",severity:"high",result:"failure",details:"Backup decryption failed (wrong passphrase or corrupt file)"});save();}
   }
 
   /* ----- forms: request-intake module ----- */
@@ -963,15 +1156,15 @@ var App=(function(){
     var due=fields.endDate||fields.effectiveDate||fields.lastWorkingDay||fields.startDate||"";
     var owner=fields.manager||"";
     if(!Authz.can(fEditId?"update":"create",null)){denied();return;}
-    if(fEditId){var ofr=Repo.get(state,fEditId),fsum=formDiff(ofr,fields,ft);Repo.update(state,fEditId,{title:title,status:status,fields:fields,due:due,owner:owner});Audit.log(state,"form.update",tgt(Repo.get(state,fEditId)),(fsum||"updated")+" · status "+status);}
-    else{var nfr=Repo.create(state,{type:"form",formType:fType,title:title,status:status,fields:fields,due:due,owner:owner,note:""});Audit.log(state,"form.create",tgt(nfr),ft.label+" submitted");}
+    if(fEditId){var ofr=Repo.get(state,fEditId),fsum=formDiff(ofr,fields,ft);Repo.update(state,fEditId,{title:title,status:status,fields:fields,due:due,owner:owner});Audit.log(state,"form_update",{category:"data_change",severity:"low",target:tgt(Repo.get(state,fEditId)),details:(fsum||"updated")+" · status "+status});}
+    else{var nfr=Repo.create(state,{type:"form",formType:fType,title:title,status:status,fields:fields,due:due,owner:owner,note:""});Audit.log(state,"form_create",{category:"data_change",severity:"low",target:tgt(nfr),details:ft.label+" submitted"});}
     closeModal();render();save();
   }
   function delForm(){
     if(!fEditId)return;var r=Repo.get(state,fEditId);
     if(!Authz.can("delete",r)){denied();return;}
     if(!confirm("Delete this submission? This cannot be undone."))return;
-    Repo.remove(state,fEditId);Audit.log(state,"form.delete",tgt(r),"Deleted submission");
+    Repo.remove(state,fEditId);Audit.log(state,"form_delete",{category:"data_change",severity:"medium",target:tgt(r),details:"Deleted submission"});
     closeModal();render();save();
   }
 
@@ -1092,7 +1285,7 @@ var App=(function(){
       if(Object.keys(acro).length){Object.assign(fields,acro);Object.keys(acro).forEach(function(k){extracted[k]=true;});note="acroform";}
       else{var text=await extractText(bytes);var h=heuristicExtract(text,ft);Object.assign(fields,h.fields);Object.assign(extracted,h.found);note="text-heuristic";}
     }catch(e){alert("Couldn't parse this PDF ("+((e&&e.message)||"unknown error")+"). You can still fill the form in manually.");}
-    Audit.log(state,"form.pdf_import",null,ft.label+" · "+note+" · "+Object.keys(extracted).length+" field(s) extracted (pending review)");save();
+    Audit.log(state,"form_pdf_import",{category:"data_change",severity:"low",details:ft.label+" · "+note+" · "+Object.keys(extracted).length+" field(s) extracted (pending review)"});save();
     openFormModal(ftKey,null,fields,extracted);
   }
 
@@ -1128,23 +1321,33 @@ var App=(function(){
     if(a==="stage-open"){openStaging();return;}
     if(a==="stage-commit"){commitStaged(+i);return;}
     if(a==="stage-commitall"){commitAllStaged();return;}
-    if(a==="stage-discard"){state.staging.splice(+i,1);Audit.log(state,"import.discard",null,"Discarded 1 staged record");openStaging();render();save();return;}
+    if(a==="stage-discard"){state.staging.splice(+i,1);Audit.log(state,"import_discard",{category:"data_change",severity:"low",details:"Discarded 1 staged record"});openStaging();render();save();return;}
     if(a==="act-verify"){verifyActivity();return;}
     if(a==="act-csv"){exportActivityCSV();return;}
     if(a==="device-rename"){renameDevice();return;}
+    if(a==="retention-save"){saveRetention();return;}
+    if(a==="clear-open"){openClearModal();return;}
+    if(a==="clear-confirm"){doClearAll();return;}
+    if(a==="att-preview"){openImagePreview(id);return;}
+    if(a==="att-download"){downloadAttachment(id);return;}
     if(a==="stage-clear"){if(confirm("Discard all staged records?")){state.staging=[];closeModal();render();save();}return;}
   }
 
   function boot(){
     document.addEventListener("click",onClick);
     window.addEventListener("hashchange",route);
-    document.addEventListener("input",function(e){if(e.target&&e.target.id==="fq"){filter.q=e.target.value;renderRows();}});
+    document.addEventListener("input",function(e){
+      if(!e.target)return;
+      if(e.target.id==="fq"){filter.q=e.target.value;renderRows();return;}
+      if(e.target.id==="clearconfirm"){var b=$("#clear-confirm-btn");if(b)b.disabled=(e.target.value!=="CLEAR ALL DATA");return;}
+    });
     document.addEventListener("change",function(e){
       if(!e.target)return;
       if(e.target.id==="ftype"){filter.type=e.target.value;renderRows();return;}
       if(e.target.id==="ffw"){filter.fw=e.target.value;renderRows();return;}
       if(e.target.id==="restorein"){var f=e.target.files&&e.target.files[0];e.target.value="";if(f)restore(f);return;}
       if(e.target.id==="pdfin"){var pf=e.target.files&&e.target.files[0];e.target.value="";if(pf)importFormPdf(pf);return;}
+      if(e.target.id==="act-category"){actFilter.category=e.target.value;renderActivity();return;}
       if(e.target.id==="act-action"){actFilter.action=e.target.value;renderActivity();return;}
       if(e.target.id==="act-from"){actFilter.from=e.target.value;renderActivity();return;}
       if(e.target.id==="act-to"){actFilter.to=e.target.value;renderActivity();return;}
