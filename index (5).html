@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>CISO Workspace — v1 (secure foundation)</title>
+<style>
+  :root{
+    --ink:#0c1424;--ink2:#0f1a2e;--ink3:#13213a;--ink4:#16243f;
+    --line:#213149;--line2:#1a2740;--text:#e8eef6;--muted:#93a4bd;--faint:#5d6f8c;
+    --accent:#8fb8e8;--green:#5fae86;--amber:#d8a24f;--red:#d8685f;--blue:#6fa3dd;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;--r:9px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{background:radial-gradient(1000px 480px at 82% -12%,rgba(143,184,232,.08),transparent 60%),var(--ink);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.45}
+  button,input,select,textarea{font-family:inherit}
+  /* lock */
+  #lock{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px}
+  .vault{width:100%;max-width:420px;background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:22px}
+  .vault h1{margin:0 0 4px;font-size:19px;font-weight:650}
+  .vault .ar{color:var(--muted);font-weight:600;font-size:15px;margin-left:5px}
+  .vault p{color:var(--muted);font-size:13px;margin:8px 0 16px}
+  .vault label{display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;font-weight:600}
+  .vault input{width:100%;background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:10px 11px;color:var(--text);font-size:14px;outline:none}
+  .vault input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(143,184,232,.12)}
+  .vault .err{color:var(--red);font-size:12px;margin-top:8px;min-height:14px}
+  .pwmeter{margin-top:8px}
+  .pwbar{height:5px;background:var(--line2);border-radius:3px;overflow:hidden}
+  .pwbar i{display:block;height:100%;width:0;background:var(--amber);border-radius:3px;transition:width .15s,background .15s}
+  .pwmeter span{font-size:11px;color:var(--faint);display:block;margin-top:5px}
+  .vault .note{font-size:11px;color:var(--faint);margin-top:14px;line-height:1.5;border-top:1px solid var(--line2);padding-top:12px}
+  .btn{font-size:13px;font-weight:600;color:var(--ink);background:var(--accent);border:none;border-radius:8px;padding:9px 14px;cursor:pointer;white-space:nowrap}
+  .btn:hover{filter:brightness(1.07)}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .btn.ghost:hover{color:var(--text);border-color:var(--accent)}
+  .btn.sm{padding:7px 10px;font-size:12px}
+  .btn.block{width:100%;margin-top:16px;padding:11px}
+  .btn.danger{color:var(--red);border-color:#3a2530;background:transparent}
+  /* app */
+  #app{min-height:100%;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line2);background:rgba(15,26,46,.5)}
+  header h1{margin:0;font-size:16px;font-weight:650}
+  header h1 .ar{color:var(--muted);font-size:13px;font-weight:600;margin-left:4px}
+  .sub{font-family:var(--mono);font-size:9.5px;color:var(--faint);margin-top:1px}
+  .spacer{flex:1}
+  .lockpill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:#9bd3b1;background:rgba(95,174,134,.08);border:1px solid rgba(95,174,134,.28);padding:5px 8px;border-radius:999px}
+  .lockpill .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+  main{flex:1;padding:14px 16px;max-width:1080px;width:100%;margin:0 auto}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .toolbar select,.toolbar input{background:var(--ink3);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:7px 9px;font-size:13px;outline:none}
+  .toolbar input{flex:1;min-width:150px}
+  .toolbar select:focus,.toolbar input:focus{border-color:var(--accent)}
+  .banner{display:flex;align-items:center;gap:10px;background:rgba(216,162,79,.08);border:1px solid rgba(216,162,79,.4);border-radius:var(--r);padding:9px 12px;margin-bottom:12px;font-size:13px;color:var(--amber)}
+  .list{display:flex;flex-direction:column;gap:8px}
+  .rec{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;cursor:pointer}
+  .rec:hover{border-color:var(--accent)}
+  .rline{display:flex;align-items:center;gap:9px}
+  .ttag{font-family:var(--mono);font-size:9px;color:var(--faint);border:1px solid var(--line);border-radius:4px;padding:2px 5px;flex:none;text-transform:uppercase}
+  .rtitle{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rec.done .rtitle{color:var(--faint);text-decoration:line-through}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;padding:3px 7px;border-radius:999px;border:1px solid transparent;white-space:nowrap;flex:none}
+  .pill .dot{width:6px;height:6px;border-radius:50%}
+  .due{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap;flex:none}
+  .due.over{color:var(--red)}.due.soon{color:var(--amber)}
+  .meta2{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:7px}
+  .ctag{font-size:10px;font-weight:600;color:var(--accent);background:rgba(143,184,232,.1);border:1px solid rgba(143,184,232,.3);border-radius:5px;padding:2px 7px}
+  .lk{font-family:var(--mono);font-size:10px;color:var(--faint)}
+  .empty{color:var(--faint);font-size:13px;padding:24px 4px;text-align:center}
+  .sev{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:5px;flex:none;border:1px solid transparent}
+  /* modal */
+  .modal{position:fixed;inset:0;background:rgba(6,11,22,.7);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+  .modal.open{display:flex}
+  .sheet{width:100%;max-width:480px;max-height:92vh;overflow:auto;background:var(--ink2);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:15px;font-weight:650}
+  .x{border:none;background:none;color:var(--faint);font-size:20px;cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1}
+  .x:hover{color:var(--red);background:rgba(216,104,95,.1)}
+  .sheet label{display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;font-weight:600}
+  .sheet input,.sheet select,.sheet textarea{width:100%;background:var(--ink3);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13.5px;outline:none}
+  .sheet input:focus,.sheet select:focus,.sheet textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(143,184,232,.12)}
+  .sheet textarea{min-height:52px;resize:vertical}
+  .sheet input[type=date]{font-family:var(--mono);font-size:12.5px;color-scheme:dark}
+  .frow{display:flex;gap:10px}.frow>div{flex:1}
+  .frow.tight{align-items:flex-end}.frow.tight .btn{margin-bottom:0}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--accent);background:rgba(143,184,232,.1);border:1px solid rgba(143,184,232,.3);border-radius:6px;padding:3px 8px}
+  .chip b{font-weight:600}
+  .chip button{border:none;background:none;color:var(--faint);cursor:pointer;font-size:13px;line-height:1;padding:0 2px}
+  .chip button:hover{color:var(--red)}
+  .linkitem{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:5px 0;border-top:1px solid var(--line2)}
+  .linkitem:first-child{border-top:none}
+  .linkitem .lt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .errbox{color:var(--red);font-size:12px;margin-top:10px}
+  .mfoot{display:flex;align-items:center;gap:8px;margin-top:16px}
+  .seclabel{font-family:var(--mono);font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;margin-top:14px}
+  .ae{padding:8px 4px;border-top:1px solid var(--line2);font-size:12.5px}
+  .ae:first-child{border-top:none}
+  .ae .at{font-family:var(--mono);font-size:10px;color:var(--accent)}
+  .backlinks{margin-top:6px;font-size:12px;color:var(--muted)}
+  .shell{display:flex;align-items:flex-start;min-height:100vh}
+  .sidebar{width:204px;flex:none;align-self:stretch;position:sticky;top:0;height:100vh;box-sizing:border-box;border-right:1px solid var(--line2);background:rgba(15,26,46,.55);display:flex;flex-direction:column;padding:14px 10px}
+  .sidebar .brand{display:flex;align-items:center;gap:9px;padding:4px 8px 14px}
+  .sidebar .logo{width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--ink);display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
+  .sidebar .bn{font-size:13.5px;font-weight:650}
+  .sidebar .ar{font-size:11px;color:var(--muted)}
+  .nav{display:flex;flex-direction:column;gap:2px;flex:1;min-height:0;overflow:auto}
+  .nav a{display:block;padding:9px 11px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:13.5px;font-weight:500}
+  .nav a:hover{background:var(--ink3);color:var(--text)}
+  .nav a.on{background:var(--accent);color:var(--ink);font-weight:600}
+  .sidefoot{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--line2)}
+  .content{flex:1;min-width:0;box-sizing:border-box;padding:16px 20px;max-width:1040px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .topbar h2{margin:0;font-size:18px;font-weight:650}
+  .topactions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:12px}
+  .card h3{margin:0 0 4px;font-size:15px;font-weight:650}
+  .muted{color:var(--muted);font-size:12.5px}
+  .srow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .kv{width:100%;font-size:13px;border-collapse:collapse;margin-top:4px}
+  .kv td{padding:7px 0;border-top:1px solid var(--line2)}
+  .kv td:first-child{color:var(--muted);width:45%}
+  .kv tr:first-child td{border-top:none}
+  @media (max-width:760px){
+    .shell{flex-direction:column;min-height:0}
+    .sidebar{position:static;height:auto;width:auto;flex-direction:row;align-items:center;border-right:none;border-bottom:1px solid var(--line2);overflow-x:auto;padding:8px 10px}
+    .sidebar .brand{padding:0 8px 0 2px}.sidebar .ar{display:none}.sidebar .bn{font-size:12.5px}
+    .nav{flex-direction:row;gap:4px;overflow:visible}
+    .nav a{white-space:nowrap;padding:7px 10px}
+    .sidefoot{flex-direction:row;border-top:none;padding-top:0;margin-left:auto}
+    .content{padding:12px;max-width:none}
+  }
+  .d-pending{border:1px solid var(--line);border-radius:var(--r);background:var(--ink2);padding:9px 12px;margin-bottom:12px}
+  .d-pending.alert{border-color:rgba(216,162,79,.45);background:rgba(216,162,79,.07)}
+  .d-pending.crit{border-color:rgba(216,104,95,.5);background:rgba(216,104,95,.08)}
+  .d-pending .ptitle{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--amber);margin-bottom:7px}
+  .d-pending.crit .ptitle{color:var(--red)}
+  .pchips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+  .pchip{flex:none;cursor:pointer;border:1px solid;border-radius:8px;padding:6px 10px;max-width:250px}
+  .pchip .pt{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:228px}
+  .pchip .pm{font-family:var(--mono);font-size:9.5px}
+  .d-clear{color:var(--green);font-size:12.5px}
+  .dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .dpanel{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .dpanel .ph{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:rgba(222,234,246,.05);border-bottom:1px solid rgba(222,234,246,.12)}
+  .dpanel .ph .t{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em}
+  .dpanel .ph .c{font-family:var(--mono);font-size:10px;color:var(--faint)}
+  .dpanel .pb{max-height:340px;overflow:auto;padding:6px 8px}
+  .drow{display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:7px;cursor:pointer}
+  .drow:hover{background:var(--ink3)}
+  .drow.done .dt{color:var(--faint);text-decoration:line-through}
+  .drow .dt{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @media (max-width:760px){.dgrid{grid-template-columns:1fr}}
+  @media (max-width:620px){header h1{font-size:15px}.clock{display:none}}
+</style>
+</head>
+<body>
+<div id="lock"></div>
+
+<div id="app" hidden>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="logo">CW</span><div><div class="bn">CISO Workspace</div><div class="ar" dir="rtl" lang="ar">مساحة العمل</div></div></div>
+      <nav class="nav">
+        <a href="#/dashboard" data-nav="dashboard">Dashboard</a>
+        <a href="#/records" data-nav="records">Records</a>
+        <a href="#/vendors" data-nav="vendors">Vendors</a>
+        <a href="#/risks" data-nav="risks">Risks</a>
+        <a href="#/tasks" data-nav="tasks">Tasks</a>
+        <a href="#/settings" data-nav="settings">Settings</a>
+      </nav>
+      <div class="sidefoot">
+        <span class="lockpill" id="lockpill" title="Vault encrypted with your passphrase (AES-GCM). Data at rest is ciphertext."><span class="dot"></span>ENCRYPTED</span>
+        <button class="btn ghost sm" data-action="lock">Lock vault</button>
+      </div>
+    </aside>
+    <section class="content">
+      <div class="topbar"><h2 id="pagetitle">Dashboard</h2><div class="topactions" id="topactions"></div></div>
+      <div id="stagebar"></div>
+      <div id="page"></div>
+    </section>
+  </div>
+</div>
+
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+
+<script>
+"use strict";
+/* ============================================================
+   CISO Workspace — v1 secure foundation
+   Modules: Vault · Store · Schema · Repo · Audit · Authz · App
+   Each module is a seam. The Store/Authz/Audit interfaces are
+   what a backend implements later (see SECURITY.md) — no rebuild.
+   ============================================================ */
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function uid(){return (crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36));}
+function now(){return new Date().toISOString();}
+function $(s,r){return (r||document).querySelector(s);}
+function ab2b64(buf){var b="",x=new Uint8Array(buf);for(var i=0;i<x.length;i++)b+=String.fromCharCode(x[i]);return btoa(b);}
+function b642ab(s){var bin=atob(s),x=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)x[i]=bin.charCodeAt(i);return x.buffer;}
+
+/* ---------- Vault: encryption at rest (WebCrypto) ---------- */
+var Vault=(function(){
+  var key=null,E=new TextEncoder(),D=new TextDecoder(),ITER=600000;
+  async function derive(pass,salt,iters){
+    var base=await crypto.subtle.importKey("raw",E.encode(pass),"PBKDF2",false,["deriveKey"]);
+    return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:iters||ITER,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+  }
+  async function enc(obj){
+    var iv=crypto.getRandomValues(new Uint8Array(12));
+    var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key,E.encode(JSON.stringify(obj)));
+    return {v:1,alg:"AES-GCM",iv:Array.from(iv),ct:ab2b64(ct)};
+  }
+  async function dec(rec){
+    var pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:new Uint8Array(rec.iv)},key,b642ab(rec.ct));
+    return JSON.parse(D.decode(pt));
+  }
+  async function decWith(rec,k){
+    var pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:new Uint8Array(rec.iv)},k,b642ab(rec.ct));
+    return JSON.parse(D.decode(pt));
+  }
+  return {ITER:ITER,derive:derive,enc:enc,dec:dec,decWith:decWith,set:function(k){key=k;},clear:function(){key=null;},ready:function(){return !!key;}};
+})();
+
+/* ---------- Store: persistence seam (IndexedDB, ls fallback) ---------- */
+var Store=(function(){
+  var DB="ciso_ws",VER=1,OS="vault",failed=false,mode="IndexedDB";
+  function idb(){return new Promise(function(res,rej){try{var r=indexedDB.open(DB,VER);r.onupgradeneeded=function(){r.result.createObjectStore(OS,{keyPath:"id"});};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};}catch(e){rej(e);}});}
+  async function lsGet(id){try{if(window.storage&&window.storage.get){var r=await window.storage.get("ws_"+id);return r?JSON.parse(r.value):null;}}catch(e){}try{var v=localStorage.getItem("ws_"+id);return v?JSON.parse(v):null;}catch(e){return null;}}
+  async function lsPut(rec){var s=JSON.stringify(rec);try{if(window.storage&&window.storage.set){await window.storage.set("ws_"+rec.id,s);return;}}catch(e){}try{localStorage.setItem("ws_"+rec.id,s);}catch(e){}}
+  async function lsClear(){var ids=["meta","data"];for(var i=0;i<ids.length;i++){try{if(window.storage&&window.storage.delete)await window.storage.delete("ws_"+ids[i]);}catch(e){}try{localStorage.removeItem("ws_"+ids[i]);}catch(e){}}}
+  async function get(id){if(!failed){try{var db=await idb();return await new Promise(function(res,rej){var t=db.transaction(OS,"readonly").objectStore(OS).get(id);t.onsuccess=function(){res(t.result||null);};t.onerror=function(){rej(t.error);};});}catch(e){failed=true;mode="local storage (fallback)";}}return lsGet(id);}
+  async function put(rec){if(!failed){try{var db=await idb();return await new Promise(function(res,rej){var tx=db.transaction(OS,"readwrite");tx.objectStore(OS).put(rec);tx.oncomplete=function(){res();};tx.onerror=function(){rej(tx.error);};});}catch(e){failed=true;mode="local storage (fallback)";}}return lsPut(rec);}
+  async function clearAll(){if(!failed){try{var db=await idb();await new Promise(function(res,rej){var tx=db.transaction(OS,"readwrite");tx.objectStore(OS).clear();tx.oncomplete=function(){res();};tx.onerror=function(){rej(tx.error);};});}catch(e){failed=true;}}await lsClear();}
+  return {get:get,put:put,clearAll:clearAll,mode:function(){return mode;}};
+})();
+
+/* ---------- Schema: types, validation, frameworks ---------- */
+var Schema={
+  types:[["document","Document"],["vendor","Vendor / processor"],["risk","Risk"],["project","Project"],["task","Task / deadline"],["person","Person (JML)"],["note","Note"]],
+  statuses:[["open","Open"],["progress","In progress"],["blocked","Blocked"],["done","Done"]],
+  severities:[["low","Low"],["med","Medium"],["high","High"],["crit","Critical"]],
+  frameworks:["PDPL","CMA","NCA ECC","ISO 27001","Internal"],
+  typeLabel:function(t){var f=this.types.filter(function(x){return x[0]===t;})[0];return f?f[1]:t;},
+  statusLabel:function(s){var f=this.statuses.filter(function(x){return x[0]===s;})[0];return f?f[1]:s;},
+  statusColor:function(s){return {open:"#7e90a8",progress:"#6fa3dd",blocked:"#d8685f",done:"#5fae86"}[s]||"#7e90a8";},
+  sevLabel:function(s){var f=this.severities.filter(function(x){return x[0]===s;})[0];return f?f[1]:s;},
+  sevColor:function(s){return {low:"#6cae86",med:"#d8c45f",high:"#e0915b",crit:"#d8685f"}[s]||"#d8c45f";},
+  validate:function(r){
+    var e=[];
+    if(!r.title||!String(r.title).trim())e.push("Title is required.");
+    if(String(r.title||"").length>200)e.push("Title is too long (max 200).");
+    if(!this.types.some(function(x){return x[0]===r.type;}))e.push("Invalid type.");
+    if(r.status&&!this.statuses.some(function(x){return x[0]===r.status;}))e.push("Invalid status.");
+    if(r.due&&isNaN(Date.parse(r.due)))e.push("Invalid date.");
+    if(r.type==="risk"&&r.severity&&!this.severities.some(function(x){return x[0]===r.severity;}))e.push("Invalid severity.");
+    if(String(r.note||"").length>5000)e.push("Notes too long (max 5000).");
+    return e;
+  }
+};
+
+/* ---------- Repo: CRUD over state ---------- */
+var Repo={
+  create:function(s,d){var r=Object.assign({id:uid(),type:"task",title:"",status:"open",severity:"",due:"",owner:"",note:"",complianceRefs:[],links:[]},d||{});r.createdAt=now();r.updatedAt=now();s.records.push(r);return r;},
+  update:function(s,id,d){var r=this.get(s,id);if(r){Object.assign(r,d);r.updatedAt=now();}return r;},
+  remove:function(s,id){s.records=s.records.filter(function(x){return x.id!==id;});s.records.forEach(function(x){x.links=(x.links||[]).filter(function(l){return l!==id;});});},
+  get:function(s,id){return s.records.filter(function(x){return x.id===id;})[0]||null;},
+  backlinks:function(s,id){return s.records.filter(function(x){return (x.links||[]).indexOf(id)>=0;});}
+};
+
+/* ---------- Audit: append-only activity log (local) ---------- */
+var Audit={log:function(s,action,detail){s.audit.push({ts:now(),action:action,detail:detail||""});if(s.audit.length>3000)s.audit=s.audit.slice(-3000);}};
+
+/* ---------- Authz: policy seam (single-user no-op; server enforces later) ---------- */
+var Authz={can:function(action,record){return true;}};
+
+/* ---------- App: UI controller ---------- */
+var App=(function(){
+  var state=null,editingId=null,work=null,saveTimer=null,idleTimer=null,vmeta=null,pendingRestore=null,view="dashboard";
+  var filter={type:"all",fw:"all",q:""};
+  var IDLE_MS=15*60*1000, MAX_IMPORT=25*1024*1024;
+  function denied(){alert("Not permitted by the current authorization policy.");}
+  function pwScore(p){var s=0;if(p.length>=14)s++;if(p.length>=20){s+=2;}else{var c=(/[a-z]/.test(p)?1:0)+(/[A-Z]/.test(p)?1:0)+(/\d/.test(p)?1:0)+(/[^A-Za-z0-9]/.test(p)?1:0);if(c>=3)s++;}return s;}
+  function pwLabel(p){if(p.length<14)return{pct:Math.min(Math.round(p.length/14*99),99),txt:"Too short — use 14+ characters",c:"#d8685f"};var s=pwScore(p);if(s>=3)return{pct:100,txt:"Strong",c:"#5fae86"};if(s>=2)return{pct:78,txt:"Good",c:"#6fa3dd"};return{pct:55,txt:"Weak — add length or variety",c:"#d8a24f"};}
+  function updateMeter(){var p=$("#vp").value,l=pwLabel(p),f=$("#pwfill"),lb=$("#pwlbl");if(f){f.style.width=l.pct+"%";f.style.background=l.c;}if(lb){lb.textContent=l.txt;lb.style.color=l.c;}}
+
+  /* lock screen */
+  function renderLock(first,errMsg){
+    $("#app").hidden=true;
+    var l=$("#lock");l.hidden=false;
+    l.innerHTML=
+      '<div class="vault">'
+      +'<h1>CISO Workspace<span class="ar" dir="rtl" lang="ar">مساحة العمل</span></h1>'
+      +'<p>'+(first?"Set a passphrase to create your encrypted vault. It never leaves this device and cannot be recovered if lost.":"Enter your passphrase to decrypt the local vault.")+'</p>'
+      +'<label for="vp">Passphrase</label><input id="vp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">'
+      +(first?'<div class="pwmeter" id="pwmeter"><div class="pwbar"><i id="pwfill"></i></div><span id="pwlbl">Use a passphrase of 14+ characters</span></div>':'')
+      +(first?'<label for="vp2">Confirm passphrase</label><input id="vp2" type="password" autocomplete="off">':'')
+      +'<div class="err" id="verr">'+esc(errMsg||"")+'</div>'
+      +'<button class="btn block" data-action="'+(first?"create":"unlock")+'">'+(first?"Create vault":"Unlock")+'</button>'
+      +'<div class="note">Encryption: AES-GCM-256, key derived from your passphrase (PBKDF2-SHA-256, '+Vault.ITER.toLocaleString()+' iterations, per current OWASP guidance). KDF parameters are stored with the vault so they can be raised later without breaking it. This protects data at rest on this device — it is not an access-control gate (that arrives with hosted auth). Nothing is uploaded.</div>'
+      +'</div>';
+    var ip=$("#vp");if(ip)ip.focus();
+    if(first&&ip)ip.addEventListener("input",updateMeter);
+  }
+
+  async function createVault(){
+    var p=$("#vp").value,p2=$("#vp2")?$("#vp2").value:"";
+    if(p.length<14){$("#verr").textContent="Use a passphrase of at least 14 characters.";return;}
+    if(pwScore(p)<2){$("#verr").textContent="Passphrase is too weak — add length, or mix in upper-case, digits and symbols.";return;}
+    if(p!==p2){$("#verr").textContent="Passphrases do not match.";return;}
+    var salt=crypto.getRandomValues(new Uint8Array(16));
+    var kdf={algo:"PBKDF2",hash:"SHA-256",iterations:Vault.ITER};
+    Vault.set(await Vault.derive(p,salt,kdf.iterations));
+    vmeta={salt:Array.from(salt),kdf:kdf,version:2,created:now()};
+    await Store.put(Object.assign({id:"meta"},vmeta));
+    state={records:[],audit:[],staging:[],meta:{version:2,created:now()}};
+    Audit.log(state,"vault.created","Encrypted vault initialised (PBKDF2 "+kdf.iterations.toLocaleString()+")");
+    await persist();startSession();
+  }
+  async function unlock(){
+    var p=$("#vp").value;if(!p){return;}
+    var m=await Store.get("meta");vmeta=m;
+    var iters=(m&&m.kdf&&m.kdf.iterations)||310000;
+    Vault.set(await Vault.derive(p,new Uint8Array(m.salt),iters));
+    var data=await Store.get("data");
+    if(!data||!data.enc){state={records:[],audit:[],staging:[],meta:{version:2}};}
+    else{try{state=await Vault.dec(data.enc);}catch(e){Vault.clear();renderLock(false,"Incorrect passphrase.");return;}}
+    if(!state.staging)state.staging=[];if(!state.audit)state.audit=[];
+    Audit.log(state,"vault.unlocked","");
+    await persist();startSession();
+  }
+  function lock(){
+    Vault.clear();state=null;clearTimeout(idleTimer);closeModal();
+    var p=$("#page");if(p)p.innerHTML="";var sb=$("#stagebar");if(sb)sb.innerHTML="";
+    if(location.hash!=="#/unlock")location.hash="#/unlock";
+    renderLock(false);
+  }
+
+  async function persist(){if(!Vault.ready()||!state)return;var enc=await Vault.enc(state);await Store.put({id:"data",enc:enc,updatedAt:now()});}
+  function save(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,250);resetIdle();}
+
+  function startSession(){
+    $("#lock").hidden=true;$("#app").hidden=false;
+    if(/^#\/(dashboard|records|vendors|risks|tasks|settings)$/.test(location.hash))route();
+    else location.hash="#/dashboard";
+    resetIdle();
+  }
+  function resetIdle(){clearTimeout(idleTimer);idleTimer=setTimeout(lock,IDLE_MS);}
+
+  /* ----- routing ----- */
+  var routeType=null;
+  function route(){
+    if(!Vault.ready())return;
+    var h=(location.hash||"").replace(/^#\/?/,"").split("/")[0]||"dashboard";
+    if(["dashboard","records","vendors","risks","tasks","settings"].indexOf(h)<0)h="dashboard";
+    view=h;renderNav();renderStaging();renderPage(h);
+    var c=$(".content");if(c)c.scrollTop=0;window.scrollTo(0,0);
+  }
+  function renderNav(){var n=$(".nav");if(!n)return;Array.prototype.forEach.call(n.querySelectorAll("a"),function(a){a.classList.toggle("on",a.getAttribute("data-nav")===view);});}
+  function render(){if(!Vault.ready())return;renderNav();renderStaging();renderPage(view);}
+  function renderPage(page){
+    routeType={vendors:"vendor",risks:"risk",tasks:"task"}[page]||null;
+    var titles={dashboard:"Dashboard",records:"All records",vendors:"Vendors & processors",risks:"Risk register",tasks:"Tasks & deadlines",settings:"Settings"};
+    $("#pagetitle").textContent=titles[page]||"Dashboard";
+    var ta="";
+    if(page==="dashboard")ta='<button class="btn ghost sm" data-action="activity">Activity</button>';
+    else if(page==="records")ta='<button class="btn sm" data-action="new">+ New record</button>';
+    else if(page==="vendors")ta='<button class="btn sm" data-action="new" data-type="vendor">+ New vendor</button>';
+    else if(page==="risks")ta='<button class="btn sm" data-action="new" data-type="risk">+ New risk</button>';
+    else if(page==="tasks")ta='<button class="btn sm" data-action="new" data-type="task">+ New task</button>';
+    $("#topactions").innerHTML=ta;
+    if(page==="dashboard")renderDashboard();
+    else if(page==="settings")renderSettings();
+    else renderRegister(page);
+  }
+
+  function dueTag(iso){if(!iso)return null;var t=new Date(iso+"T00:00:00");if(isNaN(t))return null;var n=new Date();n.setHours(0,0,0,0);var d=Math.round((t-n)/86400000);if(d<0)return{t:Math.abs(d)+"d ago",c:"over"};if(d===0)return{t:"today",c:"soon"};if(d<=7)return{t:"in "+d+"d",c:"soon"};return{t:iso.slice(5),c:""};}
+
+  var SEVRANK={crit:0,high:1,med:2,low:3};
+  function isOver(r){return r.status==="blocked"||r.severity==="crit"||(dueTag(r.due)||{}).c==="over";}
+  function isPending(r){if(r.status==="done")return false;if(r.status==="blocked")return true;if(r.type==="risk"&&(r.severity==="high"||r.severity==="crit"))return true;var dt=dueTag(r.due);return !!(dt&&(dt.c==="over"||dt.c==="soon"||dt.c==="today"));}
+  function renderDashboard(){
+    var R=state.records.filter(function(r){return Authz.can("read",r);});
+    var pend=R.filter(isPending).sort(function(a,b){var ao=isOver(a),bo=isOver(b);if(ao!==bo)return ao?-1:1;return recSort(a,b);});
+    var crit=pend.some(isOver);
+    var pendHTML;
+    if(pend.length){
+      pendHTML='<div class="d-pending '+(crit?"crit":"alert")+'"><div class="ptitle">NEEDS ATTENTION · '+pend.length+'</div><div class="pchips">'
+        +pend.map(function(r){var over=isOver(r),c=over?"var(--red)":"var(--amber)",dt=dueTag(r.due);var reason=r.status==="blocked"?"blocked":r.type==="risk"?("risk · "+Schema.sevLabel(r.severity||"med").toLowerCase()):((dt&&dt.t)||Schema.statusLabel(r.status));return '<div class="pchip" data-action="edit" data-id="'+r.id+'" style="border-color:'+c+'66;background:'+c+'14"><span class="pt">'+esc(r.title)+'</span><span class="pm" style="color:'+c+'">'+esc(Schema.typeLabel(r.type).split(" ")[0])+' · '+esc(reason)+'</span></div>';}).join("")
+        +'</div></div>';
+    }else{
+      pendHTML='<div class="d-pending"><div class="ptitle" style="color:var(--green)">NOTHING PENDING</div><div class="d-clear">No overdue, blocked, or high-risk items.</div></div>';
+    }
+    function rank(r){return SEVRANK[r.severity]==null?2:SEVRANK[r.severity];}
+    var risks=R.filter(function(r){return r.type==="risk";}).sort(function(a,b){return (rank(a)-rank(b))||recSort(a,b);});
+    var projects=R.filter(function(r){return r.type==="project";}).sort(recSort);
+    var tasks=R.filter(function(r){return r.type==="task";}).sort(recSort);
+    $("#page").innerHTML=pendHTML+'<div class="dgrid">'+dpanel("Risk register",risks)+dpanel("Projects",projects)+dpanel("Tasks &amp; due",tasks)+'</div>';
+  }
+  function dpanel(label,items){
+    var openN=items.filter(function(r){return r.status!=="done";}).length;
+    var rows=items.length?items.map(drow).join(""):'<div class="empty" style="padding:14px 4px">None.</div>';
+    return '<div class="dpanel"><div class="ph"><span class="t">'+label+'</span><span class="c">'+openN+' open</span></div><div class="pb">'+rows+'</div></div>';
+  }
+  function drow(r){
+    var dt=dueTag(r.due),sc=Schema.statusColor(r.status);
+    var lead=r.type==="risk"&&r.severity?'<span class="sev" style="color:'+Schema.sevColor(r.severity)+';background:'+Schema.sevColor(r.severity)+'1a;border-color:'+Schema.sevColor(r.severity)+'40">'+esc(Schema.sevLabel(r.severity).toUpperCase())+'</span>':'<span class="pill" style="color:'+sc+';background:'+sc+'1a;border-color:'+sc+'40"><span class="dot" style="background:'+sc+'"></span>'+esc(Schema.statusLabel(r.status))+'</span>';
+    return '<div class="drow '+(r.status==="done"?"done":"")+'" data-action="edit" data-id="'+r.id+'" title="'+esc(r.note||"")+'">'+lead+'<span class="dt">'+esc(r.title)+'</span>'+(dt?'<span class="due '+dt.c+'">'+esc(dt.t)+'</span>':'')+'</div>';
+  }
+
+  function renderStaging(){
+    var n=state.staging.length;
+    $("#stagebar").innerHTML=n?'<div class="banner"><span>'+n+' imported record(s) awaiting review — untrusted until you commit.</span><span class="spacer"></span><button class="btn sm" data-action="stage-open">Review</button></div>':"";
+  }
+
+  function matches(r,fixedType){
+    if(fixedType){if(r.type!==fixedType)return false;}
+    else if(filter.type!=="all"&&r.type!==filter.type)return false;
+    if(filter.fw!=="all"&&!(r.complianceRefs||[]).some(function(c){return c.fw===filter.fw;}))return false;
+    if(filter.q){var q=filter.q.toLowerCase();if((r.title||"").toLowerCase().indexOf(q)<0&&(r.note||"").toLowerCase().indexOf(q)<0)return false;}
+    return true;
+  }
+  function recSort(a,b){
+    if((a.status==="done")!==(b.status==="done"))return a.status==="done"?1:-1;
+    var da=a.due?Date.parse(a.due):Infinity,db=b.due?Date.parse(b.due):Infinity;
+    if(da!==db)return da-db;
+    return (b.updatedAt||"").localeCompare(a.updatedAt||"");
+  }
+  function renderRegister(page){
+    var showType=(page==="records");
+    var tb='<div class="toolbar">'
+      +(showType?('<select id="ftype"><option value="all">All types</option>'+Schema.types.map(function(t){return '<option value="'+t[0]+'"'+(filter.type===t[0]?" selected":"")+'>'+esc(t[1])+'</option>';}).join("")+'</select>'):'')
+      +'<select id="ffw"><option value="all">All frameworks</option>'+Schema.frameworks.map(function(f){return '<option value="'+esc(f)+'"'+(filter.fw===f?" selected":"")+'>'+esc(f)+'</option>';}).join("")+'</select>'
+      +'<input id="fq" placeholder="Search title or notes…" value="'+esc(filter.q||"")+'">'
+      +'</div>';
+    $("#page").innerHTML=tb+'<div class="list" id="list"></div>';
+    renderRows();
+  }
+  function renderRows(){
+    var rows=state.records.filter(function(r){return Authz.can("read",r);}).filter(function(r){return matches(r,routeType);}).sort(recSort);
+    var list=$("#list");if(!list)return;
+    if(!rows.length){
+      var msg=routeType?("No "+routeType+" records yet — add one with the button above.")
+        :(state.records.length?"No records match the filter.":"No records yet. Add your first with “+ New record”.");
+      list.innerHTML='<div class="empty">'+esc(msg)+'</div>';return;
+    }
+    list.innerHTML=rows.map(recCard).join("");
+  }
+  function recCard(r){
+    var dt=dueTag(r.due);
+    var lead=r.type==="risk"&&r.severity?'<span class="sev" style="color:'+Schema.sevColor(r.severity)+';background:'+Schema.sevColor(r.severity)+'1a;border-color:'+Schema.sevColor(r.severity)+'40">'+esc(Schema.sevLabel(r.severity).toUpperCase())+'</span>':'';
+    var sc=Schema.statusColor(r.status);
+    var tags=(r.complianceRefs||[]).map(function(c){return '<span class="ctag">'+esc(c.fw)+(c.ref?' '+esc(c.ref):'')+'</span>';}).join("");
+    var nl=(r.links||[]).length;
+    return '<div class="rec '+(r.status==="done"?"done":"")+'" data-action="edit" data-id="'+r.id+'">'
+      +'<div class="rline"><span class="ttag">'+esc(r.type)+'</span>'+lead
+      +'<span class="rtitle">'+esc(r.title)+'</span>'
+      +'<span class="pill" style="color:'+sc+';background:'+sc+'1a;border-color:'+sc+'40"><span class="dot" style="background:'+sc+'"></span>'+esc(Schema.statusLabel(r.status))+'</span>'
+      +(dt?'<span class="due '+dt.c+'">'+esc(dt.t)+'</span>':'')+'</div>'
+      +((tags||nl)?'<div class="meta2">'+tags+(nl?'<span class="lk">'+nl+' linked</span>':'')+'</div>':'')
+      +'</div>';
+  }
+  function renderSettings(){
+    var kdf=(vmeta&&vmeta.kdf)||{hash:"SHA-256",iterations:Vault.ITER};
+    var created=(vmeta&&vmeta.created)?new Date(vmeta.created).toLocaleString():"—";
+    $("#page").innerHTML=
+      '<div class="card"><h3>Vault &amp; backup</h3>'
+      +'<p class="muted">Back up regularly. Backups are encrypted with your passphrase and restore independently of this device — after device loss, in a new browser, or into a fresh vault.</p>'
+      +'<div class="srow"><button class="btn sm" data-action="backup">Export encrypted backup</button>'
+      +'<label class="btn ghost sm" style="display:inline-block"><input type="file" id="restorein" accept="application/json" style="display:none">Restore from backup</label>'
+      +'<button class="btn ghost sm" data-action="activity">Activity log</button>'
+      +'<button class="btn ghost sm danger" data-action="lock">Lock vault</button></div></div>'
+      +'<div class="card"><h3>Security</h3><table class="kv">'
+      +'<tr><td>Encryption</td><td>AES-GCM-256 (data at rest on this device)</td></tr>'
+      +'<tr><td>Key derivation</td><td>PBKDF2-'+esc(kdf.hash||"SHA-256")+' · '+(kdf.iterations||Vault.ITER).toLocaleString()+' iterations</td></tr>'
+      +'<tr><td>Storage backend</td><td>'+esc(Store.mode())+'</td></tr>'
+      +'<tr><td>Vault created</td><td>'+esc(created)+'</td></tr>'
+      +'<tr><td>Records held</td><td>'+state.records.length+'</td></tr>'
+      +'<tr><td>Auto-lock</td><td>After 15 minutes idle</td></tr>'
+      +'</table>'
+      +'<p class="muted" style="margin-top:10px">The passphrase unlocks local encryption — it is not an access-control gate. Real authentication, roles, and tamper-proof audit arrive with the hosted backend phase.</p></div>';
+  }
+
+  /* ----- record modal ----- */
+  function openModal(id,presetType){
+    var r=id?Repo.get(state,id):null;
+    editingId=id||null;
+    var nt=presetType||"task";
+    work={refs:r?JSON.parse(JSON.stringify(r.complianceRefs||[])):[],links:r?(r.links||[]).slice():[]};
+    $("#sheet").innerHTML=
+      '<div class="mhead"><span>'+(r?"Edit record":"New record")+'</span><button class="x" data-action="m-close">×</button></div>'
+      +'<label for="f-title">Title</label><input id="f-title" maxlength="200" value="'+esc(r?r.title:"")+'">'
+      +'<div class="frow"><div><label for="f-type">Type</label><select id="f-type">'+Schema.types.map(function(t){return '<option value="'+t[0]+'"'+((r?r.type===t[0]:t[0]===nt)?' selected':'')+'>'+esc(t[1])+'</option>';}).join("")+'</select></div>'
+      +'<div><label for="f-status">Status</label><select id="f-status">'+Schema.statuses.map(function(s){return '<option value="'+s[0]+'"'+(r&&r.status===s[0]?' selected':'')+'>'+esc(s[1])+'</option>';}).join("")+'</select></div></div>'
+      +'<div class="frow"><div><label for="f-due">Due / review date</label><input type="date" id="f-due" value="'+esc(r?r.due:"")+'"></div>'
+      +'<div><label for="f-owner">Owner</label><input id="f-owner" maxlength="80" value="'+esc(r?r.owner:"")+'"></div></div>'
+      +'<div id="f-sevwrap" style="display:'+(((r&&r.type==="risk")||(!r&&nt==="risk"))?"block":"none")+'"><label for="f-sev">Severity</label><select id="f-sev">'+Schema.severities.map(function(s){return '<option value="'+s[0]+'"'+(r&&r.severity===s[0]?' selected':'')+'>'+esc(s[1])+'</option>';}).join("")+'</select></div>'
+      +'<div class="seclabel">Compliance / evidence tags</div>'
+      +'<div class="frow tight"><div><select id="cf-fw">'+Schema.frameworks.map(function(f){return '<option value="'+esc(f)+'">'+esc(f)+'</option>';}).join("")+'</select></div>'
+      +'<div style="flex:1.4"><input id="cf-ref" maxlength="60" placeholder="reference — e.g. Art. 17, ECC 2-3-1, A.5.1"></div>'
+      +'<button class="btn ghost sm" data-action="cf-add">Tag</button></div>'
+      +'<div class="chips" id="cf-list"></div>'
+      +'<div class="seclabel">Linked records</div>'
+      +'<div class="frow tight"><div><select id="lk-sel"></select></div><button class="btn ghost sm" data-action="lk-add">Link</button></div>'
+      +'<div id="lk-list"></div>'
+      +'<label for="f-note">Notes</label><textarea id="f-note" maxlength="5000">'+esc(r?r.note:"")+'</textarea>'
+      +(r?'<div class="backlinks" id="backlinks"></div>':'')
+      +'<div class="errbox" id="m-err"></div>'
+      +'<div class="mfoot">'+(r?'<button class="btn ghost sm danger" data-action="m-del">Delete</button>':'')+'<span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Cancel</button><button class="btn sm" data-action="m-save">Save</button></div>';
+    renderRefs();renderLinkSel();renderLinks();
+    if(r)renderBacklinks(r.id);
+    $("#f-type").addEventListener("change",function(){$("#f-sevwrap").style.display=this.value==="risk"?"block":"none";});
+    $("#modal").classList.add("open");$("#f-title").focus();
+  }
+  function renderRefs(){
+    $("#cf-list").innerHTML=work.refs.length?work.refs.map(function(c,i){return '<span class="chip"><b>'+esc(c.fw)+'</b>'+(c.ref?' '+esc(c.ref):'')+'<button data-action="cf-del" data-i="'+i+'" aria-label="remove">×</button></span>';}).join(""):'<span class="lk" style="color:var(--faint);font-size:11px">No tags yet — link this to PDPL, CMA, NCA ECC, ISO 27001 or an internal control.</span>';
+  }
+  function renderLinkSel(){
+    var opts=state.records.filter(function(x){return x.id!==editingId&&work.links.indexOf(x.id)<0;}).map(function(x){return '<option value="'+x.id+'">'+esc(Schema.typeLabel(x.type))+": "+esc(x.title)+'</option>';}).join("");
+    $("#lk-sel").innerHTML=opts||'<option value="">— no other records —</option>';
+  }
+  function renderLinks(){
+    $("#lk-list").innerHTML=work.links.length?work.links.map(function(id){var t=Repo.get(state,id);return '<div class="linkitem"><span class="ttag">'+esc(t?t.type:"?")+'</span><span class="lt">'+esc(t?t.title:"(missing)")+'</span><button class="x" data-action="lk-del" data-id="'+id+'" style="font-size:16px">×</button></div>';}).join(""):'<span class="lk" style="color:var(--faint);font-size:11px">Not linked to anything yet.</span>';
+  }
+  function renderBacklinks(id){var bl=Repo.backlinks(state,id);$("#backlinks").innerHTML=bl.length?'Referenced by: '+bl.map(function(x){return esc(x.title);}).join(", "):"";}
+
+  function saveModal(){
+    var data={
+      title:$("#f-title").value.trim(),type:$("#f-type").value,status:$("#f-status").value,
+      due:$("#f-due").value,owner:$("#f-owner").value.trim(),note:$("#f-note").value.trim(),
+      severity:$("#f-type").value==="risk"?$("#f-sev").value:"",
+      complianceRefs:work.refs,links:work.links
+    };
+    var errs=Schema.validate(data);
+    if(errs.length){$("#m-err").innerHTML=errs.map(esc).join("<br>");return;}
+    if(!Authz.can(editingId?"update":"create",data)){denied();return;}
+    if(editingId){Repo.update(state,editingId,data);Audit.log(state,"record.update",data.type+": "+data.title);}
+    else{var r=Repo.create(state,data);Audit.log(state,"record.create",data.type+": "+data.title);editingId=r.id;}
+    closeModal();render();save();
+  }
+  function delRecord(){if(!editingId)return;var r=Repo.get(state,editingId);if(!Authz.can("delete",r)){denied();return;}if(!confirm("Delete this record? This also removes links to it."))return;Repo.remove(state,editingId);Audit.log(state,"record.delete",(r?r.type+": "+r.title:""));closeModal();render();save();}
+  function closeModal(){$("#modal").classList.remove("open");editingId=null;work=null;pendingRestore=null;}
+
+  /* ----- activity ----- */
+  function openActivity(){
+    var items=state.audit.slice().reverse().slice(0,300);
+    $("#sheet").innerHTML='<div class="mhead"><span>Activity log</span><button class="x" data-action="m-close">×</button></div>'
+      +'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:8px">Append-only. Trustworthy to the extent this device is trusted; a tamper-evident server audit arrives with hosting.</div>'
+      +(items.length?items.map(function(a){return '<div class="ae"><span class="at">'+esc(new Date(a.ts).toLocaleString())+'</span> · '+esc(a.action)+(a.detail?' — '+esc(a.detail):'')+'</div>';}).join(""):'<div class="empty">No activity yet.</div>');
+    $("#modal").classList.add("open");
+  }
+
+  /* ----- staging review ----- */
+  function openStaging(){
+    var s=state.staging;
+    $("#sheet").innerHTML='<div class="mhead"><span>Review imported records</span><button class="x" data-action="m-close">×</button></div>'
+      +'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:8px">Imported data is untrusted until committed. Review, then commit or discard.</div>'
+      +(s.length?s.map(function(it,i){return '<div class="linkitem"><span class="ttag">'+esc(it.type||"task")+'</span><span class="lt">'+esc(it.title||"(no title)")+'</span><button class="btn sm" data-action="stage-commit" data-i="'+i+'">Commit</button> <button class="x" data-action="stage-discard" data-i="'+i+'" style="font-size:16px">×</button></div>';}).join(""):'<div class="empty">Nothing staged.</div>')
+      +(s.length?'<div class="mfoot"><button class="btn ghost sm danger" data-action="stage-clear">Discard all</button><span class="spacer"></span><button class="btn sm" data-action="stage-commitall">Commit all</button></div>':'');
+    $("#modal").classList.add("open");
+  }
+  function commitStaged(i){var it=state.staging[i];if(!it)return;if(!Authz.can("create",it)){denied();return;}Repo.create(state,sanitizeImport(it));state.staging.splice(i,1);Audit.log(state,"import.commit",(it.title||""));openStaging();render();save();}
+  function commitAllStaged(){if(!Authz.can("create",null)){denied();return;}state.staging.forEach(function(it){Repo.create(state,sanitizeImport(it));});Audit.log(state,"import.commit_all",state.staging.length+" records");state.staging=[];closeModal();render();save();}
+  function sanitizeImport(it){
+    return {
+      title:String(it.title||"").slice(0,200),
+      type:Schema.types.some(function(x){return x[0]===it.type;})?it.type:"note",
+      status:Schema.statuses.some(function(x){return x[0]===it.status;})?it.status:"open",
+      due:(it.due&&!isNaN(Date.parse(it.due)))?String(it.due).slice(0,10):"",
+      owner:String(it.owner||"").slice(0,80),
+      note:String(it.note||"").slice(0,5000),
+      severity:"",complianceRefs:[],links:[]
+    };
+  }
+
+  /* ----- backup / restore ----- */
+  async function backup(){
+    if(!Authz.can("export",null)){denied();return;}
+    var enc=await Vault.enc(state);
+    var out={format:"ciso-ws-backup",v:2,encrypted:true,exported:now(),kdf:(vmeta&&vmeta.kdf)||{algo:"PBKDF2",hash:"SHA-256",iterations:Vault.ITER},salt:(vmeta&&vmeta.salt)||null,payload:enc};
+    var blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
+    var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="ciso-ws-backup-"+now().slice(0,10)+".enc.json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);
+    Audit.log(state,"backup.export","encrypted");save();
+  }
+  function stageRecords(recs){
+    if(!recs||!recs.length){alert("No records found in that backup.");return;}
+    if(!Authz.can("import",null)){denied();return;}
+    if(!confirm(recs.length+" record(s) found. They will be staged for review, not merged directly. Continue?"))return;
+    recs.forEach(function(r){state.staging.push(r);});
+    Audit.log(state,"import.restore_staged",recs.length+" records");
+    render();save();openStaging();
+  }
+  function restore(file){
+    if(file.size>MAX_IMPORT){alert("This file is "+(file.size/1048576).toFixed(1)+" MB and exceeds the v1 import limit (25 MB). Streamed large-file handling arrives in stage 2.");return;}
+    var rd=new FileReader();
+    rd.onload=function(){
+      var obj;try{obj=JSON.parse(rd.result);}catch(e){alert("That file is not valid JSON.");return;}
+      if(obj&&obj.payload&&obj.payload.ct&&obj.salt){
+        pendingRestore=obj;openRestore();
+      }else if(obj&&obj.state&&Array.isArray(obj.state.records)){
+        if(!confirm("This is an UNENCRYPTED backup. New backups are encrypted by default. Import it anyway?"))return;
+        stageRecords(obj.state.records);
+      }else if(obj&&Array.isArray(obj.records)){
+        stageRecords(obj.records);
+      }else{alert("This does not look like a workspace backup.");}
+    };
+    rd.readAsText(file);
+  }
+  function openRestore(){
+    $("#sheet").innerHTML='<div class="mhead"><span>Restore encrypted backup</span><button class="x" data-action="m-close">×</button></div>'
+      +'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:8px">Enter the passphrase this backup was created with. It is decrypted using the backup\u2019s own salt and KDF parameters \u2014 independent of your current vault \u2014 so it restores after device loss, in a new browser, or into a fresh vault.</div>'
+      +'<label for="rp">Backup passphrase</label><input id="rp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">'
+      +'<div class="errbox" id="r-err"></div>'
+      +'<div class="mfoot"><span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Cancel</button><button class="btn sm" data-action="restore-decrypt">Decrypt &amp; stage</button></div>';
+    $("#modal").classList.add("open");var ip=$("#rp");if(ip)ip.focus();
+  }
+  async function restoreDecrypt(){
+    if(!pendingRestore){closeModal();return;}
+    var p=$("#rp").value;if(!p){$("#r-err").textContent="Enter the backup passphrase.";return;}
+    var b=pendingRestore,iters=(b.kdf&&b.kdf.iterations)||600000;
+    try{
+      var k=await Vault.derive(p,new Uint8Array(b.salt),iters);
+      var d=await Vault.decWith(b.payload,k);
+      var recs=(d&&Array.isArray(d.records))?d.records:null;
+      if(!recs){$("#r-err").textContent="Decrypted, but no records were found in this backup.";return;}
+      pendingRestore=null;closeModal();stageRecords(recs);
+    }catch(e){$("#r-err").textContent="Incorrect passphrase, or the backup is corrupt.";}
+  }
+
+  /* ----- events ----- */
+  function onClick(e){
+    var t=e.target.closest("[data-action]");if(!t)return;
+    var a=t.getAttribute("data-action"),id=t.getAttribute("data-id"),i=t.getAttribute("data-i");
+    if(a==="create"){createVault();return;}
+    if(a==="unlock"){unlock();return;}
+    if(a==="lock"){lock();return;}
+    if(!Vault.ready())return;
+    if(a==="new"){openModal(null,t.getAttribute("data-type")||null);return;}
+    if(a==="edit"){openModal(id);return;}
+    if(a==="m-close"){closeModal();return;}
+    if(a==="m-save"){saveModal();return;}
+    if(a==="m-del"){delRecord();return;}
+    if(a==="cf-add"){var fw=$("#cf-fw").value,ref=$("#cf-ref").value.trim().slice(0,60);work.refs.push({fw:fw,ref:ref});$("#cf-ref").value="";renderRefs();return;}
+    if(a==="cf-del"){work.refs.splice(+i,1);renderRefs();return;}
+    if(a==="lk-add"){var v=$("#lk-sel").value;if(v){work.links.push(v);renderLinkSel();renderLinks();}return;}
+    if(a==="lk-del"){work.links=work.links.filter(function(x){return x!==id;});renderLinkSel();renderLinks();return;}
+    if(a==="activity"){openActivity();return;}
+    if(a==="backup"){backup();return;}
+    if(a==="restore-decrypt"){restoreDecrypt();return;}
+    if(a==="stage-open"){openStaging();return;}
+    if(a==="stage-commit"){commitStaged(+i);return;}
+    if(a==="stage-commitall"){commitAllStaged();return;}
+    if(a==="stage-discard"){state.staging.splice(+i,1);Audit.log(state,"import.discard","");openStaging();render();save();return;}
+    if(a==="stage-clear"){if(confirm("Discard all staged records?")){state.staging=[];closeModal();render();save();}return;}
+  }
+
+  function boot(){
+    document.addEventListener("click",onClick);
+    window.addEventListener("hashchange",route);
+    document.addEventListener("input",function(e){if(e.target&&e.target.id==="fq"){filter.q=e.target.value;renderRows();}});
+    document.addEventListener("change",function(e){
+      if(!e.target)return;
+      if(e.target.id==="ftype"){filter.type=e.target.value;renderRows();return;}
+      if(e.target.id==="ffw"){filter.fw=e.target.value;renderRows();return;}
+      if(e.target.id==="restorein"){var f=e.target.files&&e.target.files[0];e.target.value="";if(f)restore(f);return;}
+    });
+    ["mousemove","keydown","click","touchstart"].forEach(function(ev){document.addEventListener(ev,function(){if(Vault.ready())resetIdle();},{passive:true});});
+    Store.get("meta").then(function(meta){renderLock(!meta);});
+  }
+  return {boot:boot};
+})();
+
+/* the persisted 'data' record wraps the encrypted payload under .enc */
+App.boot();
+</script>
+</body>
+</html>
