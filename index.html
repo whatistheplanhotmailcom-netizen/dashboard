@@ -14,6 +14,7 @@
     --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;--r:9px;
   }
   *{box-sizing:border-box}
+  [hidden]{display:none!important}
   html,body{height:100%;margin:0}
   body{background:radial-gradient(1000px 480px at 82% -12%,rgba(143,184,232,.08),transparent 60%),var(--ink);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.45}
   button,input,select,textarea{font-family:inherit}
@@ -119,6 +120,8 @@
   .topactions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
   .card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:12px}
   .card h3{margin:0 0 4px;font-size:15px;font-weight:650}
+  .card.danger-zone{border-color:rgba(216,104,95,.45);background:rgba(216,104,95,.05)}
+  .card.danger-zone h3{color:var(--red)}
   .muted{color:var(--muted);font-size:12.5px}
   .srow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
   .kv{width:100%;font-size:13px;border-collapse:collapse;margin-top:4px}
@@ -346,6 +349,18 @@ var App=(function(){
     renderLock(false);
   }
 
+  async function wipeAll(){
+    if(!confirm("Permanently DELETE the vault, all records, and metadata from this browser?\n\nThis cannot be undone. If you have not exported an encrypted backup, the data is gone for good."))return;
+    if(!confirm("Final confirmation — wipe everything from this device now?"))return;
+    await Store.clearAll();
+    Vault.clear();state=null;vmeta=null;
+    clearTimeout(saveTimer);clearTimeout(idleTimer);
+    closeModal();
+    var p=$("#page");if(p)p.innerHTML="";var sb=$("#stagebar");if(sb)sb.innerHTML="";
+    if(location.hash!=="#/unlock")location.hash="#/unlock";
+    renderLock(true);
+  }
+
   async function persist(){if(!Vault.ready()||!state)return;var enc=await Vault.enc(state);await Store.put({id:"data",enc:enc,updatedAt:now()});}
   function save(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,250);resetIdle();}
 
@@ -488,7 +503,10 @@ var App=(function(){
       +'<tr><td>Records held</td><td>'+state.records.length+'</td></tr>'
       +'<tr><td>Auto-lock</td><td>After 15 minutes idle</td></tr>'
       +'</table>'
-      +'<p class="muted" style="margin-top:10px">The passphrase unlocks local encryption — it is not an access-control gate. Real authentication, roles, and tamper-proof audit arrive with the hosted backend phase.</p></div>';
+      +'<p class="muted" style="margin-top:10px">The passphrase unlocks local encryption — it is not an access-control gate. Real authentication, roles, and tamper-proof audit arrive with the hosted backend phase.</p></div>'
+      +'<div class="card danger-zone"><h3>Danger zone</h3>'
+      +'<p class="muted">Permanently delete the vault, all records, and metadata from this browser. This cannot be undone and there is no recovery without a backup — export the encrypted backup above first.</p>'
+      +'<div class="srow"><button class="btn sm danger" data-action="wipe">Wipe all data from this device</button></div></div>';
   }
 
   /* ----- record modal ----- */
@@ -644,6 +662,7 @@ var App=(function(){
     if(a==="create"){createVault();return;}
     if(a==="unlock"){unlock();return;}
     if(a==="lock"){lock();return;}
+    if(a==="wipe"){wipeAll();return;}
     if(!Vault.ready())return;
     if(a==="new"){openModal(null,t.getAttribute("data-type")||null);return;}
     if(a==="edit"){openModal(id);return;}
