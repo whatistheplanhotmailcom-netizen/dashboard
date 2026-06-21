@@ -129,6 +129,9 @@
   .ftab:hover{color:var(--text);border-color:var(--accent)}
   .ftab.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
   .exbadge{font-family:var(--mono);font-size:8.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--green);background:rgba(95,174,134,.12);border:1px solid rgba(95,174,134,.35);border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle}
+  .metafoot{margin-top:12px;border-top:1px solid var(--line2);padding-top:8px;font-family:var(--mono);font-size:10px;color:var(--faint);line-height:1.7}
+  .card input{width:100%;background:var(--ink3);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13.5px;outline:none}
+  .card input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(143,184,232,.12)}
   .card.danger-zone{border-color:rgba(216,104,95,.45);background:rgba(216,104,95,.05)}
   .card.danger-zone h3{color:var(--red)}
   .muted{color:var(--muted);font-size:12.5px}
@@ -216,6 +219,15 @@ function now(){return new Date().toISOString();}
 function $(s,r){return (r||document).querySelector(s);}
 function ab2b64(buf){var b="",x=new Uint8Array(buf);for(var i=0;i<x.length;i++)b+=String.fromCharCode(x[i]);return btoa(b);}
 function b642ab(s){var bin=atob(s),x=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)x[i]=bin.charCodeAt(i);return x.buffer;}
+var APP_VERSION="1.0";
+/* ISO-8601 timestamp WITH local timezone offset, e.g. 2026-06-21T14:33:07+03:00 */
+function nowTZ(){var d=new Date(),off=-d.getTimezoneOffset(),s=off>=0?"+":"-",a=Math.abs(off);function p(n){return ("0"+n).slice(-2);}return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds())+s+p((a/60)|0)+":"+p(a%60);}
+function fmtTs(ts){if(!ts)return "—";var d=new Date(ts);return isNaN(d.getTime())?String(ts):d.toLocaleString();}
+/* SHA-256 hex via WebCrypto (used only for the advisory log hash-chain — not the Vault) */
+async function sha256hex(str){var buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));var x=new Uint8Array(buf),h="";for(var i=0;i<x.length;i++)h+=("0"+x[i].toString(16)).slice(-2);return h;}
+/* Self-reported device label from the UA string — NOT attested */
+function deviceLabelFromUA(ua){ua=ua||"";var os="Unknown OS";if(/Windows/.test(ua))os="Windows";else if(/Mac OS X/.test(ua))os="macOS";else if(/Android/.test(ua))os="Android";else if(/(iPhone|iPad|iPod)/.test(ua))os="iOS";else if(/CrOS/.test(ua))os="ChromeOS";else if(/Linux/.test(ua))os="Linux";var br="Browser";if(/Edg\//.test(ua))br="Edge";else if(/OPR\//.test(ua)||/Opera/.test(ua))br="Opera";else if(/Firefox\//.test(ua))br="Firefox";else if(/Chrome\//.test(ua)&&!/Chromium/.test(ua))br="Chrome";else if(/Safari\//.test(ua)&&/Version\//.test(ua))br="Safari";return os+" — "+br;}
+
 
 /* ---------- Vault: encryption at rest (WebCrypto) ---------- */
 var Vault=(function(){
@@ -345,15 +357,50 @@ var FORM_TYPES={
 
 /* ---------- Repo: CRUD over state ---------- */
 var Repo={
-  create:function(s,d){var r=Object.assign({id:uid(),type:"task",title:"",status:"open",severity:"",due:"",owner:"",note:"",complianceRefs:[],links:[]},d||{});r.createdAt=now();r.updatedAt=now();s.records.push(r);return r;},
-  update:function(s,id,d){var r=this.get(s,id);if(r){Object.assign(r,d);r.updatedAt=now();}return r;},
+  create:function(s,d){var r=Object.assign({id:uid(),type:"task",title:"",status:"open",severity:"",due:"",owner:"",note:"",complianceRefs:[],links:[]},d||{});var dev=(s.meta&&s.meta.deviceId)||"";r.createdAt=now();r.updatedAt=now();r.createdBy=dev;r.updatedBy=dev;s.records.push(r);return r;},
+  update:function(s,id,d){var r=this.get(s,id);if(r){Object.assign(r,d);r.updatedAt=now();r.updatedBy=(s.meta&&s.meta.deviceId)||"";}return r;},
   remove:function(s,id){s.records=s.records.filter(function(x){return x.id!==id;});s.records.forEach(function(x){x.links=(x.links||[]).filter(function(l){return l!==id;});});},
   get:function(s,id){return s.records.filter(function(x){return x.id===id;})[0]||null;},
   backlinks:function(s,id){return s.records.filter(function(x){return (x.links||[]).indexOf(id)>=0;});}
 };
 
-/* ---------- Audit: append-only activity log (local) ---------- */
-var Audit={log:function(s,action,detail){s.audit.push({ts:now(),action:action,detail:detail||""});if(s.audit.length>3000)s.audit=s.audit.slice(-3000);}};
+/* ---------- Audit: append-only LOCAL activity log (advisory, not tamper-proof) ----------
+   Entries are hash-chained (SHA-256 of the previous entry over canonical JSON).
+   HONEST LIMITATION: this detects casual tampering (an edited/removed entry breaks
+   the chain), but it is NOT proof against an attacker who controls the app code and
+   can recompute the whole chain. Immutable, evidential audit requires a server.
+   The signature is extended (action,target,details) — not parallel logging. */
+var Audit=(function(){
+  var MAX=5000;
+  function canon(e){return JSON.stringify([e.ts,e.action,e.target||null,e.details||"",e.deviceId||"",e.deviceLabel||"",e.prevHash||null]);}
+  function log(s,action,target,details){
+    var m=s.meta||{};
+    var e={ts:nowTZ(),action:action,target:target||null,details:details||"",deviceId:m.deviceId||"",deviceLabel:m.deviceLabel||"",prevHash:null,hash:null};
+    s.audit.push(e);
+    if(s.audit.length>MAX)s.audit=s.audit.slice(-MAX);
+    return e;
+  }
+  /* assign prevHash + hash to any unsealed tail entries (called before each persist) */
+  async function seal(s){
+    if(!s||!s.audit)return;
+    var prev=null,i=0;
+    for(i=0;i<s.audit.length;i++){if(s.audit[i].hash)prev=s.audit[i].hash;else break;}
+    for(;i<s.audit.length;i++){var e=s.audit[i];e.prevHash=prev;e.hash=await sha256hex(canon(e));prev=e.hash;}
+  }
+  /* recompute the chain and report the first break, if any */
+  async function verify(s){
+    if(!s||!s.audit||!s.audit.length)return {ok:true,count:0,brokenAt:-1};
+    var prev=null;
+    for(var i=0;i<s.audit.length;i++){
+      var e=s.audit[i];
+      if((e.prevHash||null)!==prev)return {ok:false,count:s.audit.length,brokenAt:i,reason:"chain link"};
+      if(e.hash!==await sha256hex(canon(e)))return {ok:false,count:s.audit.length,brokenAt:i,reason:"content hash"};
+      prev=e.hash;
+    }
+    return {ok:true,count:s.audit.length,brokenAt:-1};
+  }
+  return {log:log,seal:seal,verify:verify};
+})();
 
 /* ---------- Authz: policy seam (single-user no-op; server enforces later) ---------- */
 var Authz={can:function(action,record){return true;}};
@@ -363,6 +410,7 @@ var App=(function(){
   var state=null,editingId=null,work=null,saveTimer=null,idleTimer=null,vmeta=null,pendingRestore=null,view="dashboard";
   var formSel=null,fType=null,fEditId=null,emailDraft=null,_pdflibP=null;
   var filter={type:"all",fw:"all",q:""};
+  var actFilter={action:"all",from:"",to:""};
   var IDLE_MS=15*60*1000, MAX_IMPORT=25*1024*1024;
   function denied(){alert("Not permitted by the current authorization policy.");}
   function pwScore(p){var s=0;if(p.length>=14)s++;if(p.length>=20){s+=2;}else{var c=(/[a-z]/.test(p)?1:0)+(/[A-Z]/.test(p)?1:0)+(/\d/.test(p)?1:0)+(/[^A-Za-z0-9]/.test(p)?1:0);if(c>=3)s++;}return s;}
@@ -404,8 +452,9 @@ var App=(function(){
     Vault.set(await Vault.derive(p,salt,kdf.iterations));
     vmeta={salt:Array.from(salt),kdf:kdf,version:2,created:now()};
     await Store.put(Object.assign({id:"meta"},vmeta));
-    state={records:[],audit:[],staging:[],meta:{version:2,created:now()}};
-    Audit.log(state,"vault.created","Encrypted vault initialised (PBKDF2 "+kdf.iterations.toLocaleString()+")");
+    var dev=(crypto.randomUUID?crypto.randomUUID():uid()),label=deviceLabelFromUA(navigator.userAgent),names={};names[dev]=label;
+    state={records:[],audit:[],staging:[],meta:{version:2,created:now(),deviceId:dev,deviceLabel:label,deviceNames:names}};
+    Audit.log(state,"vault.created",null,"Encrypted vault initialised on “"+label+"” (PBKDF2 "+kdf.iterations.toLocaleString()+")");
     await persist();startSession();
   }
   async function unlock(){
@@ -417,7 +466,10 @@ var App=(function(){
     if(!data||!data.enc){state={records:[],audit:[],staging:[],meta:{version:2}};}
     else{try{state=await Vault.dec(data.enc);}catch(e){Vault.clear();renderLock(false,"Incorrect passphrase.");return;}}
     if(!state.staging)state.staging=[];if(!state.audit)state.audit=[];
-    Audit.log(state,"vault.unlocked","");
+    ensureDeviceMeta();
+    /* migrate pre-1.0 log entries (detail -> details) so they join the chain cleanly */
+    state.audit=state.audit.map(function(e){if(e&&e.details==null&&e.detail!=null)e.details=e.detail;return e;});
+    Audit.log(state,"vault.unlocked",null,"Unlocked on “"+state.meta.deviceLabel+"”");
     await persist();startSession();
   }
   function lock(){
@@ -430,6 +482,7 @@ var App=(function(){
   async function wipeAll(){
     if(!confirm("Permanently DELETE the vault, all records, and metadata from this browser?\n\nThis cannot be undone. If you have not exported an encrypted backup, the data is gone for good."))return;
     if(!confirm("Final confirmation — wipe everything from this device now?"))return;
+    if(state)Audit.log(state,"vault.wiped",null,"All local data deleted from this device");
     await Store.clearAll();
     Vault.clear();state=null;vmeta=null;
     clearTimeout(saveTimer);clearTimeout(idleTimer);
@@ -439,7 +492,41 @@ var App=(function(){
     renderLock(true);
   }
 
-  async function persist(){if(!Vault.ready()||!state)return;var enc=await Vault.enc(state);await Store.put({id:"data",enc:enc,updatedAt:now()});}
+  /* ensure this (possibly older) vault has a self-reported device identity */
+  function ensureDeviceMeta(){
+    if(!state.meta)state.meta={version:2};
+    if(!state.meta.deviceNames)state.meta.deviceNames={};
+    if(!state.meta.deviceId)state.meta.deviceId=(crypto.randomUUID?crypto.randomUUID():uid());
+    if(!state.meta.deviceLabel)state.meta.deviceLabel=deviceLabelFromUA(navigator.userAgent);
+    state.meta.deviceNames[state.meta.deviceId]=state.meta.deviceLabel;
+  }
+  /* resolve a deviceId to a friendly label (self-reported; falls back to short id) */
+  function deviceName(id){
+    if(!id)return "—";
+    var m=state&&state.meta&&state.meta.deviceNames;
+    if(m&&m[id])return m[id];
+    if(state&&state.meta&&id===state.meta.deviceId)return state.meta.deviceLabel||("device "+String(id).slice(0,8));
+    return "device "+String(id).slice(0,8);
+  }
+  function renameDevice(){
+    var el=$("#devlabel");if(!el)return;var v=String(el.value||"").trim().slice(0,60);if(!v)return;
+    var old=state.meta.deviceLabel;state.meta.deviceLabel=v;state.meta.deviceNames[state.meta.deviceId]=v;
+    Audit.log(state,"device.renamed",null,"Device label “"+(old||"")+"” → “"+v+"”");
+    render();save();
+  }
+  function tgt(r){return r?{type:r.type,id:r.id,title:r.title}:null;}
+  function trunc(s,n){s=String(s==null?"":s);n=n||32;return s.length>n?s.slice(0,n-1)+"…":s;}
+  function diffSummary(o,d){
+    if(!o)return "created";
+    var parts=[],keys=[["title","title"],["type","type"],["status","status"],["severity","severity"],["due","due"],["owner","owner"]];
+    keys.forEach(function(k){var ov=o[k[0]]||"",nv=d[k[0]]||"";if(String(ov)!==String(nv))parts.push(k[1]+": "+(ov?("“"+trunc(ov)+"”"):"∅")+"→"+(nv?("“"+trunc(nv)+"”"):"∅"));});
+    if(String(o.note||"")!==String(d.note||""))parts.push("note edited");
+    var oc=(o.complianceRefs||[]).length,nc=(d.complianceRefs||[]).length;if(oc!==nc)parts.push("tags "+oc+"→"+nc);
+    var ol=(o.links||[]).length,nl=(d.links||[]).length;if(ol!==nl)parts.push("links "+ol+"→"+nl);
+    return parts.length?parts.join("; "):"no field changes";
+  }
+
+  async function persist(){if(!Vault.ready()||!state)return;await Audit.seal(state);var enc=await Vault.enc(state);await Store.put({id:"data",enc:enc,updatedAt:now()});}
   function save(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,250);resetIdle();}
 
   function startSession(){
@@ -583,6 +670,11 @@ var App=(function(){
       +'<tr><td>Auto-lock</td><td>After 15 minutes idle</td></tr>'
       +'</table>'
       +'<p class="muted" style="margin-top:10px">The passphrase unlocks local encryption — it is not an access-control gate. Real authentication, roles, and tamper-proof audit arrive with the hosted backend phase.</p></div>'
+      +'<div class="card"><h3>This device</h3>'
+      +'<p class="muted">Activity is stamped with a self-reported device identity. It is not attested — a new browser or cleared storage produces a new device ID.</p>'
+      +'<table class="kv"><tr><td>Device ID</td><td style="font-family:var(--mono);font-size:11px">'+esc(state.meta.deviceId||"—")+'</td></tr></table>'
+      +'<label for="devlabel" style="display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;font-weight:600">Device label</label>'
+      +'<div class="frow tight"><div><input id="devlabel" maxlength="60" value="'+esc(state.meta.deviceLabel||"")+'" placeholder="e.g. Work laptop — Edge"></div><button class="btn sm" data-action="device-rename">Save</button></div></div>'
       +'<div class="card danger-zone"><h3>Danger zone</h3>'
       +'<p class="muted">Permanently delete the vault, all records, and metadata from this browser. This cannot be undone and there is no recovery without a backup — export the encrypted backup above first.</p>'
       +'<div class="srow"><button class="btn sm danger" data-action="wipe">Wipe all data from this device</button></div></div>';
@@ -612,6 +704,7 @@ var App=(function(){
       +'<div id="lk-list"></div>'
       +'<label for="f-note">Notes</label><textarea id="f-note" maxlength="5000">'+esc(r?r.note:"")+'</textarea>'
       +(r?'<div class="backlinks" id="backlinks"></div>':'')
+      +(r?'<div class="metafoot">Created '+esc(fmtTs(r.createdAt))+' · '+esc(deviceName(r.createdBy))+'<br>Last updated '+esc(fmtTs(r.updatedAt))+' · '+esc(deviceName(r.updatedBy))+'</div>':'')
       +'<div class="errbox" id="m-err"></div>'
       +'<div class="mfoot">'+(r?'<button class="btn ghost sm danger" data-action="m-del">Delete</button>':'')+'<span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Cancel</button><button class="btn sm" data-action="m-save">Save</button></div>';
     renderRefs();renderLinkSel();renderLinks();
@@ -641,20 +734,65 @@ var App=(function(){
     var errs=Schema.validate(data);
     if(errs.length){$("#m-err").innerHTML=errs.map(esc).join("<br>");return;}
     if(!Authz.can(editingId?"update":"create",data)){denied();return;}
-    if(editingId){Repo.update(state,editingId,data);Audit.log(state,"record.update",data.type+": "+data.title);}
-    else{var r=Repo.create(state,data);Audit.log(state,"record.create",data.type+": "+data.title);editingId=r.id;}
+    if(editingId){var oldRec=Repo.get(state,editingId),summary=diffSummary(oldRec,data);Repo.update(state,editingId,data);Audit.log(state,"record.update",tgt(Repo.get(state,editingId)),summary);}
+    else{var r=Repo.create(state,data);Audit.log(state,"record.create",tgt(r),"Created "+r.type);editingId=r.id;}
     closeModal();render();save();
   }
-  function delRecord(){if(!editingId)return;var r=Repo.get(state,editingId);if(!Authz.can("delete",r)){denied();return;}if(!confirm("Delete this record? This also removes links to it."))return;Repo.remove(state,editingId);Audit.log(state,"record.delete",(r?r.type+": "+r.title:""));closeModal();render();save();}
+  function delRecord(){if(!editingId)return;var r=Repo.get(state,editingId);if(!Authz.can("delete",r)){denied();return;}if(!confirm("Delete this record? This also removes links to it."))return;Repo.remove(state,editingId);Audit.log(state,"record.delete",tgt(r),"Deleted "+(r?r.type:"record"));closeModal();render();save();}
   function closeModal(){$("#modal").classList.remove("open");editingId=null;work=null;pendingRestore=null;fEditId=null;fType=null;emailDraft=null;}
 
-  /* ----- activity ----- */
-  function openActivity(){
-    var items=state.audit.slice().reverse().slice(0,300);
+  /* ----- activity (local, advisory log) ----- */
+  function openActivity(){actFilter={action:"all",from:"",to:""};renderActivity();$("#modal").classList.add("open");}
+  function activityRows(){
+    var f=actFilter;
+    return state.audit.slice().reverse().filter(function(e){
+      if(f.action!=="all"&&e.action!==f.action)return false;
+      var d=(e.ts||"").slice(0,10);
+      if(f.from&&d<f.from)return false;
+      if(f.to&&d>f.to)return false;
+      return true;
+    });
+  }
+  function activityListHTML(rows){
+    if(!rows.length)return '<div class="empty">No matching activity.</div>';
+    return rows.map(function(e){
+      var t=e.target,tg=t?(esc(Schema.typeLabel(t.type||""))+(t.title?' · '+esc(trunc(t.title,48)):'')):"";
+      var det=e.details||e.detail||"";
+      return '<div class="ae"><span class="at">'+esc(fmtTs(e.ts))+'</span> · '+esc(deviceName(e.deviceId))+' · <b>'+esc(e.action)+'</b>'
+        +(tg?' — '+tg:'')+(det?'<div class="lk" style="margin-top:2px;color:var(--muted)">'+esc(det)+'</div>':'')+'</div>';
+    }).join("");
+  }
+  function renderActivity(){
+    var actions=Object.keys(state.audit.reduce(function(m,e){m[e.action]=1;return m;},{})).sort();
+    var rows=activityRows();
     $("#sheet").innerHTML='<div class="mhead"><span>Activity log</span><button class="x" data-action="m-close">×</button></div>'
-      +'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:8px">Append-only. Trustworthy to the extent this device is trusted; a tamper-evident server audit arrives with hosting.</div>'
-      +(items.length?items.map(function(a){return '<div class="ae"><span class="at">'+esc(new Date(a.ts).toLocaleString())+'</span> · '+esc(a.action)+(a.detail?' — '+esc(a.detail):'')+'</div>';}).join(""):'<div class="empty">No activity yet.</div>');
-    $("#modal").classList.add("open");
+      +'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:4px">Local activity log — recorded on this device. Advisory, not a tamper-proof audit trail.</div>'
+      +'<div class="lk" title="Device identity is self-reported by the browser, not attested. A new browser or cleared storage produces a new device ID." style="color:var(--faint);font-size:11px;margin-bottom:8px">This device: '+esc(deviceName(state.meta.deviceId))+' · identity is self-reported (ⓘ).</div>'
+      +'<div class="toolbar">'
+        +'<select id="act-action"><option value="all">All actions</option>'+actions.map(function(a){return '<option value="'+esc(a)+'"'+(actFilter.action===a?" selected":"")+'>'+esc(a)+'</option>';}).join("")+'</select>'
+        +'<input type="date" id="act-from" value="'+esc(actFilter.from)+'" title="From date">'
+        +'<input type="date" id="act-to" value="'+esc(actFilter.to)+'" title="To date">'
+      +'</div>'
+      +'<div class="srow"><button class="btn ghost sm" data-action="act-verify">Verify log integrity</button><button class="btn ghost sm" data-action="act-csv">Export CSV</button><span class="spacer"></span><span class="lk" style="font-size:11px;align-self:center">'+rows.length+' / '+state.audit.length+' entries</span></div>'
+      +'<div id="act-result" class="lk" style="font-size:11px;margin:6px 0;min-height:14px"></div>'
+      +'<div id="act-list">'+activityListHTML(rows)+'</div>'
+      +'<div class="lk" style="color:var(--faint);font-size:10.5px;margin-top:10px;border-top:1px solid var(--line2);padding-top:8px">Entries are hash-chained (SHA-256) so a casual edit or deletion breaks the chain. This is not proof against an attacker who controls the app code — immutable audit requires a server.</div>';
+  }
+  async function verifyActivity(){
+    var el=$("#act-result");if(el)el.textContent="Verifying…";
+    var res=await Audit.verify(state);el=$("#act-result");if(!el)return;
+    if(res.ok)el.innerHTML='<span style="color:var(--green)">✓ Chain intact — '+res.count+' entr'+(res.count===1?"y":"ies")+' verify against their stored hashes.</span>';
+    else el.innerHTML='<span style="color:var(--red)">✗ Integrity check FAILED at entry #'+(res.brokenAt+1)+' ('+esc(res.reason)+'). The log may have been altered.</span>';
+  }
+  function exportActivityCSV(){
+    var cols=["timestamp","device_id","device_label","action","target_type","target_id","target_title","details","prevHash","hash"];
+    function q(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"';}
+    var lines=[cols.join(",")];
+    state.audit.forEach(function(e){var t=e.target||{};lines.push([e.ts,e.deviceId,e.deviceLabel,e.action,t.type,t.id,t.title,(e.details||e.detail||""),e.prevHash,e.hash].map(q).join(","));});
+    var blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+    var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="activity-log-"+now().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);
+    Audit.log(state,"log.export_csv",null,"Exported "+state.audit.length+" entries to CSV");save();
+    var el=$("#act-result");if(el)el.innerHTML='<span style="color:var(--green)">CSV downloaded ('+state.audit.length+' entries).</span>';
   }
 
   /* ----- staging review ----- */
@@ -666,8 +804,8 @@ var App=(function(){
       +(s.length?'<div class="mfoot"><button class="btn ghost sm danger" data-action="stage-clear">Discard all</button><span class="spacer"></span><button class="btn sm" data-action="stage-commitall">Commit all</button></div>':'');
     $("#modal").classList.add("open");
   }
-  function commitStaged(i){var it=state.staging[i];if(!it)return;if(!Authz.can("create",it)){denied();return;}Repo.create(state,sanitizeImport(it));state.staging.splice(i,1);Audit.log(state,"import.commit",(it.title||""));openStaging();render();save();}
-  function commitAllStaged(){if(!Authz.can("create",null)){denied();return;}state.staging.forEach(function(it){Repo.create(state,sanitizeImport(it));});Audit.log(state,"import.commit_all",state.staging.length+" records");state.staging=[];closeModal();render();save();}
+  function commitStaged(i){var it=state.staging[i];if(!it)return;if(!Authz.can("create",it)){denied();return;}var r=Repo.create(state,sanitizeImport(it));state.staging.splice(i,1);Audit.log(state,"import.commit",tgt(r),"Committed imported record");openStaging();render();save();}
+  function commitAllStaged(){if(!Authz.can("create",null)){denied();return;}var n=state.staging.length;state.staging.forEach(function(it){Repo.create(state,sanitizeImport(it));});Audit.log(state,"import.commit_all",null,"Committed "+n+" imported record(s)");state.staging=[];closeModal();render();save();}
   function sanitizeImport(it){
     return {
       title:String(it.title||"").slice(0,200),
@@ -683,18 +821,22 @@ var App=(function(){
   /* ----- backup / restore ----- */
   async function backup(){
     if(!Authz.can("export",null)){denied();return;}
+    await Audit.seal(state);
     var enc=await Vault.enc(state);
-    var out={format:"ciso-ws-backup",v:2,encrypted:true,exported:now(),kdf:(vmeta&&vmeta.kdf)||{algo:"PBKDF2",hash:"SHA-256",iterations:Vault.ITER},salt:(vmeta&&vmeta.salt)||null,payload:enc};
+    /* envelope metadata is NON-SECRET only; the payload encryption is unchanged */
+    var out={format:"ciso-ws-backup",v:2,encrypted:true,exported:nowTZ(),app:APP_VERSION,device:{id:(state.meta&&state.meta.deviceId)||"",label:(state.meta&&state.meta.deviceLabel)||""},kdf:(vmeta&&vmeta.kdf)||{algo:"PBKDF2",hash:"SHA-256",iterations:Vault.ITER},salt:(vmeta&&vmeta.salt)||null,payload:enc};
     var blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
     var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="ciso-ws-backup-"+now().slice(0,10)+".enc.json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);
-    Audit.log(state,"backup.export","encrypted");save();
+    Audit.log(state,"backup.export",null,"Encrypted backup of "+state.records.length+" record(s) exported");save();
   }
-  function stageRecords(recs){
+  function stageRecords(recs,origin){
     if(!recs||!recs.length){alert("No records found in that backup.");return;}
     if(!Authz.can("import",null)){denied();return;}
     if(!confirm(recs.length+" record(s) found. They will be staged for review, not merged directly. Continue?"))return;
+    if(origin&&(origin.label||origin.id))state.meta.deviceNames[origin.id||("orig-"+origin.label)]=origin.label||("device "+String(origin.id).slice(0,8));
     recs.forEach(function(r){state.staging.push(r);});
-    Audit.log(state,"import.restore_staged",recs.length+" records");
+    var src=origin&&(origin.label||origin.exported)?(" from “"+(origin.label||"unknown device")+"”"+(origin.exported?" exported "+fmtTs(origin.exported):"")):"";
+    Audit.log(state,"import.restore_staged",null,recs.length+" record(s) staged"+src);
     render();save();openStaging();
   }
   function restore(file){
@@ -714,7 +856,10 @@ var App=(function(){
     rd.readAsText(file);
   }
   function openRestore(){
+    var b=pendingRestore||{},dev=(b.device&&(b.device.label||b.device.id))?(b.device.label||("device "+String(b.device.id).slice(0,8))):null;
+    var origin=(dev||b.exported||b.app)?('<div class="lk" style="font-size:11px;color:var(--muted);background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px">Backup origin (self-reported): <b>'+esc(dev||"unknown device")+'</b>'+(b.exported?' · exported '+esc(fmtTs(b.exported)):'')+(b.app?' · app v'+esc(b.app):'')+'</div>'):'';
     $("#sheet").innerHTML='<div class="mhead"><span>Restore encrypted backup</span><button class="x" data-action="m-close">×</button></div>'
+      +origin
       +'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:8px">Enter the passphrase this backup was created with. It is decrypted using the backup\u2019s own salt and KDF parameters \u2014 independent of your current vault \u2014 so it restores after device loss, in a new browser, or into a fresh vault.</div>'
       +'<label for="rp">Backup passphrase</label><input id="rp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">'
       +'<div class="errbox" id="r-err"></div>'
@@ -730,13 +875,19 @@ var App=(function(){
       var d=await Vault.decWith(b.payload,k);
       var recs=(d&&Array.isArray(d.records))?d.records:null;
       if(!recs){$("#r-err").textContent="Decrypted, but no records were found in this backup.";return;}
-      pendingRestore=null;closeModal();stageRecords(recs);
+      var origin={id:(b.device&&b.device.id)||"",label:(b.device&&b.device.label)||"",exported:b.exported||""};
+      pendingRestore=null;closeModal();stageRecords(recs,origin);
     }catch(e){$("#r-err").textContent="Incorrect passphrase, or the backup is corrupt.";}
   }
 
   /* ----- forms: request-intake module ----- */
   function deriveFormTitle(ftKey,fields){var ft=FORM_TYPES[ftKey];var who=(fields.fullName||fields.email||"Untitled").toString().trim()||"Untitled";return who+" — "+(ft?ft.label:"Form");}
   function fillTpl(tpl,fields){return String(tpl).replace(/\{\{(\w+)\}\}/g,function(_,k){return (fields&&fields[k]!=null&&fields[k]!=="")?String(fields[k]):"";});}
+  function formDiff(oldRec,newFields,ft){
+    var of=(oldRec&&oldRec.fields)||{},parts=[];
+    ft.fields.forEach(function(f){var ov=of[f.key]||"",nv=newFields[f.key]||"";if(String(ov)!==String(nv))parts.push(f.label+": "+(ov?("“"+trunc(ov)+"”"):"∅")+"→"+(nv?("“"+trunc(nv)+"”"):"∅"));});
+    return parts.length?parts.join("; "):"";
+  }
 
   function renderForms(){
     var keys=Object.keys(FORM_TYPES);
@@ -790,6 +941,7 @@ var App=(function(){
       '<div class="mhead"><span>'+(rec?"Edit ":"New ")+esc(ft.label)+'</span><button class="x" data-action="m-close">×</button></div>'
       +(Object.keys(ex).length?'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:8px">Fields marked “auto” were read from the imported PDF — review them. Nothing is stored until you press Save.</div>':"")
       +rows+statusSel
+      +(rec?'<div class="metafoot">Created '+esc(fmtTs(rec.createdAt))+' · '+esc(deviceName(rec.createdBy))+'<br>Last updated '+esc(fmtTs(rec.updatedAt))+' · '+esc(deviceName(rec.updatedBy))+'</div>':'')
       +'<div class="errbox" id="fm-err"></div>'
       +'<div class="mfoot">'+(rec?'<button class="btn ghost sm danger" data-action="fm-del">Delete</button>':"")+'<span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Cancel</button><button class="btn sm" data-action="fm-save">Save</button></div>';
     $("#modal").classList.add("open");
@@ -811,15 +963,15 @@ var App=(function(){
     var due=fields.endDate||fields.effectiveDate||fields.lastWorkingDay||fields.startDate||"";
     var owner=fields.manager||"";
     if(!Authz.can(fEditId?"update":"create",null)){denied();return;}
-    if(fEditId){Repo.update(state,fEditId,{title:title,status:status,fields:fields,due:due,owner:owner});Audit.log(state,"form.update",ft.label+": "+title);}
-    else{Repo.create(state,{type:"form",formType:fType,title:title,status:status,fields:fields,due:due,owner:owner,note:""});Audit.log(state,"form.create",ft.label+": "+title);}
+    if(fEditId){var ofr=Repo.get(state,fEditId),fsum=formDiff(ofr,fields,ft);Repo.update(state,fEditId,{title:title,status:status,fields:fields,due:due,owner:owner});Audit.log(state,"form.update",tgt(Repo.get(state,fEditId)),(fsum||"updated")+" · status "+status);}
+    else{var nfr=Repo.create(state,{type:"form",formType:fType,title:title,status:status,fields:fields,due:due,owner:owner,note:""});Audit.log(state,"form.create",tgt(nfr),ft.label+" submitted");}
     closeModal();render();save();
   }
   function delForm(){
     if(!fEditId)return;var r=Repo.get(state,fEditId);
     if(!Authz.can("delete",r)){denied();return;}
     if(!confirm("Delete this submission? This cannot be undone."))return;
-    Repo.remove(state,fEditId);Audit.log(state,"form.delete",(r?r.title:""));
+    Repo.remove(state,fEditId);Audit.log(state,"form.delete",tgt(r),"Deleted submission");
     closeModal();render();save();
   }
 
@@ -940,7 +1092,7 @@ var App=(function(){
       if(Object.keys(acro).length){Object.assign(fields,acro);Object.keys(acro).forEach(function(k){extracted[k]=true;});note="acroform";}
       else{var text=await extractText(bytes);var h=heuristicExtract(text,ft);Object.assign(fields,h.fields);Object.assign(extracted,h.found);note="text-heuristic";}
     }catch(e){alert("Couldn't parse this PDF ("+((e&&e.message)||"unknown error")+"). You can still fill the form in manually.");}
-    Audit.log(state,"form.pdf_import",ft.label+" · "+note+" · "+Object.keys(extracted).length+" field(s)");save();
+    Audit.log(state,"form.pdf_import",null,ft.label+" · "+note+" · "+Object.keys(extracted).length+" field(s) extracted (pending review)");save();
     openFormModal(ftKey,null,fields,extracted);
   }
 
@@ -976,7 +1128,10 @@ var App=(function(){
     if(a==="stage-open"){openStaging();return;}
     if(a==="stage-commit"){commitStaged(+i);return;}
     if(a==="stage-commitall"){commitAllStaged();return;}
-    if(a==="stage-discard"){state.staging.splice(+i,1);Audit.log(state,"import.discard","");openStaging();render();save();return;}
+    if(a==="stage-discard"){state.staging.splice(+i,1);Audit.log(state,"import.discard",null,"Discarded 1 staged record");openStaging();render();save();return;}
+    if(a==="act-verify"){verifyActivity();return;}
+    if(a==="act-csv"){exportActivityCSV();return;}
+    if(a==="device-rename"){renameDevice();return;}
     if(a==="stage-clear"){if(confirm("Discard all staged records?")){state.staging=[];closeModal();render();save();}return;}
   }
 
@@ -990,6 +1145,9 @@ var App=(function(){
       if(e.target.id==="ffw"){filter.fw=e.target.value;renderRows();return;}
       if(e.target.id==="restorein"){var f=e.target.files&&e.target.files[0];e.target.value="";if(f)restore(f);return;}
       if(e.target.id==="pdfin"){var pf=e.target.files&&e.target.files[0];e.target.value="";if(pf)importFormPdf(pf);return;}
+      if(e.target.id==="act-action"){actFilter.action=e.target.value;renderActivity();return;}
+      if(e.target.id==="act-from"){actFilter.from=e.target.value;renderActivity();return;}
+      if(e.target.id==="act-to"){actFilter.to=e.target.value;renderActivity();return;}
     });
     ["mousemove","keydown","click","touchstart"].forEach(function(ev){document.addEventListener(ev,function(){if(Vault.ready())resetIdle();},{passive:true});});
     Store.get("meta").then(function(meta){renderLock(!meta);});
