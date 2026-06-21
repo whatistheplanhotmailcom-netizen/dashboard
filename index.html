@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <title>Test page</title>
 <style>
@@ -36,6 +36,10 @@
   .pwbar i{display:block;height:100%;width:0;background:var(--amber);border-radius:3px;transition:width .15s,background .15s}
   .pwmeter span{font-size:11px;color:var(--faint);display:block;margin-top:5px}
   .vault .note{font-size:11px;color:var(--faint);margin-top:14px;line-height:1.5;border-top:1px solid var(--line2);padding-top:12px}
+  .vault .dz{margin-top:14px;border-top:1px solid rgba(216,104,95,.3);padding-top:12px}
+  .vault .dz h2{font-size:11px;font-weight:700;color:var(--red);margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em}
+  .vault .dz p{font-size:11px;color:var(--faint);margin:0 0 10px;line-height:1.5}
+  .vault .dz .btn{width:100%}
   .btn{font-size:13px;font-weight:600;color:var(--ink);background:var(--accent);border:none;border-radius:8px;padding:9px 14px;cursor:pointer;white-space:nowrap}
   .btn:hover{filter:brightness(1.07)}
   .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
@@ -120,6 +124,14 @@
   .topactions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
   .card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:12px}
   .card h3{margin:0 0 4px;font-size:15px;font-weight:650}
+  .ftabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .ftab{font-size:12.5px;font-weight:600;color:var(--muted);background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+  .ftab:hover{color:var(--text);border-color:var(--accent)}
+  .ftab.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+  .exbadge{font-family:var(--mono);font-size:8.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--green);background:rgba(95,174,134,.12);border:1px solid rgba(95,174,134,.35);border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle}
+  .metafoot{margin-top:12px;border-top:1px solid var(--line2);padding-top:8px;font-family:var(--mono);font-size:10px;color:var(--faint);line-height:1.7}
+  .card input{width:100%;background:var(--ink3);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13.5px;outline:none}
+  .card input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(143,184,232,.12)}
   .card.danger-zone{border-color:rgba(216,104,95,.45);background:rgba(216,104,95,.05)}
   .card.danger-zone h3{color:var(--red)}
   .muted{color:var(--muted);font-size:12.5px}
@@ -175,6 +187,7 @@
         <a href="#/vendors" data-nav="vendors">Vendors</a>
         <a href="#/risks" data-nav="risks">Risks</a>
         <a href="#/tasks" data-nav="tasks">Tasks</a>
+        <a href="#/forms" data-nav="forms">Forms</a>
         <a href="#/settings" data-nav="settings">Settings</a>
       </nav>
       <div class="sidefoot">
@@ -206,6 +219,15 @@ function now(){return new Date().toISOString();}
 function $(s,r){return (r||document).querySelector(s);}
 function ab2b64(buf){var b="",x=new Uint8Array(buf);for(var i=0;i<x.length;i++)b+=String.fromCharCode(x[i]);return btoa(b);}
 function b642ab(s){var bin=atob(s),x=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)x[i]=bin.charCodeAt(i);return x.buffer;}
+var APP_VERSION="1.0";
+/* ISO-8601 timestamp WITH local timezone offset, e.g. 2026-06-21T14:33:07+03:00 */
+function nowTZ(){var d=new Date(),off=-d.getTimezoneOffset(),s=off>=0?"+":"-",a=Math.abs(off);function p(n){return ("0"+n).slice(-2);}return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds())+s+p((a/60)|0)+":"+p(a%60);}
+function fmtTs(ts){if(!ts)return "—";var d=new Date(ts);return isNaN(d.getTime())?String(ts):d.toLocaleString();}
+/* SHA-256 hex via WebCrypto (used only for the advisory log hash-chain — not the Vault) */
+async function sha256hex(str){var buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));var x=new Uint8Array(buf),h="";for(var i=0;i<x.length;i++)h+=("0"+x[i].toString(16)).slice(-2);return h;}
+/* Self-reported device label from the UA string — NOT attested */
+function deviceLabelFromUA(ua){ua=ua||"";var os="Unknown OS";if(/Windows/.test(ua))os="Windows";else if(/Mac OS X/.test(ua))os="macOS";else if(/Android/.test(ua))os="Android";else if(/(iPhone|iPad|iPod)/.test(ua))os="iOS";else if(/CrOS/.test(ua))os="ChromeOS";else if(/Linux/.test(ua))os="Linux";var br="Browser";if(/Edg\//.test(ua))br="Edge";else if(/OPR\//.test(ua)||/Opera/.test(ua))br="Opera";else if(/Firefox\//.test(ua))br="Firefox";else if(/Chrome\//.test(ua)&&!/Chromium/.test(ua))br="Chrome";else if(/Safari\//.test(ua)&&/Version\//.test(ua))br="Safari";return os+" — "+br;}
+
 
 /* ---------- Vault: encryption at rest (WebCrypto) ---------- */
 var Vault=(function(){
@@ -267,17 +289,118 @@ var Schema={
   }
 };
 
+/* ---------- Forms: request-intake config (extend here to add a type) ----------
+   Each form type is pure config: field schema (rendered as the New/Edit modal),
+   a pdfFieldMap (AcroForm field name -> schema key) for fillable-PDF import, and
+   an email template whose {{fieldKey}} placeholders are filled from a submission.
+   Adding a new form type is a matter of adding one entry below. */
+var FORM_TYPES={
+  vpn_access:{
+    key:"vpn_access",label:"VPN Access",
+    fields:[
+      {key:"fullName",label:"Full name",type:"text",required:true},
+      {key:"email",label:"Email",type:"email",required:true},
+      {key:"employeeId",label:"Employee ID",type:"text"},
+      {key:"department",label:"Department",type:"text"},
+      {key:"manager",label:"Manager",type:"text"},
+      {key:"accessProfile",label:"Access profile",type:"select",options:["Standard","Privileged","Third-party","Break-glass"]},
+      {key:"justification",label:"Business justification",type:"text"},
+      {key:"startDate",label:"Start date",type:"date"},
+      {key:"endDate",label:"End date",type:"date"}
+    ],
+    pdfFieldMap:{"Full Name":"fullName","Name":"fullName","Requester":"fullName","Email":"email","Email Address":"email","Employee ID":"employeeId","EmployeeID":"employeeId","Department":"department","Manager":"manager","Line Manager":"manager","Access Profile":"accessProfile","Profile":"accessProfile","Justification":"justification","Business Justification":"justification","Start Date":"startDate","End Date":"endDate"},
+    email:{subject:"VPN access request — {{fullName}}",body:"Hi {{manager}},\n\nPlease review/approve VPN access for the following request:\n\nRequester: {{fullName}} ({{email}})\nEmployee ID: {{employeeId}}\nDepartment: {{department}}\nAccess profile: {{accessProfile}}\nPeriod: {{startDate}} to {{endDate}}\n\nJustification:\n{{justification}}\n\nThank you."}
+  },
+  jml_joiner:{
+    key:"jml_joiner",label:"JML — Joiner",
+    fields:[
+      {key:"fullName",label:"Full name",type:"text",required:true},
+      {key:"email",label:"Email",type:"email"},
+      {key:"startDate",label:"Start date",type:"date",required:true},
+      {key:"department",label:"Department",type:"text"},
+      {key:"manager",label:"Manager",type:"text"},
+      {key:"role",label:"Role / job title",type:"text"},
+      {key:"systemsToGrant",label:"Systems to grant",type:"text"}
+    ],
+    pdfFieldMap:{"Full Name":"fullName","Name":"fullName","New Joiner":"fullName","Email":"email","Email Address":"email","Start Date":"startDate","Department":"department","Manager":"manager","Line Manager":"manager","Role":"role","Job Title":"role","Systems":"systemsToGrant","Systems to Grant":"systemsToGrant","Access Required":"systemsToGrant"},
+    email:{subject:"Joiner onboarding — {{fullName}} ({{startDate}})",body:"Hi IT/Access team,\n\nPlease provision access for a new joiner:\n\nName: {{fullName}} ({{email}})\nStart date: {{startDate}}\nDepartment: {{department}}\nManager: {{manager}}\nRole: {{role}}\n\nSystems to grant:\n{{systemsToGrant}}\n\nThank you."}
+  },
+  jml_mover:{
+    key:"jml_mover",label:"JML — Mover",
+    fields:[
+      {key:"fullName",label:"Full name",type:"text",required:true},
+      {key:"email",label:"Email",type:"email"},
+      {key:"fromDept",label:"From department",type:"text"},
+      {key:"toDept",label:"To department",type:"text"},
+      {key:"fromRole",label:"From role",type:"text"},
+      {key:"toRole",label:"To role",type:"text"},
+      {key:"accessChanges",label:"Access changes",type:"text"},
+      {key:"effectiveDate",label:"Effective date",type:"date"}
+    ],
+    pdfFieldMap:{"Full Name":"fullName","Name":"fullName","Email":"email","Email Address":"email","From Department":"fromDept","Current Department":"fromDept","To Department":"toDept","New Department":"toDept","From Role":"fromRole","Current Role":"fromRole","To Role":"toRole","New Role":"toRole","Access Changes":"accessChanges","Effective Date":"effectiveDate"},
+    email:{subject:"Mover access change — {{fullName}} (eff. {{effectiveDate}})",body:"Hi IT/Access team,\n\nPlease action an internal move:\n\nName: {{fullName}} ({{email}})\nFrom: {{fromDept}} / {{fromRole}}\nTo: {{toDept}} / {{toRole}}\nEffective date: {{effectiveDate}}\n\nAccess changes required:\n{{accessChanges}}\n\nThank you."}
+  },
+  jml_leaver:{
+    key:"jml_leaver",label:"JML — Leaver",
+    fields:[
+      {key:"fullName",label:"Full name",type:"text",required:true},
+      {key:"email",label:"Email",type:"email"},
+      {key:"lastWorkingDay",label:"Last working day",type:"date",required:true},
+      {key:"manager",label:"Manager",type:"text"},
+      {key:"systemsToRevoke",label:"Systems to revoke",type:"text"},
+      {key:"assetsToReturn",label:"Assets to return",type:"text"}
+    ],
+    pdfFieldMap:{"Full Name":"fullName","Name":"fullName","Leaver":"fullName","Email":"email","Email Address":"email","Last Working Day":"lastWorkingDay","Leaving Date":"lastWorkingDay","Termination Date":"lastWorkingDay","Manager":"manager","Line Manager":"manager","Systems to Revoke":"systemsToRevoke","Access to Revoke":"systemsToRevoke","Assets to Return":"assetsToReturn","Equipment":"assetsToReturn"},
+    email:{subject:"Leaver offboarding — {{fullName}} (LWD {{lastWorkingDay}})",body:"Hi IT/Access team,\n\nPlease offboard the following leaver:\n\nName: {{fullName}} ({{email}})\nLast working day: {{lastWorkingDay}}\nManager: {{manager}}\n\nSystems to revoke:\n{{systemsToRevoke}}\n\nAssets to return:\n{{assetsToReturn}}\n\nThank you."}
+  }
+};
+
 /* ---------- Repo: CRUD over state ---------- */
 var Repo={
-  create:function(s,d){var r=Object.assign({id:uid(),type:"task",title:"",status:"open",severity:"",due:"",owner:"",note:"",complianceRefs:[],links:[]},d||{});r.createdAt=now();r.updatedAt=now();s.records.push(r);return r;},
-  update:function(s,id,d){var r=this.get(s,id);if(r){Object.assign(r,d);r.updatedAt=now();}return r;},
+  create:function(s,d){var r=Object.assign({id:uid(),type:"task",title:"",status:"open",severity:"",due:"",owner:"",note:"",complianceRefs:[],links:[]},d||{});var dev=(s.meta&&s.meta.deviceId)||"";r.createdAt=now();r.updatedAt=now();r.createdBy=dev;r.updatedBy=dev;s.records.push(r);return r;},
+  update:function(s,id,d){var r=this.get(s,id);if(r){Object.assign(r,d);r.updatedAt=now();r.updatedBy=(s.meta&&s.meta.deviceId)||"";}return r;},
   remove:function(s,id){s.records=s.records.filter(function(x){return x.id!==id;});s.records.forEach(function(x){x.links=(x.links||[]).filter(function(l){return l!==id;});});},
   get:function(s,id){return s.records.filter(function(x){return x.id===id;})[0]||null;},
   backlinks:function(s,id){return s.records.filter(function(x){return (x.links||[]).indexOf(id)>=0;});}
 };
 
-/* ---------- Audit: append-only activity log (local) ---------- */
-var Audit={log:function(s,action,detail){s.audit.push({ts:now(),action:action,detail:detail||""});if(s.audit.length>3000)s.audit=s.audit.slice(-3000);}};
+/* ---------- Audit: append-only LOCAL activity log (advisory, not tamper-proof) ----------
+   Entries are hash-chained (SHA-256 of the previous entry over canonical JSON).
+   HONEST LIMITATION: this detects casual tampering (an edited/removed entry breaks
+   the chain), but it is NOT proof against an attacker who controls the app code and
+   can recompute the whole chain. Immutable, evidential audit requires a server.
+   The signature is extended (action,target,details) — not parallel logging. */
+var Audit=(function(){
+  var MAX=5000;
+  function canon(e){return JSON.stringify([e.ts,e.action,e.target||null,e.details||"",e.deviceId||"",e.deviceLabel||"",e.prevHash||null]);}
+  function log(s,action,target,details){
+    var m=s.meta||{};
+    var e={ts:nowTZ(),action:action,target:target||null,details:details||"",deviceId:m.deviceId||"",deviceLabel:m.deviceLabel||"",prevHash:null,hash:null};
+    s.audit.push(e);
+    if(s.audit.length>MAX)s.audit=s.audit.slice(-MAX);
+    return e;
+  }
+  /* assign prevHash + hash to any unsealed tail entries (called before each persist) */
+  async function seal(s){
+    if(!s||!s.audit)return;
+    var prev=null,i=0;
+    for(i=0;i<s.audit.length;i++){if(s.audit[i].hash)prev=s.audit[i].hash;else break;}
+    for(;i<s.audit.length;i++){var e=s.audit[i];e.prevHash=prev;e.hash=await sha256hex(canon(e));prev=e.hash;}
+  }
+  /* recompute the chain and report the first break, if any */
+  async function verify(s){
+    if(!s||!s.audit||!s.audit.length)return {ok:true,count:0,brokenAt:-1};
+    var prev=null;
+    for(var i=0;i<s.audit.length;i++){
+      var e=s.audit[i];
+      if((e.prevHash||null)!==prev)return {ok:false,count:s.audit.length,brokenAt:i,reason:"chain link"};
+      if(e.hash!==await sha256hex(canon(e)))return {ok:false,count:s.audit.length,brokenAt:i,reason:"content hash"};
+      prev=e.hash;
+    }
+    return {ok:true,count:s.audit.length,brokenAt:-1};
+  }
+  return {log:log,seal:seal,verify:verify};
+})();
 
 /* ---------- Authz: policy seam (single-user no-op; server enforces later) ---------- */
 var Authz={can:function(action,record){return true;}};
@@ -285,7 +408,9 @@ var Authz={can:function(action,record){return true;}};
 /* ---------- App: UI controller ---------- */
 var App=(function(){
   var state=null,editingId=null,work=null,saveTimer=null,idleTimer=null,vmeta=null,pendingRestore=null,view="dashboard";
+  var formSel=null,fType=null,fEditId=null,emailDraft=null,_pdflibP=null;
   var filter={type:"all",fw:"all",q:""};
+  var actFilter={action:"all",from:"",to:""};
   var IDLE_MS=15*60*1000, MAX_IMPORT=25*1024*1024;
   function denied(){alert("Not permitted by the current authorization policy.");}
   function pwScore(p){var s=0;if(p.length>=14)s++;if(p.length>=20){s+=2;}else{var c=(/[a-z]/.test(p)?1:0)+(/[A-Z]/.test(p)?1:0)+(/\d/.test(p)?1:0)+(/[^A-Za-z0-9]/.test(p)?1:0);if(c>=3)s++;}return s;}
@@ -308,6 +433,7 @@ var App=(function(){
       +'<div class="err" id="verr">'+esc(errMsg||"")+'</div>'
       +'<button class="btn block" data-action="'+(first?"create":"unlock")+'">'+(first?"Create vault":"Sign in")+'</button>'
       +'<div class="note">Encryption: AES-GCM-256, key derived from your passphrase (PBKDF2-SHA-256, '+Vault.ITER.toLocaleString()+' iterations, per current OWASP guidance). KDF parameters are stored with the vault so they can be raised later without breaking it. This protects data at rest on this device — it is not an access-control gate (that arrives with hosted auth). Nothing is uploaded.</div>'
+      +(first?'':'<div class="dz"><h2>Danger zone</h2><p>Permanently delete the vault, all records, and metadata from this browser. This cannot be undone and there is no recovery without a backup — export the encrypted backup first.</p><button class="btn ghost sm danger" data-action="wipe">Wipe all data from this device</button></div>')
       +'</div>';
     var ip=$("#vp");if(ip)ip.focus();
     if(first&&ip)ip.addEventListener("input",updateMeter);
@@ -326,8 +452,9 @@ var App=(function(){
     Vault.set(await Vault.derive(p,salt,kdf.iterations));
     vmeta={salt:Array.from(salt),kdf:kdf,version:2,created:now()};
     await Store.put(Object.assign({id:"meta"},vmeta));
-    state={records:[],audit:[],staging:[],meta:{version:2,created:now()}};
-    Audit.log(state,"vault.created","Encrypted vault initialised (PBKDF2 "+kdf.iterations.toLocaleString()+")");
+    var dev=(crypto.randomUUID?crypto.randomUUID():uid()),label=deviceLabelFromUA(navigator.userAgent),names={};names[dev]=label;
+    state={records:[],audit:[],staging:[],meta:{version:2,created:now(),deviceId:dev,deviceLabel:label,deviceNames:names}};
+    Audit.log(state,"vault.created",null,"Encrypted vault initialised on “"+label+"” (PBKDF2 "+kdf.iterations.toLocaleString()+")");
     await persist();startSession();
   }
   async function unlock(){
@@ -339,7 +466,10 @@ var App=(function(){
     if(!data||!data.enc){state={records:[],audit:[],staging:[],meta:{version:2}};}
     else{try{state=await Vault.dec(data.enc);}catch(e){Vault.clear();renderLock(false,"Incorrect passphrase.");return;}}
     if(!state.staging)state.staging=[];if(!state.audit)state.audit=[];
-    Audit.log(state,"vault.unlocked","");
+    ensureDeviceMeta();
+    /* migrate pre-1.0 log entries (detail -> details) so they join the chain cleanly */
+    state.audit=state.audit.map(function(e){if(e&&e.details==null&&e.detail!=null)e.details=e.detail;return e;});
+    Audit.log(state,"vault.unlocked",null,"Unlocked on “"+state.meta.deviceLabel+"”");
     await persist();startSession();
   }
   function lock(){
@@ -352,6 +482,7 @@ var App=(function(){
   async function wipeAll(){
     if(!confirm("Permanently DELETE the vault, all records, and metadata from this browser?\n\nThis cannot be undone. If you have not exported an encrypted backup, the data is gone for good."))return;
     if(!confirm("Final confirmation — wipe everything from this device now?"))return;
+    if(state)Audit.log(state,"vault.wiped",null,"All local data deleted from this device");
     await Store.clearAll();
     Vault.clear();state=null;vmeta=null;
     clearTimeout(saveTimer);clearTimeout(idleTimer);
@@ -361,12 +492,46 @@ var App=(function(){
     renderLock(true);
   }
 
-  async function persist(){if(!Vault.ready()||!state)return;var enc=await Vault.enc(state);await Store.put({id:"data",enc:enc,updatedAt:now()});}
+  /* ensure this (possibly older) vault has a self-reported device identity */
+  function ensureDeviceMeta(){
+    if(!state.meta)state.meta={version:2};
+    if(!state.meta.deviceNames)state.meta.deviceNames={};
+    if(!state.meta.deviceId)state.meta.deviceId=(crypto.randomUUID?crypto.randomUUID():uid());
+    if(!state.meta.deviceLabel)state.meta.deviceLabel=deviceLabelFromUA(navigator.userAgent);
+    state.meta.deviceNames[state.meta.deviceId]=state.meta.deviceLabel;
+  }
+  /* resolve a deviceId to a friendly label (self-reported; falls back to short id) */
+  function deviceName(id){
+    if(!id)return "—";
+    var m=state&&state.meta&&state.meta.deviceNames;
+    if(m&&m[id])return m[id];
+    if(state&&state.meta&&id===state.meta.deviceId)return state.meta.deviceLabel||("device "+String(id).slice(0,8));
+    return "device "+String(id).slice(0,8);
+  }
+  function renameDevice(){
+    var el=$("#devlabel");if(!el)return;var v=String(el.value||"").trim().slice(0,60);if(!v)return;
+    var old=state.meta.deviceLabel;state.meta.deviceLabel=v;state.meta.deviceNames[state.meta.deviceId]=v;
+    Audit.log(state,"device.renamed",null,"Device label “"+(old||"")+"” → “"+v+"”");
+    render();save();
+  }
+  function tgt(r){return r?{type:r.type,id:r.id,title:r.title}:null;}
+  function trunc(s,n){s=String(s==null?"":s);n=n||32;return s.length>n?s.slice(0,n-1)+"…":s;}
+  function diffSummary(o,d){
+    if(!o)return "created";
+    var parts=[],keys=[["title","title"],["type","type"],["status","status"],["severity","severity"],["due","due"],["owner","owner"]];
+    keys.forEach(function(k){var ov=o[k[0]]||"",nv=d[k[0]]||"";if(String(ov)!==String(nv))parts.push(k[1]+": "+(ov?("“"+trunc(ov)+"”"):"∅")+"→"+(nv?("“"+trunc(nv)+"”"):"∅"));});
+    if(String(o.note||"")!==String(d.note||""))parts.push("note edited");
+    var oc=(o.complianceRefs||[]).length,nc=(d.complianceRefs||[]).length;if(oc!==nc)parts.push("tags "+oc+"→"+nc);
+    var ol=(o.links||[]).length,nl=(d.links||[]).length;if(ol!==nl)parts.push("links "+ol+"→"+nl);
+    return parts.length?parts.join("; "):"no field changes";
+  }
+
+  async function persist(){if(!Vault.ready()||!state)return;await Audit.seal(state);var enc=await Vault.enc(state);await Store.put({id:"data",enc:enc,updatedAt:now()});}
   function save(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,250);resetIdle();}
 
   function startSession(){
     $("#lock").hidden=true;$("#app").hidden=false;
-    if(/^#\/(dashboard|records|vendors|risks|tasks|settings)$/.test(location.hash))route();
+    if(/^#\/(dashboard|records|vendors|risks|tasks|forms|settings)$/.test(location.hash))route();
     else location.hash="#/dashboard";
     resetIdle();
   }
@@ -377,7 +542,7 @@ var App=(function(){
   function route(){
     if(!Vault.ready())return;
     var h=(location.hash||"").replace(/^#\/?/,"").split("/")[0]||"dashboard";
-    if(["dashboard","records","vendors","risks","tasks","settings"].indexOf(h)<0)h="dashboard";
+    if(["dashboard","records","vendors","risks","tasks","forms","settings"].indexOf(h)<0)h="dashboard";
     view=h;renderNav();renderStaging();renderPage(h);
     var c=$(".content");if(c)c.scrollTop=0;window.scrollTo(0,0);
   }
@@ -385,7 +550,7 @@ var App=(function(){
   function render(){if(!Vault.ready())return;renderNav();renderStaging();renderPage(view);}
   function renderPage(page){
     routeType={vendors:"vendor",risks:"risk",tasks:"task"}[page]||null;
-    var titles={dashboard:"Dashboard",records:"All records",vendors:"Vendors & processors",risks:"Risk register",tasks:"Tasks & deadlines",settings:"Settings"};
+    var titles={dashboard:"Dashboard",records:"All records",vendors:"Vendors & processors",risks:"Risk register",tasks:"Tasks & deadlines",forms:"Forms",settings:"Settings"};
     $("#pagetitle").textContent=titles[page]||"Dashboard";
     var ta="";
     if(page==="dashboard")ta='<button class="btn ghost sm" data-action="activity">Activity</button>';
@@ -396,6 +561,7 @@ var App=(function(){
     $("#topactions").innerHTML=ta;
     if(page==="dashboard")renderDashboard();
     else if(page==="settings")renderSettings();
+    else if(page==="forms")renderForms();
     else renderRegister(page);
   }
 
@@ -504,6 +670,11 @@ var App=(function(){
       +'<tr><td>Auto-lock</td><td>After 15 minutes idle</td></tr>'
       +'</table>'
       +'<p class="muted" style="margin-top:10px">The passphrase unlocks local encryption — it is not an access-control gate. Real authentication, roles, and tamper-proof audit arrive with the hosted backend phase.</p></div>'
+      +'<div class="card"><h3>This device</h3>'
+      +'<p class="muted">Activity is stamped with a self-reported device identity. It is not attested — a new browser or cleared storage produces a new device ID.</p>'
+      +'<table class="kv"><tr><td>Device ID</td><td style="font-family:var(--mono);font-size:11px">'+esc(state.meta.deviceId||"—")+'</td></tr></table>'
+      +'<label for="devlabel" style="display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;font-weight:600">Device label</label>'
+      +'<div class="frow tight"><div><input id="devlabel" maxlength="60" value="'+esc(state.meta.deviceLabel||"")+'" placeholder="e.g. Work laptop — Edge"></div><button class="btn sm" data-action="device-rename">Save</button></div></div>'
       +'<div class="card danger-zone"><h3>Danger zone</h3>'
       +'<p class="muted">Permanently delete the vault, all records, and metadata from this browser. This cannot be undone and there is no recovery without a backup — export the encrypted backup above first.</p>'
       +'<div class="srow"><button class="btn sm danger" data-action="wipe">Wipe all data from this device</button></div></div>';
@@ -533,6 +704,7 @@ var App=(function(){
       +'<div id="lk-list"></div>'
       +'<label for="f-note">Notes</label><textarea id="f-note" maxlength="5000">'+esc(r?r.note:"")+'</textarea>'
       +(r?'<div class="backlinks" id="backlinks"></div>':'')
+      +(r?'<div class="metafoot">Created '+esc(fmtTs(r.createdAt))+' · '+esc(deviceName(r.createdBy))+'<br>Last updated '+esc(fmtTs(r.updatedAt))+' · '+esc(deviceName(r.updatedBy))+'</div>':'')
       +'<div class="errbox" id="m-err"></div>'
       +'<div class="mfoot">'+(r?'<button class="btn ghost sm danger" data-action="m-del">Delete</button>':'')+'<span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Cancel</button><button class="btn sm" data-action="m-save">Save</button></div>';
     renderRefs();renderLinkSel();renderLinks();
@@ -562,20 +734,65 @@ var App=(function(){
     var errs=Schema.validate(data);
     if(errs.length){$("#m-err").innerHTML=errs.map(esc).join("<br>");return;}
     if(!Authz.can(editingId?"update":"create",data)){denied();return;}
-    if(editingId){Repo.update(state,editingId,data);Audit.log(state,"record.update",data.type+": "+data.title);}
-    else{var r=Repo.create(state,data);Audit.log(state,"record.create",data.type+": "+data.title);editingId=r.id;}
+    if(editingId){var oldRec=Repo.get(state,editingId),summary=diffSummary(oldRec,data);Repo.update(state,editingId,data);Audit.log(state,"record.update",tgt(Repo.get(state,editingId)),summary);}
+    else{var r=Repo.create(state,data);Audit.log(state,"record.create",tgt(r),"Created "+r.type);editingId=r.id;}
     closeModal();render();save();
   }
-  function delRecord(){if(!editingId)return;var r=Repo.get(state,editingId);if(!Authz.can("delete",r)){denied();return;}if(!confirm("Delete this record? This also removes links to it."))return;Repo.remove(state,editingId);Audit.log(state,"record.delete",(r?r.type+": "+r.title:""));closeModal();render();save();}
-  function closeModal(){$("#modal").classList.remove("open");editingId=null;work=null;pendingRestore=null;}
+  function delRecord(){if(!editingId)return;var r=Repo.get(state,editingId);if(!Authz.can("delete",r)){denied();return;}if(!confirm("Delete this record? This also removes links to it."))return;Repo.remove(state,editingId);Audit.log(state,"record.delete",tgt(r),"Deleted "+(r?r.type:"record"));closeModal();render();save();}
+  function closeModal(){$("#modal").classList.remove("open");editingId=null;work=null;pendingRestore=null;fEditId=null;fType=null;emailDraft=null;}
 
-  /* ----- activity ----- */
-  function openActivity(){
-    var items=state.audit.slice().reverse().slice(0,300);
+  /* ----- activity (local, advisory log) ----- */
+  function openActivity(){actFilter={action:"all",from:"",to:""};renderActivity();$("#modal").classList.add("open");}
+  function activityRows(){
+    var f=actFilter;
+    return state.audit.slice().reverse().filter(function(e){
+      if(f.action!=="all"&&e.action!==f.action)return false;
+      var d=(e.ts||"").slice(0,10);
+      if(f.from&&d<f.from)return false;
+      if(f.to&&d>f.to)return false;
+      return true;
+    });
+  }
+  function activityListHTML(rows){
+    if(!rows.length)return '<div class="empty">No matching activity.</div>';
+    return rows.map(function(e){
+      var t=e.target,tg=t?(esc(Schema.typeLabel(t.type||""))+(t.title?' · '+esc(trunc(t.title,48)):'')):"";
+      var det=e.details||e.detail||"";
+      return '<div class="ae"><span class="at">'+esc(fmtTs(e.ts))+'</span> · '+esc(deviceName(e.deviceId))+' · <b>'+esc(e.action)+'</b>'
+        +(tg?' — '+tg:'')+(det?'<div class="lk" style="margin-top:2px;color:var(--muted)">'+esc(det)+'</div>':'')+'</div>';
+    }).join("");
+  }
+  function renderActivity(){
+    var actions=Object.keys(state.audit.reduce(function(m,e){m[e.action]=1;return m;},{})).sort();
+    var rows=activityRows();
     $("#sheet").innerHTML='<div class="mhead"><span>Activity log</span><button class="x" data-action="m-close">×</button></div>'
-      +'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:8px">Append-only. Trustworthy to the extent this device is trusted; a tamper-evident server audit arrives with hosting.</div>'
-      +(items.length?items.map(function(a){return '<div class="ae"><span class="at">'+esc(new Date(a.ts).toLocaleString())+'</span> · '+esc(a.action)+(a.detail?' — '+esc(a.detail):'')+'</div>';}).join(""):'<div class="empty">No activity yet.</div>');
-    $("#modal").classList.add("open");
+      +'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:4px">Local activity log — recorded on this device. Advisory, not a tamper-proof audit trail.</div>'
+      +'<div class="lk" title="Device identity is self-reported by the browser, not attested. A new browser or cleared storage produces a new device ID." style="color:var(--faint);font-size:11px;margin-bottom:8px">This device: '+esc(deviceName(state.meta.deviceId))+' · identity is self-reported (ⓘ).</div>'
+      +'<div class="toolbar">'
+        +'<select id="act-action"><option value="all">All actions</option>'+actions.map(function(a){return '<option value="'+esc(a)+'"'+(actFilter.action===a?" selected":"")+'>'+esc(a)+'</option>';}).join("")+'</select>'
+        +'<input type="date" id="act-from" value="'+esc(actFilter.from)+'" title="From date">'
+        +'<input type="date" id="act-to" value="'+esc(actFilter.to)+'" title="To date">'
+      +'</div>'
+      +'<div class="srow"><button class="btn ghost sm" data-action="act-verify">Verify log integrity</button><button class="btn ghost sm" data-action="act-csv">Export CSV</button><span class="spacer"></span><span class="lk" style="font-size:11px;align-self:center">'+rows.length+' / '+state.audit.length+' entries</span></div>'
+      +'<div id="act-result" class="lk" style="font-size:11px;margin:6px 0;min-height:14px"></div>'
+      +'<div id="act-list">'+activityListHTML(rows)+'</div>'
+      +'<div class="lk" style="color:var(--faint);font-size:10.5px;margin-top:10px;border-top:1px solid var(--line2);padding-top:8px">Entries are hash-chained (SHA-256) so a casual edit or deletion breaks the chain. This is not proof against an attacker who controls the app code — immutable audit requires a server.</div>';
+  }
+  async function verifyActivity(){
+    var el=$("#act-result");if(el)el.textContent="Verifying…";
+    var res=await Audit.verify(state);el=$("#act-result");if(!el)return;
+    if(res.ok)el.innerHTML='<span style="color:var(--green)">✓ Chain intact — '+res.count+' entr'+(res.count===1?"y":"ies")+' verify against their stored hashes.</span>';
+    else el.innerHTML='<span style="color:var(--red)">✗ Integrity check FAILED at entry #'+(res.brokenAt+1)+' ('+esc(res.reason)+'). The log may have been altered.</span>';
+  }
+  function exportActivityCSV(){
+    var cols=["timestamp","device_id","device_label","action","target_type","target_id","target_title","details","prevHash","hash"];
+    function q(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"';}
+    var lines=[cols.join(",")];
+    state.audit.forEach(function(e){var t=e.target||{};lines.push([e.ts,e.deviceId,e.deviceLabel,e.action,t.type,t.id,t.title,(e.details||e.detail||""),e.prevHash,e.hash].map(q).join(","));});
+    var blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+    var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="activity-log-"+now().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);
+    Audit.log(state,"log.export_csv",null,"Exported "+state.audit.length+" entries to CSV");save();
+    var el=$("#act-result");if(el)el.innerHTML='<span style="color:var(--green)">CSV downloaded ('+state.audit.length+' entries).</span>';
   }
 
   /* ----- staging review ----- */
@@ -587,8 +804,8 @@ var App=(function(){
       +(s.length?'<div class="mfoot"><button class="btn ghost sm danger" data-action="stage-clear">Discard all</button><span class="spacer"></span><button class="btn sm" data-action="stage-commitall">Commit all</button></div>':'');
     $("#modal").classList.add("open");
   }
-  function commitStaged(i){var it=state.staging[i];if(!it)return;if(!Authz.can("create",it)){denied();return;}Repo.create(state,sanitizeImport(it));state.staging.splice(i,1);Audit.log(state,"import.commit",(it.title||""));openStaging();render();save();}
-  function commitAllStaged(){if(!Authz.can("create",null)){denied();return;}state.staging.forEach(function(it){Repo.create(state,sanitizeImport(it));});Audit.log(state,"import.commit_all",state.staging.length+" records");state.staging=[];closeModal();render();save();}
+  function commitStaged(i){var it=state.staging[i];if(!it)return;if(!Authz.can("create",it)){denied();return;}var r=Repo.create(state,sanitizeImport(it));state.staging.splice(i,1);Audit.log(state,"import.commit",tgt(r),"Committed imported record");openStaging();render();save();}
+  function commitAllStaged(){if(!Authz.can("create",null)){denied();return;}var n=state.staging.length;state.staging.forEach(function(it){Repo.create(state,sanitizeImport(it));});Audit.log(state,"import.commit_all",null,"Committed "+n+" imported record(s)");state.staging=[];closeModal();render();save();}
   function sanitizeImport(it){
     return {
       title:String(it.title||"").slice(0,200),
@@ -604,18 +821,22 @@ var App=(function(){
   /* ----- backup / restore ----- */
   async function backup(){
     if(!Authz.can("export",null)){denied();return;}
+    await Audit.seal(state);
     var enc=await Vault.enc(state);
-    var out={format:"ciso-ws-backup",v:2,encrypted:true,exported:now(),kdf:(vmeta&&vmeta.kdf)||{algo:"PBKDF2",hash:"SHA-256",iterations:Vault.ITER},salt:(vmeta&&vmeta.salt)||null,payload:enc};
+    /* envelope metadata is NON-SECRET only; the payload encryption is unchanged */
+    var out={format:"ciso-ws-backup",v:2,encrypted:true,exported:nowTZ(),app:APP_VERSION,device:{id:(state.meta&&state.meta.deviceId)||"",label:(state.meta&&state.meta.deviceLabel)||""},kdf:(vmeta&&vmeta.kdf)||{algo:"PBKDF2",hash:"SHA-256",iterations:Vault.ITER},salt:(vmeta&&vmeta.salt)||null,payload:enc};
     var blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
     var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="ciso-ws-backup-"+now().slice(0,10)+".enc.json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);
-    Audit.log(state,"backup.export","encrypted");save();
+    Audit.log(state,"backup.export",null,"Encrypted backup of "+state.records.length+" record(s) exported");save();
   }
-  function stageRecords(recs){
+  function stageRecords(recs,origin){
     if(!recs||!recs.length){alert("No records found in that backup.");return;}
     if(!Authz.can("import",null)){denied();return;}
     if(!confirm(recs.length+" record(s) found. They will be staged for review, not merged directly. Continue?"))return;
+    if(origin&&(origin.label||origin.id))state.meta.deviceNames[origin.id||("orig-"+origin.label)]=origin.label||("device "+String(origin.id).slice(0,8));
     recs.forEach(function(r){state.staging.push(r);});
-    Audit.log(state,"import.restore_staged",recs.length+" records");
+    var src=origin&&(origin.label||origin.exported)?(" from “"+(origin.label||"unknown device")+"”"+(origin.exported?" exported "+fmtTs(origin.exported):"")):"";
+    Audit.log(state,"import.restore_staged",null,recs.length+" record(s) staged"+src);
     render();save();openStaging();
   }
   function restore(file){
@@ -635,7 +856,10 @@ var App=(function(){
     rd.readAsText(file);
   }
   function openRestore(){
+    var b=pendingRestore||{},dev=(b.device&&(b.device.label||b.device.id))?(b.device.label||("device "+String(b.device.id).slice(0,8))):null;
+    var origin=(dev||b.exported||b.app)?('<div class="lk" style="font-size:11px;color:var(--muted);background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px">Backup origin (self-reported): <b>'+esc(dev||"unknown device")+'</b>'+(b.exported?' · exported '+esc(fmtTs(b.exported)):'')+(b.app?' · app v'+esc(b.app):'')+'</div>'):'';
     $("#sheet").innerHTML='<div class="mhead"><span>Restore encrypted backup</span><button class="x" data-action="m-close">×</button></div>'
+      +origin
       +'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:8px">Enter the passphrase this backup was created with. It is decrypted using the backup\u2019s own salt and KDF parameters \u2014 independent of your current vault \u2014 so it restores after device loss, in a new browser, or into a fresh vault.</div>'
       +'<label for="rp">Backup passphrase</label><input id="rp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">'
       +'<div class="errbox" id="r-err"></div>'
@@ -651,8 +875,225 @@ var App=(function(){
       var d=await Vault.decWith(b.payload,k);
       var recs=(d&&Array.isArray(d.records))?d.records:null;
       if(!recs){$("#r-err").textContent="Decrypted, but no records were found in this backup.";return;}
-      pendingRestore=null;closeModal();stageRecords(recs);
+      var origin={id:(b.device&&b.device.id)||"",label:(b.device&&b.device.label)||"",exported:b.exported||""};
+      pendingRestore=null;closeModal();stageRecords(recs,origin);
     }catch(e){$("#r-err").textContent="Incorrect passphrase, or the backup is corrupt.";}
+  }
+
+  /* ----- forms: request-intake module ----- */
+  function deriveFormTitle(ftKey,fields){var ft=FORM_TYPES[ftKey];var who=(fields.fullName||fields.email||"Untitled").toString().trim()||"Untitled";return who+" — "+(ft?ft.label:"Form");}
+  function fillTpl(tpl,fields){return String(tpl).replace(/\{\{(\w+)\}\}/g,function(_,k){return (fields&&fields[k]!=null&&fields[k]!=="")?String(fields[k]):"";});}
+  function formDiff(oldRec,newFields,ft){
+    var of=(oldRec&&oldRec.fields)||{},parts=[];
+    ft.fields.forEach(function(f){var ov=of[f.key]||"",nv=newFields[f.key]||"";if(String(ov)!==String(nv))parts.push(f.label+": "+(ov?("“"+trunc(ov)+"”"):"∅")+"→"+(nv?("“"+trunc(nv)+"”"):"∅"));});
+    return parts.length?parts.join("; "):"";
+  }
+
+  function renderForms(){
+    var keys=Object.keys(FORM_TYPES);
+    if(!formSel||!FORM_TYPES[formSel])formSel=keys[0];
+    var ft=FORM_TYPES[formSel];
+    var tabs='<div class="ftabs">'+keys.map(function(k){return '<button class="ftab'+(k===formSel?" on":"")+'" data-action="form-type" data-key="'+esc(k)+'">'+esc(FORM_TYPES[k].label)+'</button>';}).join("")+'</div>';
+    var subs=state.records.filter(function(r){return r.type==="form"&&r.formType===formSel&&Authz.can("read",r);}).sort(recSort);
+    var list=subs.length?subs.map(formRow).join(""):'<div class="empty">No '+esc(ft.label)+' submissions yet. Use “+ New” or “Import PDF”.</div>';
+    $("#page").innerHTML=tabs
+      +'<div class="toolbar"><span class="muted" style="flex:1;min-width:120px">'+esc(ft.label)+' · '+subs.length+' submission(s)</span>'
+      +'<button class="btn sm" data-action="form-new">+ New</button>'
+      +'<label class="btn ghost sm" style="display:inline-block;margin:0;cursor:pointer">Import PDF<input type="file" id="pdfin" accept="application/pdf" style="display:none"></label></div>'
+      +'<div class="list">'+list+'</div>';
+  }
+  function formRow(r){
+    var f=r.fields||{},sc=Schema.statusColor(r.status);
+    var sub=[f.email,f.department||f.role||f.toDept||f.manager].filter(Boolean).map(esc).join(" · ");
+    var dt=dueTag(r.due);
+    return '<div class="rec '+(r.status==="done"?"done":"")+'">'
+      +'<div class="rline"><span class="rtitle" data-action="form-edit" data-id="'+r.id+'" style="cursor:pointer">'+esc(r.title)+'</span>'
+      +'<span class="pill" style="color:'+sc+';background:'+sc+'1a;border-color:'+sc+'40"><span class="dot" style="background:'+sc+'"></span>'+esc(Schema.statusLabel(r.status))+'</span>'
+      +(dt?'<span class="due '+dt.c+'">'+esc(dt.t)+'</span>':'')+'</div>'
+      +(sub?'<div class="meta2"><span class="lk">'+sub+'</span></div>':'')
+      +'<div class="meta2"><button class="btn ghost sm" data-action="form-email" data-id="'+r.id+'">Draft email</button>'
+      +'<button class="btn ghost sm" data-action="form-edit" data-id="'+r.id+'">Edit</button>'
+      +'<button class="btn ghost sm danger" data-action="form-del" data-id="'+r.id+'">Delete</button></div>'
+      +'</div>';
+  }
+
+  function openFormModal(ftKey,id,prefill,extracted){
+    var ft=FORM_TYPES[ftKey];if(!ft)return;
+    var rec=id?Repo.get(state,id):null;
+    fType=ftKey;fEditId=id||null;
+    var vals=rec?Object.assign({},rec.fields||{}):(prefill||{});
+    var ex=extracted||{};
+    var statusVal=rec?rec.status:"open";
+    var rows=ft.fields.map(function(f){
+      var v=vals[f.key]!=null?vals[f.key]:"";
+      var mark=ex[f.key]?'<span class="exbadge" title="Extracted from the imported PDF — review">auto</span>':"";
+      var input;
+      if(f.type==="select"){
+        input='<select id="ff-'+esc(f.key)+'">'+(f.options||[]).map(function(o){return '<option'+(String(v)===o?" selected":"")+'>'+esc(o)+'</option>';}).join("")+'</select>';
+      }else{
+        var ty=f.type==="date"?"date":f.type==="email"?"email":"text";
+        input='<input id="ff-'+esc(f.key)+'" type="'+ty+'" maxlength="500" value="'+esc(v)+'">';
+      }
+      return '<label for="ff-'+esc(f.key)+'">'+esc(f.label)+(f.required?" *":"")+mark+'</label>'+input;
+    }).join("");
+    var statusSel='<label for="ff-status">Status</label><select id="ff-status">'+Schema.statuses.map(function(s){return '<option value="'+s[0]+'"'+(statusVal===s[0]?" selected":"")+'>'+esc(s[1])+'</option>';}).join("")+'</select>';
+    $("#sheet").innerHTML=
+      '<div class="mhead"><span>'+(rec?"Edit ":"New ")+esc(ft.label)+'</span><button class="x" data-action="m-close">×</button></div>'
+      +(Object.keys(ex).length?'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:8px">Fields marked “auto” were read from the imported PDF — review them. Nothing is stored until you press Save.</div>':"")
+      +rows+statusSel
+      +(rec?'<div class="metafoot">Created '+esc(fmtTs(rec.createdAt))+' · '+esc(deviceName(rec.createdBy))+'<br>Last updated '+esc(fmtTs(rec.updatedAt))+' · '+esc(deviceName(rec.updatedBy))+'</div>':'')
+      +'<div class="errbox" id="fm-err"></div>'
+      +'<div class="mfoot">'+(rec?'<button class="btn ghost sm danger" data-action="fm-del">Delete</button>':"")+'<span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Cancel</button><button class="btn sm" data-action="fm-save">Save</button></div>';
+    $("#modal").classList.add("open");
+    var first=$("#ff-"+ft.fields[0].key);if(first)first.focus();
+  }
+  function saveForm(){
+    var ft=FORM_TYPES[fType];if(!ft)return;
+    var fields={},errs=[];
+    ft.fields.forEach(function(f){
+      var el=$("#ff-"+f.key),v=el?String(el.value).trim():"";
+      if(f.required&&!v)errs.push(esc(f.label)+" is required.");
+      if(f.type==="email"&&v&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v))errs.push(esc(f.label)+" is not a valid email.");
+      if(f.type==="date"&&v&&isNaN(Date.parse(v)))errs.push(esc(f.label)+" is not a valid date.");
+      fields[f.key]=v.slice(0,500);
+    });
+    if(errs.length){$("#fm-err").innerHTML=errs.join("<br>");return;}
+    var status=$("#ff-status")?$("#ff-status").value:"open";
+    var title=deriveFormTitle(fType,fields);
+    var due=fields.endDate||fields.effectiveDate||fields.lastWorkingDay||fields.startDate||"";
+    var owner=fields.manager||"";
+    if(!Authz.can(fEditId?"update":"create",null)){denied();return;}
+    if(fEditId){var ofr=Repo.get(state,fEditId),fsum=formDiff(ofr,fields,ft);Repo.update(state,fEditId,{title:title,status:status,fields:fields,due:due,owner:owner});Audit.log(state,"form.update",tgt(Repo.get(state,fEditId)),(fsum||"updated")+" · status "+status);}
+    else{var nfr=Repo.create(state,{type:"form",formType:fType,title:title,status:status,fields:fields,due:due,owner:owner,note:""});Audit.log(state,"form.create",tgt(nfr),ft.label+" submitted");}
+    closeModal();render();save();
+  }
+  function delForm(){
+    if(!fEditId)return;var r=Repo.get(state,fEditId);
+    if(!Authz.can("delete",r)){denied();return;}
+    if(!confirm("Delete this submission? This cannot be undone."))return;
+    Repo.remove(state,fEditId);Audit.log(state,"form.delete",tgt(r),"Deleted submission");
+    closeModal();render();save();
+  }
+
+  /* draft email from the form type's template */
+  function openEmailDraft(id){
+    var r=Repo.get(state,id);if(!r||r.type!=="form")return;
+    var ft=FORM_TYPES[r.formType];if(!ft||!ft.email){alert("No email template for this form type.");return;}
+    var fields=r.fields||{};
+    var subj=fillTpl(ft.email.subject,fields),body=fillTpl(ft.email.body,fields),to=fields.email||"";
+    emailDraft={subj:subj,body:body};
+    var mailto="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(body);
+    $("#sheet").innerHTML=
+      '<div class="mhead"><span>Draft email</span><button class="x" data-action="m-close">×</button></div>'
+      +'<label>To</label><input value="'+esc(to)+'" readonly>'
+      +'<label>Subject</label><input value="'+esc(subj)+'" readonly>'
+      +'<label>Body</label><textarea readonly style="min-height:200px">'+esc(body)+'</textarea>'
+      +'<div class="lk" style="color:var(--faint);font-size:11px;margin-top:8px">“Open in mail app” uses a mailto: link; very long bodies can be truncated by the OS — use “Copy draft” for those.</div>'
+      +'<div class="mfoot"><a class="btn sm" href="'+esc(mailto)+'">Open in mail app</a><button class="btn ghost sm" data-action="email-copy">Copy draft</button><span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Close</button></div>';
+    $("#modal").classList.add("open");
+  }
+  function copyText(txt,btn){
+    function done(){if(btn){var o=btn.textContent;btn.textContent="Copied";setTimeout(function(){btn.textContent=o;},1200);}}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done);});}
+    else fallbackCopy(txt,done);
+  }
+  function fallbackCopy(txt,done){try{var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");ta.remove();done();}catch(e){alert("Copy failed — select the text and copy manually.");}}
+
+  /* ----- PDF import: parse as UNTRUSTED data, never execute, confirm before save ----- */
+  function loadPdfLib(){
+    if(window.PDFLib)return Promise.resolve(window.PDFLib);
+    if(_pdflibP)return _pdflibP;
+    _pdflibP=new Promise(function(res,rej){
+      var s=document.createElement("script");s.src="vendor/pdf-lib.min.js";
+      s.onload=function(){window.PDFLib?res(window.PDFLib):rej(new Error("PDF engine loaded but unavailable."));};
+      s.onerror=function(){_pdflibP=null;rej(new Error("Could not load the local PDF engine (vendor/pdf-lib.min.js). Serve the app from its folder so same-origin scripts can load."));};
+      document.head.appendChild(s);
+    });
+    return _pdflibP;
+  }
+  function normName(s){return String(s).toLowerCase().replace(/[^a-z0-9]/g,"");}
+  function readAcro(doc,ft){
+    var out={},form,fs;
+    try{form=doc.getForm();}catch(e){return out;}
+    try{fs=form.getFields();}catch(e){return out;}
+    if(!fs||!fs.length)return out;
+    var map={};Object.keys(ft.pdfFieldMap).forEach(function(k){map[normName(k)]=ft.pdfFieldMap[k];});
+    fs.forEach(function(f){
+      var name;try{name=f.getName();}catch(e){return;}
+      var key=map[normName(name)];if(!key)return;
+      var val="";
+      try{
+        if(typeof f.getText==="function")val=f.getText()||"";
+        else if(typeof f.getSelected==="function"){var sel=f.getSelected();val=(sel&&sel.join(", "))||"";}
+        else if(typeof f.isChecked==="function")val=f.isChecked()?"Yes":"";
+      }catch(e){}
+      if(val)out[key]=String(val).slice(0,500);
+    });
+    return out;
+  }
+  function regesc(s){return String(s).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");}
+  function pdfUnesc(lit){
+    return lit.slice(1,-1).replace(/\\([nrtbf()\\]|[0-7]{1,3})/g,function(_,c){
+      if(c==="n")return "\n";if(c==="r")return "\r";if(c==="t")return "\t";if(c==="b")return "\b";if(c==="f")return "\f";
+      if(c==="("||c===")"||c==="\\")return c;return String.fromCharCode(parseInt(c,8)&255);
+    });
+  }
+  async function inflate(u8){
+    if(typeof DecompressionStream==="undefined")return null;
+    var fmts=["deflate","deflate-raw"];
+    for(var i=0;i<fmts.length;i++){
+      try{var ds=new DecompressionStream(fmts[i]);var ab=await new Response(new Blob([u8]).stream().pipeThrough(ds)).arrayBuffer();return new Uint8Array(ab);}catch(e){}
+    }
+    return null;
+  }
+  /* best-effort flat-text extraction (worker-free): inflate FlateDecode content
+     streams and pull literal strings. Reliable AcroForm path is preferred. */
+  async function extractText(u8){
+    var dec=new TextDecoder("latin1"),s=dec.decode(u8),out=[],pos=0,guard=0;
+    while(guard++<5000){
+      var si=s.indexOf("stream",pos);if(si<0)break;
+      var ei=s.indexOf("endstream",si);if(ei<0)break;
+      var start=si+6;if(s[start]==="\r")start++;if(s[start]==="\n")start++;
+      var raw=u8.subarray(start,ei);
+      var dictStart=s.lastIndexOf("<<",si),dict=dictStart>=0?s.slice(dictStart,si):"";
+      var content=null;
+      if(/\/FlateDecode/.test(dict)){var inf=await inflate(raw);if(inf)content=dec.decode(inf);}
+      else content=dec.decode(raw);
+      if(content){var m,re=/\((?:\\[\s\S]|[^\\()])*\)/g;while((m=re.exec(content))){out.push(pdfUnesc(m[0]));}}
+      pos=ei+9;
+    }
+    return out.join(" ");
+  }
+  var LABEL_ALIASES={fullName:["full name","name","employee name","requester"],email:["email","e-mail","email address"],employeeId:["employee id","employee number","staff id"],department:["department","dept"],manager:["manager","line manager","reporting manager"],role:["role","job title","title","position"],startDate:["start date","commencement date"],endDate:["end date","expiry date"],lastWorkingDay:["last working day","leaving date","termination date","last day"],effectiveDate:["effective date","effective from"],fromDept:["from department","current department"],toDept:["to department","new department"],fromRole:["from role","current role"],toRole:["to role","new role"]};
+  function heuristicExtract(text,ft){
+    var found={},fields={},flat=(text||"").replace(/[ \t]+/g," ");
+    var em=flat.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+    ft.fields.forEach(function(f){
+      var aliases=[f.label].concat(LABEL_ALIASES[f.key]||[]);
+      for(var i=0;i<aliases.length;i++){
+        var rx=new RegExp(regesc(aliases[i])+"\\s*[:\\-\\u2013]\\s*([^\\n\\r]{1,120}?)(?:\\s{2,}|[\\n\\r]|$)","i");
+        var mm=flat.match(rx);
+        if(mm&&mm[1]&&mm[1].trim()){fields[f.key]=mm[1].trim().slice(0,500);found[f.key]=true;break;}
+      }
+      if(!fields[f.key]&&f.type==="email"&&em){fields[f.key]=em[0];found[f.key]=true;}
+    });
+    return {fields:fields,found:found};
+  }
+  async function importFormPdf(file){
+    if(!Authz.can("import",null)){denied();return;}
+    if(file.size>MAX_IMPORT){alert("This file is "+(file.size/1048576).toFixed(1)+" MB and exceeds the "+(MAX_IMPORT/1048576)+" MB import limit.");return;}
+    var ftKey=formSel,ft=FORM_TYPES[ftKey];if(!ft)return;
+    var bytes;try{bytes=new Uint8Array(await file.arrayBuffer());}catch(e){alert("Could not read that file.");return;}
+    var fields={},extracted={},note="";
+    try{
+      var PDFLib=await loadPdfLib();
+      var doc=await PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true,updateMetadata:false});
+      var acro=readAcro(doc,ft);
+      if(Object.keys(acro).length){Object.assign(fields,acro);Object.keys(acro).forEach(function(k){extracted[k]=true;});note="acroform";}
+      else{var text=await extractText(bytes);var h=heuristicExtract(text,ft);Object.assign(fields,h.fields);Object.assign(extracted,h.found);note="text-heuristic";}
+    }catch(e){alert("Couldn't parse this PDF ("+((e&&e.message)||"unknown error")+"). You can still fill the form in manually.");}
+    Audit.log(state,"form.pdf_import",null,ft.label+" · "+note+" · "+Object.keys(extracted).length+" field(s) extracted (pending review)");save();
+    openFormModal(ftKey,null,fields,extracted);
   }
 
   /* ----- events ----- */
@@ -665,7 +1106,15 @@ var App=(function(){
     if(a==="wipe"){wipeAll();return;}
     if(!Vault.ready())return;
     if(a==="new"){openModal(null,t.getAttribute("data-type")||null);return;}
-    if(a==="edit"){openModal(id);return;}
+    if(a==="edit"){var _er=Repo.get(state,id);if(_er&&_er.type==="form"){openFormModal(_er.formType,id);}else{openModal(id);}return;}
+    if(a==="form-type"){formSel=t.getAttribute("data-key");render();return;}
+    if(a==="form-new"){openFormModal(formSel,null,{},{});return;}
+    if(a==="form-edit"){var _fr=Repo.get(state,id);openFormModal(_fr?_fr.formType:formSel,id);return;}
+    if(a==="form-email"){openEmailDraft(id);return;}
+    if(a==="form-del"){fEditId=id;delForm();return;}
+    if(a==="fm-save"){saveForm();return;}
+    if(a==="fm-del"){delForm();return;}
+    if(a==="email-copy"){copyText(emailDraft?(emailDraft.subj+"\n\n"+emailDraft.body):"",t);return;}
     if(a==="m-close"){closeModal();return;}
     if(a==="m-save"){saveModal();return;}
     if(a==="m-del"){delRecord();return;}
@@ -679,7 +1128,10 @@ var App=(function(){
     if(a==="stage-open"){openStaging();return;}
     if(a==="stage-commit"){commitStaged(+i);return;}
     if(a==="stage-commitall"){commitAllStaged();return;}
-    if(a==="stage-discard"){state.staging.splice(+i,1);Audit.log(state,"import.discard","");openStaging();render();save();return;}
+    if(a==="stage-discard"){state.staging.splice(+i,1);Audit.log(state,"import.discard",null,"Discarded 1 staged record");openStaging();render();save();return;}
+    if(a==="act-verify"){verifyActivity();return;}
+    if(a==="act-csv"){exportActivityCSV();return;}
+    if(a==="device-rename"){renameDevice();return;}
     if(a==="stage-clear"){if(confirm("Discard all staged records?")){state.staging=[];closeModal();render();save();}return;}
   }
 
@@ -692,6 +1144,10 @@ var App=(function(){
       if(e.target.id==="ftype"){filter.type=e.target.value;renderRows();return;}
       if(e.target.id==="ffw"){filter.fw=e.target.value;renderRows();return;}
       if(e.target.id==="restorein"){var f=e.target.files&&e.target.files[0];e.target.value="";if(f)restore(f);return;}
+      if(e.target.id==="pdfin"){var pf=e.target.files&&e.target.files[0];e.target.value="";if(pf)importFormPdf(pf);return;}
+      if(e.target.id==="act-action"){actFilter.action=e.target.value;renderActivity();return;}
+      if(e.target.id==="act-from"){actFilter.from=e.target.value;renderActivity();return;}
+      if(e.target.id==="act-to"){actFilter.to=e.target.value;renderActivity();return;}
     });
     ["mousemove","keydown","click","touchstart"].forEach(function(ev){document.addEventListener(ev,function(){if(Vault.ready())resetIdle();},{passive:true});});
     Store.get("meta").then(function(meta){renderLock(!meta);});
