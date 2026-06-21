@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <title>Test page</title>
 <style>
@@ -120,6 +120,11 @@
   .topactions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
   .card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:12px}
   .card h3{margin:0 0 4px;font-size:15px;font-weight:650}
+  .ftabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .ftab{font-size:12.5px;font-weight:600;color:var(--muted);background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+  .ftab:hover{color:var(--text);border-color:var(--accent)}
+  .ftab.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+  .exbadge{font-family:var(--mono);font-size:8.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--green);background:rgba(95,174,134,.12);border:1px solid rgba(95,174,134,.35);border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle}
   .card.danger-zone{border-color:rgba(216,104,95,.45);background:rgba(216,104,95,.05)}
   .card.danger-zone h3{color:var(--red)}
   .muted{color:var(--muted);font-size:12.5px}
@@ -175,6 +180,7 @@
         <a href="#/vendors" data-nav="vendors">Vendors</a>
         <a href="#/risks" data-nav="risks">Risks</a>
         <a href="#/tasks" data-nav="tasks">Tasks</a>
+        <a href="#/forms" data-nav="forms">Forms</a>
         <a href="#/settings" data-nav="settings">Settings</a>
       </nav>
       <div class="sidefoot">
@@ -267,6 +273,72 @@ var Schema={
   }
 };
 
+/* ---------- Forms: request-intake config (extend here to add a type) ----------
+   Each form type is pure config: field schema (rendered as the New/Edit modal),
+   a pdfFieldMap (AcroForm field name -> schema key) for fillable-PDF import, and
+   an email template whose {{fieldKey}} placeholders are filled from a submission.
+   Adding a new form type is a matter of adding one entry below. */
+var FORM_TYPES={
+  vpn_access:{
+    key:"vpn_access",label:"VPN Access",
+    fields:[
+      {key:"fullName",label:"Full name",type:"text",required:true},
+      {key:"email",label:"Email",type:"email",required:true},
+      {key:"employeeId",label:"Employee ID",type:"text"},
+      {key:"department",label:"Department",type:"text"},
+      {key:"manager",label:"Manager",type:"text"},
+      {key:"accessProfile",label:"Access profile",type:"select",options:["Standard","Privileged","Third-party","Break-glass"]},
+      {key:"justification",label:"Business justification",type:"text"},
+      {key:"startDate",label:"Start date",type:"date"},
+      {key:"endDate",label:"End date",type:"date"}
+    ],
+    pdfFieldMap:{"Full Name":"fullName","Name":"fullName","Requester":"fullName","Email":"email","Email Address":"email","Employee ID":"employeeId","EmployeeID":"employeeId","Department":"department","Manager":"manager","Line Manager":"manager","Access Profile":"accessProfile","Profile":"accessProfile","Justification":"justification","Business Justification":"justification","Start Date":"startDate","End Date":"endDate"},
+    email:{subject:"VPN access request — {{fullName}}",body:"Hi {{manager}},\n\nPlease review/approve VPN access for the following request:\n\nRequester: {{fullName}} ({{email}})\nEmployee ID: {{employeeId}}\nDepartment: {{department}}\nAccess profile: {{accessProfile}}\nPeriod: {{startDate}} to {{endDate}}\n\nJustification:\n{{justification}}\n\nThank you."}
+  },
+  jml_joiner:{
+    key:"jml_joiner",label:"JML — Joiner",
+    fields:[
+      {key:"fullName",label:"Full name",type:"text",required:true},
+      {key:"email",label:"Email",type:"email"},
+      {key:"startDate",label:"Start date",type:"date",required:true},
+      {key:"department",label:"Department",type:"text"},
+      {key:"manager",label:"Manager",type:"text"},
+      {key:"role",label:"Role / job title",type:"text"},
+      {key:"systemsToGrant",label:"Systems to grant",type:"text"}
+    ],
+    pdfFieldMap:{"Full Name":"fullName","Name":"fullName","New Joiner":"fullName","Email":"email","Email Address":"email","Start Date":"startDate","Department":"department","Manager":"manager","Line Manager":"manager","Role":"role","Job Title":"role","Systems":"systemsToGrant","Systems to Grant":"systemsToGrant","Access Required":"systemsToGrant"},
+    email:{subject:"Joiner onboarding — {{fullName}} ({{startDate}})",body:"Hi IT/Access team,\n\nPlease provision access for a new joiner:\n\nName: {{fullName}} ({{email}})\nStart date: {{startDate}}\nDepartment: {{department}}\nManager: {{manager}}\nRole: {{role}}\n\nSystems to grant:\n{{systemsToGrant}}\n\nThank you."}
+  },
+  jml_mover:{
+    key:"jml_mover",label:"JML — Mover",
+    fields:[
+      {key:"fullName",label:"Full name",type:"text",required:true},
+      {key:"email",label:"Email",type:"email"},
+      {key:"fromDept",label:"From department",type:"text"},
+      {key:"toDept",label:"To department",type:"text"},
+      {key:"fromRole",label:"From role",type:"text"},
+      {key:"toRole",label:"To role",type:"text"},
+      {key:"accessChanges",label:"Access changes",type:"text"},
+      {key:"effectiveDate",label:"Effective date",type:"date"}
+    ],
+    pdfFieldMap:{"Full Name":"fullName","Name":"fullName","Email":"email","Email Address":"email","From Department":"fromDept","Current Department":"fromDept","To Department":"toDept","New Department":"toDept","From Role":"fromRole","Current Role":"fromRole","To Role":"toRole","New Role":"toRole","Access Changes":"accessChanges","Effective Date":"effectiveDate"},
+    email:{subject:"Mover access change — {{fullName}} (eff. {{effectiveDate}})",body:"Hi IT/Access team,\n\nPlease action an internal move:\n\nName: {{fullName}} ({{email}})\nFrom: {{fromDept}} / {{fromRole}}\nTo: {{toDept}} / {{toRole}}\nEffective date: {{effectiveDate}}\n\nAccess changes required:\n{{accessChanges}}\n\nThank you."}
+  },
+  jml_leaver:{
+    key:"jml_leaver",label:"JML — Leaver",
+    fields:[
+      {key:"fullName",label:"Full name",type:"text",required:true},
+      {key:"email",label:"Email",type:"email"},
+      {key:"lastWorkingDay",label:"Last working day",type:"date",required:true},
+      {key:"manager",label:"Manager",type:"text"},
+      {key:"systemsToRevoke",label:"Systems to revoke",type:"text"},
+      {key:"assetsToReturn",label:"Assets to return",type:"text"}
+    ],
+    pdfFieldMap:{"Full Name":"fullName","Name":"fullName","Leaver":"fullName","Email":"email","Email Address":"email","Last Working Day":"lastWorkingDay","Leaving Date":"lastWorkingDay","Termination Date":"lastWorkingDay","Manager":"manager","Line Manager":"manager","Systems to Revoke":"systemsToRevoke","Access to Revoke":"systemsToRevoke","Assets to Return":"assetsToReturn","Equipment":"assetsToReturn"},
+    email:{subject:"Leaver offboarding — {{fullName}} (LWD {{lastWorkingDay}})",body:"Hi IT/Access team,\n\nPlease offboard the following leaver:\n\nName: {{fullName}} ({{email}})\nLast working day: {{lastWorkingDay}}\nManager: {{manager}}\n\nSystems to revoke:\n{{systemsToRevoke}}\n\nAssets to return:\n{{assetsToReturn}}\n\nThank you."}
+  }
+};
+
 /* ---------- Repo: CRUD over state ---------- */
 var Repo={
   create:function(s,d){var r=Object.assign({id:uid(),type:"task",title:"",status:"open",severity:"",due:"",owner:"",note:"",complianceRefs:[],links:[]},d||{});r.createdAt=now();r.updatedAt=now();s.records.push(r);return r;},
@@ -285,6 +357,7 @@ var Authz={can:function(action,record){return true;}};
 /* ---------- App: UI controller ---------- */
 var App=(function(){
   var state=null,editingId=null,work=null,saveTimer=null,idleTimer=null,vmeta=null,pendingRestore=null,view="dashboard";
+  var formSel=null,fType=null,fEditId=null,emailDraft=null,_pdflibP=null;
   var filter={type:"all",fw:"all",q:""};
   var IDLE_MS=15*60*1000, MAX_IMPORT=25*1024*1024;
   function denied(){alert("Not permitted by the current authorization policy.");}
@@ -366,7 +439,7 @@ var App=(function(){
 
   function startSession(){
     $("#lock").hidden=true;$("#app").hidden=false;
-    if(/^#\/(dashboard|records|vendors|risks|tasks|settings)$/.test(location.hash))route();
+    if(/^#\/(dashboard|records|vendors|risks|tasks|forms|settings)$/.test(location.hash))route();
     else location.hash="#/dashboard";
     resetIdle();
   }
@@ -377,7 +450,7 @@ var App=(function(){
   function route(){
     if(!Vault.ready())return;
     var h=(location.hash||"").replace(/^#\/?/,"").split("/")[0]||"dashboard";
-    if(["dashboard","records","vendors","risks","tasks","settings"].indexOf(h)<0)h="dashboard";
+    if(["dashboard","records","vendors","risks","tasks","forms","settings"].indexOf(h)<0)h="dashboard";
     view=h;renderNav();renderStaging();renderPage(h);
     var c=$(".content");if(c)c.scrollTop=0;window.scrollTo(0,0);
   }
@@ -385,7 +458,7 @@ var App=(function(){
   function render(){if(!Vault.ready())return;renderNav();renderStaging();renderPage(view);}
   function renderPage(page){
     routeType={vendors:"vendor",risks:"risk",tasks:"task"}[page]||null;
-    var titles={dashboard:"Dashboard",records:"All records",vendors:"Vendors & processors",risks:"Risk register",tasks:"Tasks & deadlines",settings:"Settings"};
+    var titles={dashboard:"Dashboard",records:"All records",vendors:"Vendors & processors",risks:"Risk register",tasks:"Tasks & deadlines",forms:"Forms",settings:"Settings"};
     $("#pagetitle").textContent=titles[page]||"Dashboard";
     var ta="";
     if(page==="dashboard")ta='<button class="btn ghost sm" data-action="activity">Activity</button>';
@@ -396,6 +469,7 @@ var App=(function(){
     $("#topactions").innerHTML=ta;
     if(page==="dashboard")renderDashboard();
     else if(page==="settings")renderSettings();
+    else if(page==="forms")renderForms();
     else renderRegister(page);
   }
 
@@ -567,7 +641,7 @@ var App=(function(){
     closeModal();render();save();
   }
   function delRecord(){if(!editingId)return;var r=Repo.get(state,editingId);if(!Authz.can("delete",r)){denied();return;}if(!confirm("Delete this record? This also removes links to it."))return;Repo.remove(state,editingId);Audit.log(state,"record.delete",(r?r.type+": "+r.title:""));closeModal();render();save();}
-  function closeModal(){$("#modal").classList.remove("open");editingId=null;work=null;pendingRestore=null;}
+  function closeModal(){$("#modal").classList.remove("open");editingId=null;work=null;pendingRestore=null;fEditId=null;fType=null;emailDraft=null;}
 
   /* ----- activity ----- */
   function openActivity(){
@@ -655,6 +729,216 @@ var App=(function(){
     }catch(e){$("#r-err").textContent="Incorrect passphrase, or the backup is corrupt.";}
   }
 
+  /* ----- forms: request-intake module ----- */
+  function deriveFormTitle(ftKey,fields){var ft=FORM_TYPES[ftKey];var who=(fields.fullName||fields.email||"Untitled").toString().trim()||"Untitled";return who+" — "+(ft?ft.label:"Form");}
+  function fillTpl(tpl,fields){return String(tpl).replace(/\{\{(\w+)\}\}/g,function(_,k){return (fields&&fields[k]!=null&&fields[k]!=="")?String(fields[k]):"";});}
+
+  function renderForms(){
+    var keys=Object.keys(FORM_TYPES);
+    if(!formSel||!FORM_TYPES[formSel])formSel=keys[0];
+    var ft=FORM_TYPES[formSel];
+    var tabs='<div class="ftabs">'+keys.map(function(k){return '<button class="ftab'+(k===formSel?" on":"")+'" data-action="form-type" data-key="'+esc(k)+'">'+esc(FORM_TYPES[k].label)+'</button>';}).join("")+'</div>';
+    var subs=state.records.filter(function(r){return r.type==="form"&&r.formType===formSel&&Authz.can("read",r);}).sort(recSort);
+    var list=subs.length?subs.map(formRow).join(""):'<div class="empty">No '+esc(ft.label)+' submissions yet. Use “+ New” or “Import PDF”.</div>';
+    $("#page").innerHTML=tabs
+      +'<div class="toolbar"><span class="muted" style="flex:1;min-width:120px">'+esc(ft.label)+' · '+subs.length+' submission(s)</span>'
+      +'<button class="btn sm" data-action="form-new">+ New</button>'
+      +'<label class="btn ghost sm" style="display:inline-block;margin:0;cursor:pointer">Import PDF<input type="file" id="pdfin" accept="application/pdf" style="display:none"></label></div>'
+      +'<div class="list">'+list+'</div>';
+  }
+  function formRow(r){
+    var f=r.fields||{},sc=Schema.statusColor(r.status);
+    var sub=[f.email,f.department||f.role||f.toDept||f.manager].filter(Boolean).map(esc).join(" · ");
+    var dt=dueTag(r.due);
+    return '<div class="rec '+(r.status==="done"?"done":"")+'">'
+      +'<div class="rline"><span class="rtitle" data-action="form-edit" data-id="'+r.id+'" style="cursor:pointer">'+esc(r.title)+'</span>'
+      +'<span class="pill" style="color:'+sc+';background:'+sc+'1a;border-color:'+sc+'40"><span class="dot" style="background:'+sc+'"></span>'+esc(Schema.statusLabel(r.status))+'</span>'
+      +(dt?'<span class="due '+dt.c+'">'+esc(dt.t)+'</span>':'')+'</div>'
+      +(sub?'<div class="meta2"><span class="lk">'+sub+'</span></div>':'')
+      +'<div class="meta2"><button class="btn ghost sm" data-action="form-email" data-id="'+r.id+'">Draft email</button>'
+      +'<button class="btn ghost sm" data-action="form-edit" data-id="'+r.id+'">Edit</button>'
+      +'<button class="btn ghost sm danger" data-action="form-del" data-id="'+r.id+'">Delete</button></div>'
+      +'</div>';
+  }
+
+  function openFormModal(ftKey,id,prefill,extracted){
+    var ft=FORM_TYPES[ftKey];if(!ft)return;
+    var rec=id?Repo.get(state,id):null;
+    fType=ftKey;fEditId=id||null;
+    var vals=rec?Object.assign({},rec.fields||{}):(prefill||{});
+    var ex=extracted||{};
+    var statusVal=rec?rec.status:"open";
+    var rows=ft.fields.map(function(f){
+      var v=vals[f.key]!=null?vals[f.key]:"";
+      var mark=ex[f.key]?'<span class="exbadge" title="Extracted from the imported PDF — review">auto</span>':"";
+      var input;
+      if(f.type==="select"){
+        input='<select id="ff-'+esc(f.key)+'">'+(f.options||[]).map(function(o){return '<option'+(String(v)===o?" selected":"")+'>'+esc(o)+'</option>';}).join("")+'</select>';
+      }else{
+        var ty=f.type==="date"?"date":f.type==="email"?"email":"text";
+        input='<input id="ff-'+esc(f.key)+'" type="'+ty+'" maxlength="500" value="'+esc(v)+'">';
+      }
+      return '<label for="ff-'+esc(f.key)+'">'+esc(f.label)+(f.required?" *":"")+mark+'</label>'+input;
+    }).join("");
+    var statusSel='<label for="ff-status">Status</label><select id="ff-status">'+Schema.statuses.map(function(s){return '<option value="'+s[0]+'"'+(statusVal===s[0]?" selected":"")+'>'+esc(s[1])+'</option>';}).join("")+'</select>';
+    $("#sheet").innerHTML=
+      '<div class="mhead"><span>'+(rec?"Edit ":"New ")+esc(ft.label)+'</span><button class="x" data-action="m-close">×</button></div>'
+      +(Object.keys(ex).length?'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:8px">Fields marked “auto” were read from the imported PDF — review them. Nothing is stored until you press Save.</div>':"")
+      +rows+statusSel
+      +'<div class="errbox" id="fm-err"></div>'
+      +'<div class="mfoot">'+(rec?'<button class="btn ghost sm danger" data-action="fm-del">Delete</button>':"")+'<span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Cancel</button><button class="btn sm" data-action="fm-save">Save</button></div>';
+    $("#modal").classList.add("open");
+    var first=$("#ff-"+ft.fields[0].key);if(first)first.focus();
+  }
+  function saveForm(){
+    var ft=FORM_TYPES[fType];if(!ft)return;
+    var fields={},errs=[];
+    ft.fields.forEach(function(f){
+      var el=$("#ff-"+f.key),v=el?String(el.value).trim():"";
+      if(f.required&&!v)errs.push(esc(f.label)+" is required.");
+      if(f.type==="email"&&v&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v))errs.push(esc(f.label)+" is not a valid email.");
+      if(f.type==="date"&&v&&isNaN(Date.parse(v)))errs.push(esc(f.label)+" is not a valid date.");
+      fields[f.key]=v.slice(0,500);
+    });
+    if(errs.length){$("#fm-err").innerHTML=errs.join("<br>");return;}
+    var status=$("#ff-status")?$("#ff-status").value:"open";
+    var title=deriveFormTitle(fType,fields);
+    var due=fields.endDate||fields.effectiveDate||fields.lastWorkingDay||fields.startDate||"";
+    var owner=fields.manager||"";
+    if(!Authz.can(fEditId?"update":"create",null)){denied();return;}
+    if(fEditId){Repo.update(state,fEditId,{title:title,status:status,fields:fields,due:due,owner:owner});Audit.log(state,"form.update",ft.label+": "+title);}
+    else{Repo.create(state,{type:"form",formType:fType,title:title,status:status,fields:fields,due:due,owner:owner,note:""});Audit.log(state,"form.create",ft.label+": "+title);}
+    closeModal();render();save();
+  }
+  function delForm(){
+    if(!fEditId)return;var r=Repo.get(state,fEditId);
+    if(!Authz.can("delete",r)){denied();return;}
+    if(!confirm("Delete this submission? This cannot be undone."))return;
+    Repo.remove(state,fEditId);Audit.log(state,"form.delete",(r?r.title:""));
+    closeModal();render();save();
+  }
+
+  /* draft email from the form type's template */
+  function openEmailDraft(id){
+    var r=Repo.get(state,id);if(!r||r.type!=="form")return;
+    var ft=FORM_TYPES[r.formType];if(!ft||!ft.email){alert("No email template for this form type.");return;}
+    var fields=r.fields||{};
+    var subj=fillTpl(ft.email.subject,fields),body=fillTpl(ft.email.body,fields),to=fields.email||"";
+    emailDraft={subj:subj,body:body};
+    var mailto="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(body);
+    $("#sheet").innerHTML=
+      '<div class="mhead"><span>Draft email</span><button class="x" data-action="m-close">×</button></div>'
+      +'<label>To</label><input value="'+esc(to)+'" readonly>'
+      +'<label>Subject</label><input value="'+esc(subj)+'" readonly>'
+      +'<label>Body</label><textarea readonly style="min-height:200px">'+esc(body)+'</textarea>'
+      +'<div class="lk" style="color:var(--faint);font-size:11px;margin-top:8px">“Open in mail app” uses a mailto: link; very long bodies can be truncated by the OS — use “Copy draft” for those.</div>'
+      +'<div class="mfoot"><a class="btn sm" href="'+esc(mailto)+'">Open in mail app</a><button class="btn ghost sm" data-action="email-copy">Copy draft</button><span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Close</button></div>';
+    $("#modal").classList.add("open");
+  }
+  function copyText(txt,btn){
+    function done(){if(btn){var o=btn.textContent;btn.textContent="Copied";setTimeout(function(){btn.textContent=o;},1200);}}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done);});}
+    else fallbackCopy(txt,done);
+  }
+  function fallbackCopy(txt,done){try{var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");ta.remove();done();}catch(e){alert("Copy failed — select the text and copy manually.");}}
+
+  /* ----- PDF import: parse as UNTRUSTED data, never execute, confirm before save ----- */
+  function loadPdfLib(){
+    if(window.PDFLib)return Promise.resolve(window.PDFLib);
+    if(_pdflibP)return _pdflibP;
+    _pdflibP=new Promise(function(res,rej){
+      var s=document.createElement("script");s.src="vendor/pdf-lib.min.js";
+      s.onload=function(){window.PDFLib?res(window.PDFLib):rej(new Error("PDF engine loaded but unavailable."));};
+      s.onerror=function(){_pdflibP=null;rej(new Error("Could not load the local PDF engine (vendor/pdf-lib.min.js). Serve the app from its folder so same-origin scripts can load."));};
+      document.head.appendChild(s);
+    });
+    return _pdflibP;
+  }
+  function normName(s){return String(s).toLowerCase().replace(/[^a-z0-9]/g,"");}
+  function readAcro(doc,ft){
+    var out={},form,fs;
+    try{form=doc.getForm();}catch(e){return out;}
+    try{fs=form.getFields();}catch(e){return out;}
+    if(!fs||!fs.length)return out;
+    var map={};Object.keys(ft.pdfFieldMap).forEach(function(k){map[normName(k)]=ft.pdfFieldMap[k];});
+    fs.forEach(function(f){
+      var name;try{name=f.getName();}catch(e){return;}
+      var key=map[normName(name)];if(!key)return;
+      var val="";
+      try{
+        if(typeof f.getText==="function")val=f.getText()||"";
+        else if(typeof f.getSelected==="function"){var sel=f.getSelected();val=(sel&&sel.join(", "))||"";}
+        else if(typeof f.isChecked==="function")val=f.isChecked()?"Yes":"";
+      }catch(e){}
+      if(val)out[key]=String(val).slice(0,500);
+    });
+    return out;
+  }
+  function regesc(s){return String(s).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");}
+  function pdfUnesc(lit){
+    return lit.slice(1,-1).replace(/\\([nrtbf()\\]|[0-7]{1,3})/g,function(_,c){
+      if(c==="n")return "\n";if(c==="r")return "\r";if(c==="t")return "\t";if(c==="b")return "\b";if(c==="f")return "\f";
+      if(c==="("||c===")"||c==="\\")return c;return String.fromCharCode(parseInt(c,8)&255);
+    });
+  }
+  async function inflate(u8){
+    if(typeof DecompressionStream==="undefined")return null;
+    var fmts=["deflate","deflate-raw"];
+    for(var i=0;i<fmts.length;i++){
+      try{var ds=new DecompressionStream(fmts[i]);var ab=await new Response(new Blob([u8]).stream().pipeThrough(ds)).arrayBuffer();return new Uint8Array(ab);}catch(e){}
+    }
+    return null;
+  }
+  /* best-effort flat-text extraction (worker-free): inflate FlateDecode content
+     streams and pull literal strings. Reliable AcroForm path is preferred. */
+  async function extractText(u8){
+    var dec=new TextDecoder("latin1"),s=dec.decode(u8),out=[],pos=0,guard=0;
+    while(guard++<5000){
+      var si=s.indexOf("stream",pos);if(si<0)break;
+      var ei=s.indexOf("endstream",si);if(ei<0)break;
+      var start=si+6;if(s[start]==="\r")start++;if(s[start]==="\n")start++;
+      var raw=u8.subarray(start,ei);
+      var dictStart=s.lastIndexOf("<<",si),dict=dictStart>=0?s.slice(dictStart,si):"";
+      var content=null;
+      if(/\/FlateDecode/.test(dict)){var inf=await inflate(raw);if(inf)content=dec.decode(inf);}
+      else content=dec.decode(raw);
+      if(content){var m,re=/\((?:\\[\s\S]|[^\\()])*\)/g;while((m=re.exec(content))){out.push(pdfUnesc(m[0]));}}
+      pos=ei+9;
+    }
+    return out.join(" ");
+  }
+  var LABEL_ALIASES={fullName:["full name","name","employee name","requester"],email:["email","e-mail","email address"],employeeId:["employee id","employee number","staff id"],department:["department","dept"],manager:["manager","line manager","reporting manager"],role:["role","job title","title","position"],startDate:["start date","commencement date"],endDate:["end date","expiry date"],lastWorkingDay:["last working day","leaving date","termination date","last day"],effectiveDate:["effective date","effective from"],fromDept:["from department","current department"],toDept:["to department","new department"],fromRole:["from role","current role"],toRole:["to role","new role"]};
+  function heuristicExtract(text,ft){
+    var found={},fields={},flat=(text||"").replace(/[ \t]+/g," ");
+    var em=flat.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+    ft.fields.forEach(function(f){
+      var aliases=[f.label].concat(LABEL_ALIASES[f.key]||[]);
+      for(var i=0;i<aliases.length;i++){
+        var rx=new RegExp(regesc(aliases[i])+"\\s*[:\\-\\u2013]\\s*([^\\n\\r]{1,120}?)(?:\\s{2,}|[\\n\\r]|$)","i");
+        var mm=flat.match(rx);
+        if(mm&&mm[1]&&mm[1].trim()){fields[f.key]=mm[1].trim().slice(0,500);found[f.key]=true;break;}
+      }
+      if(!fields[f.key]&&f.type==="email"&&em){fields[f.key]=em[0];found[f.key]=true;}
+    });
+    return {fields:fields,found:found};
+  }
+  async function importFormPdf(file){
+    if(!Authz.can("import",null)){denied();return;}
+    if(file.size>MAX_IMPORT){alert("This file is "+(file.size/1048576).toFixed(1)+" MB and exceeds the "+(MAX_IMPORT/1048576)+" MB import limit.");return;}
+    var ftKey=formSel,ft=FORM_TYPES[ftKey];if(!ft)return;
+    var bytes;try{bytes=new Uint8Array(await file.arrayBuffer());}catch(e){alert("Could not read that file.");return;}
+    var fields={},extracted={},note="";
+    try{
+      var PDFLib=await loadPdfLib();
+      var doc=await PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true,updateMetadata:false});
+      var acro=readAcro(doc,ft);
+      if(Object.keys(acro).length){Object.assign(fields,acro);Object.keys(acro).forEach(function(k){extracted[k]=true;});note="acroform";}
+      else{var text=await extractText(bytes);var h=heuristicExtract(text,ft);Object.assign(fields,h.fields);Object.assign(extracted,h.found);note="text-heuristic";}
+    }catch(e){alert("Couldn't parse this PDF ("+((e&&e.message)||"unknown error")+"). You can still fill the form in manually.");}
+    Audit.log(state,"form.pdf_import",ft.label+" · "+note+" · "+Object.keys(extracted).length+" field(s)");save();
+    openFormModal(ftKey,null,fields,extracted);
+  }
+
   /* ----- events ----- */
   function onClick(e){
     var t=e.target.closest("[data-action]");if(!t)return;
@@ -665,7 +949,15 @@ var App=(function(){
     if(a==="wipe"){wipeAll();return;}
     if(!Vault.ready())return;
     if(a==="new"){openModal(null,t.getAttribute("data-type")||null);return;}
-    if(a==="edit"){openModal(id);return;}
+    if(a==="edit"){var _er=Repo.get(state,id);if(_er&&_er.type==="form"){openFormModal(_er.formType,id);}else{openModal(id);}return;}
+    if(a==="form-type"){formSel=t.getAttribute("data-key");render();return;}
+    if(a==="form-new"){openFormModal(formSel,null,{},{});return;}
+    if(a==="form-edit"){var _fr=Repo.get(state,id);openFormModal(_fr?_fr.formType:formSel,id);return;}
+    if(a==="form-email"){openEmailDraft(id);return;}
+    if(a==="form-del"){fEditId=id;delForm();return;}
+    if(a==="fm-save"){saveForm();return;}
+    if(a==="fm-del"){delForm();return;}
+    if(a==="email-copy"){copyText(emailDraft?(emailDraft.subj+"\n\n"+emailDraft.body):"",t);return;}
     if(a==="m-close"){closeModal();return;}
     if(a==="m-save"){saveModal();return;}
     if(a==="m-del"){delRecord();return;}
@@ -692,6 +984,7 @@ var App=(function(){
       if(e.target.id==="ftype"){filter.type=e.target.value;renderRows();return;}
       if(e.target.id==="ffw"){filter.fw=e.target.value;renderRows();return;}
       if(e.target.id==="restorein"){var f=e.target.files&&e.target.files[0];e.target.value="";if(f)restore(f);return;}
+      if(e.target.id==="pdfin"){var pf=e.target.files&&e.target.files[0];e.target.value="";if(pf)importFormPdf(pf);return;}
     });
     ["mousemove","keydown","click","touchstart"].forEach(function(ev){document.addEventListener(ev,function(){if(Vault.ready())resetIdle();},{passive:true});});
     Store.get("meta").then(function(meta){renderLock(!meta);});
