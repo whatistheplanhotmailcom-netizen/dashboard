@@ -5,1158 +5,930 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
-<title>Test page</title>
+<title>Aegis — Secure Workspace</title>
 <style>
   :root{
-    --ink:#0c1424;--ink2:#0f1a2e;--ink3:#13213a;--ink4:#16243f;
-    --line:#213149;--line2:#1a2740;--text:#e8eef6;--muted:#93a4bd;--faint:#5d6f8c;
-    --accent:#8fb8e8;--green:#5fae86;--amber:#d8a24f;--red:#d8685f;--blue:#6fa3dd;
-    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;--r:9px;
+    --bg:#0a0e16;--bg2:#0f1420;--bg3:#141b2b;--bg4:#1a2334;
+    --line:#243149;--line2:#1b2438;
+    --text:#e7edf7;--muted:#93a2bd;--faint:#5f6f8c;
+    --accent:#8b93ff;--accent2:#5ec7b8;
+    --green:#57b98a;--amber:#d7a552;--red:#e0736a;--blue:#6aa6e6;--violet:#a78bfa;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+    --r:11px;--r2:14px;
   }
   *{box-sizing:border-box}
   [hidden]{display:none!important}
   html,body{height:100%;margin:0}
-  body{background:radial-gradient(1000px 480px at 82% -12%,rgba(143,184,232,.08),transparent 60%),var(--ink);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.45}
+  body{
+    background:
+      radial-gradient(1100px 520px at 88% -14%,rgba(139,147,255,.10),transparent 60%),
+      radial-gradient(800px 420px at 8% 108%,rgba(94,199,184,.07),transparent 60%),
+      var(--bg);
+    color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.45}
   button,input,select,textarea{font-family:inherit}
-  /* lock */
+  ::selection{background:rgba(139,147,255,.28)}
+  a{color:var(--accent);text-decoration:none}
+
+  /* ---------- lock ---------- */
   #lock{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px}
-  .vault{width:100%;max-width:420px;background:var(--ink2);border:1px solid var(--line);border-radius:14px;padding:26px 24px}
-  .vlogo{width:46px;height:46px;border-radius:12px;background:var(--accent);color:var(--ink);display:grid;place-items:center;font-weight:700;font-size:16px;margin-bottom:14px}
-  .vbrand{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
-  .vbrand .ar{font-family:var(--sans);letter-spacing:0}
-  .vault h1{margin:0 0 4px;font-size:21px;font-weight:650}
-  .vault .ar{color:var(--muted);font-weight:600;font-size:15px;margin-left:5px}
-  .vault p{color:var(--muted);font-size:13px;margin:8px 0 16px}
-  .vault label{display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;font-weight:600}
-  .vault input{width:100%;background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:10px 11px;color:var(--text);font-size:14px;outline:none}
-  .vault input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(143,184,232,.12)}
-  .vault .err{color:var(--red);font-size:12px;margin-top:8px;min-height:14px}
-  .pwmeter{margin-top:8px}
+  .vault{width:100%;max-width:430px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);padding:28px 26px;box-shadow:0 24px 60px -30px rgba(0,0,0,.6)}
+  .vlogo{width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0a0e16;display:grid;place-items:center;font-weight:800;font-size:18px;margin-bottom:16px}
+  .vbrand{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+  .vault h1{margin:0 0 4px;font-size:22px;font-weight:660}
+  .vault p{color:var(--muted);font-size:13px;margin:8px 0 18px}
+  .vault label{display:block;font-size:11px;color:var(--muted);margin:12px 0 5px;font-weight:600;letter-spacing:.02em}
+  .vault input{width:100%;background:var(--bg3);border:1px solid var(--line);border-radius:9px;padding:11px 12px;color:var(--text);font-size:14px;outline:none;transition:border-color .12s,box-shadow .12s}
+  .vault input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,147,255,.14)}
+  .vault .err{color:var(--red);font-size:12px;margin-top:10px;min-height:15px}
+  .pwmeter{margin-top:10px}
   .pwbar{height:5px;background:var(--line2);border-radius:3px;overflow:hidden}
-  .pwbar i{display:block;height:100%;width:0;background:var(--amber);border-radius:3px;transition:width .15s,background .15s}
-  .pwmeter span{font-size:11px;color:var(--faint);display:block;margin-top:5px}
-  .vault .note{font-size:11px;color:var(--faint);margin-top:14px;line-height:1.5;border-top:1px solid var(--line2);padding-top:12px}
-  .vault .dz{margin-top:14px;border-top:1px solid rgba(216,104,95,.3);padding-top:12px}
-  .vault .dz h2{font-size:11px;font-weight:700;color:var(--red);margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em}
-  .vault .dz p{font-size:11px;color:var(--faint);margin:0 0 10px;line-height:1.5}
-  .vault .dz .btn{width:100%}
-  .btn{font-size:13px;font-weight:600;color:var(--ink);background:var(--accent);border:none;border-radius:8px;padding:9px 14px;cursor:pointer;white-space:nowrap}
-  .btn:hover{filter:brightness(1.07)}
+  .pwbar i{display:block;height:100%;width:0;background:var(--amber);border-radius:3px;transition:width .18s,background .18s}
+  .pwmeter span{font-size:11px;color:var(--faint);display:block;margin-top:6px}
+  .vault .note{font-size:11px;color:var(--faint);margin-top:16px;line-height:1.55;border-top:1px solid var(--line2);padding-top:13px}
+  .vault .dz{margin-top:16px;border-top:1px solid rgba(224,115,106,.28);padding-top:13px}
+  .vault .dz h2{font-size:11px;font-weight:700;color:var(--red);margin:0 0 6px;text-transform:uppercase;letter-spacing:.06em}
+  .vault .dz p{font-size:11px;color:var(--faint);margin:0 0 10px}
+
+  /* ---------- buttons ---------- */
+  .btn{font-size:13px;font-weight:600;color:#0a0e16;background:var(--accent);border:none;border-radius:9px;padding:9px 15px;cursor:pointer;white-space:nowrap;transition:filter .12s,border-color .12s,color .12s}
+  .btn:hover{filter:brightness(1.08)}
+  .btn:active{filter:brightness(.96)}
   .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
   .btn.ghost:hover{color:var(--text);border-color:var(--accent)}
-  .btn.sm{padding:7px 10px;font-size:12px}
-  .btn.block{width:100%;margin-top:16px;padding:11px}
-  .btn.danger{color:var(--red);border-color:#3a2530;background:transparent}
-  /* app */
-  #app{min-height:100%;display:flex;flex-direction:column}
-  header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line2);background:rgba(15,26,46,.5)}
-  header h1{margin:0;font-size:16px;font-weight:650}
-  header h1 .ar{color:var(--muted);font-size:13px;font-weight:600;margin-left:4px}
-  .sub{font-family:var(--mono);font-size:9.5px;color:var(--faint);margin-top:1px}
-  .spacer{flex:1}
-  .lockpill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:#9bd3b1;background:rgba(95,174,134,.08);border:1px solid rgba(95,174,134,.28);padding:5px 8px;border-radius:999px}
+  .btn.sm{padding:7px 11px;font-size:12px}
+  .btn.block{width:100%;margin-top:18px;padding:12px}
+  .btn.danger{color:var(--red);border:1px solid #3a2530;background:transparent}
+  .btn.danger:hover{border-color:var(--red)}
+
+  /* ---------- app shell ---------- */
+  .shell{display:flex;min-height:100%}
+  .sidebar{width:214px;flex:0 0 214px;background:var(--bg2);border-right:1px solid var(--line2);display:flex;flex-direction:column;padding:18px 14px;position:sticky;top:0;height:100vh}
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 6px 16px}
+  .brand .logo{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0a0e16;display:grid;place-items:center;font-weight:800;font-size:14px}
+  .brand b{font-size:15px;font-weight:660;letter-spacing:.01em}
+  .nav{display:flex;flex-direction:column;gap:2px;flex:1}
+  .nav a{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:8px;color:var(--muted);font-size:13.5px;font-weight:550;cursor:pointer}
+  .nav a:hover{background:var(--bg3);color:var(--text)}
+  .nav a.on{background:var(--bg4);color:var(--text)}
+  .nav a .ico{width:16px;text-align:center;opacity:.85;font-size:14px}
+  .nav a .ct{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--faint);background:var(--bg4);border-radius:6px;padding:1px 6px}
+  .nav a.on .ct{background:var(--bg2)}
+  .sidefoot{border-top:1px solid var(--line2);padding-top:12px;display:flex;flex-direction:column;gap:9px}
+  .lockpill{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--green);background:rgba(87,185,138,.10);border:1px solid rgba(87,185,138,.28);border-radius:7px;padding:5px 8px;width:fit-content}
   .lockpill .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
-  main{flex:1;padding:14px 16px;max-width:1080px;width:100%;margin:0 auto}
-  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-  .toolbar select,.toolbar input{background:var(--ink3);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:7px 9px;font-size:13px;outline:none}
-  .toolbar input{flex:1;min-width:150px}
-  .toolbar select:focus,.toolbar input:focus{border-color:var(--accent)}
-  .banner{display:flex;align-items:center;gap:10px;background:rgba(216,162,79,.08);border:1px solid rgba(216,162,79,.4);border-radius:var(--r);padding:9px 12px;margin-bottom:12px;font-size:13px;color:var(--amber)}
+
+  .content{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{position:sticky;top:0;z-index:5;background:rgba(10,14,22,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line2);display:flex;align-items:center;gap:12px;padding:14px 24px}
+  .topbar h2{margin:0;font-size:18px;font-weight:640}
+  .topact{margin-left:auto;display:flex;gap:8px}
+  .page{padding:22px 24px 60px;max-width:1180px;width:100%}
+
+  /* ---------- cards / grid ---------- */
+  .grid{display:grid;gap:14px}
+  .stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .stat{background:var(--bg2);border:1px solid var(--line2);border-radius:var(--r);padding:15px 16px}
+  .stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+  .stat .v{font-size:27px;font-weight:680;margin-top:7px;letter-spacing:-.01em}
+  .stat .m{font-size:11px;color:var(--muted);margin-top:3px}
+  .cols{grid-template-columns:repeat(auto-fit,minmax(290px,1fr));margin-top:14px}
+  .panel{background:var(--bg2);border:1px solid var(--line2);border-radius:var(--r);padding:16px}
+  .panel h3{margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .panel h3 .ct{font-family:var(--mono);font-size:10px;color:var(--faint);font-weight:600}
+
+  .attention{background:linear-gradient(180deg,rgba(224,115,106,.06),transparent);border:1px solid rgba(224,115,106,.24);border-radius:var(--r);padding:15px 16px}
+  .attention.ok{background:linear-gradient(180deg,rgba(87,185,138,.06),transparent);border-color:rgba(87,185,138,.24)}
+  .attention h3{color:var(--red)}
+  .attention.ok h3{color:var(--green)}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+  .pchip{flex:0 0 auto;background:var(--bg3);border:1px solid var(--line);border-radius:9px;padding:9px 11px;min-width:170px;cursor:pointer}
+  .pchip:hover{border-color:var(--accent)}
+  .pchip.over{border-color:rgba(224,115,106,.5)}
+  .pchip .t{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+  .pchip .s{font-size:11px;color:var(--muted);margin-top:4px;display:flex;gap:6px;align-items:center}
+
+  /* ---------- rows / list ---------- */
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+  .toolbar input[type=search],.toolbar select{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:8px 11px;color:var(--text);font-size:13px;outline:none}
+  .toolbar input[type=search]{flex:1;min-width:180px}
+  .toolbar input:focus,.toolbar select:focus{border-color:var(--accent)}
   .list{display:flex;flex-direction:column;gap:8px}
-  .rec{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;cursor:pointer}
-  .rec:hover{border-color:var(--accent)}
-  .rline{display:flex;align-items:center;gap:9px}
-  .ttag{font-family:var(--mono);font-size:9px;color:var(--faint);border:1px solid var(--line);border-radius:4px;padding:2px 5px;flex:none;text-transform:uppercase}
-  .rtitle{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .rec.done .rtitle{color:var(--faint);text-decoration:line-through}
-  .pill{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;padding:3px 7px;border-radius:999px;border:1px solid transparent;white-space:nowrap;flex:none}
-  .pill .dot{width:6px;height:6px;border-radius:50%}
-  .due{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap;flex:none}
+  .rec{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--line2);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:border-color .12s,background .12s}
+  .rec:hover{border-color:var(--line);background:var(--bg3)}
+  .rec .tw{min-width:0;flex:1}
+  .rec .tt{font-size:14px;font-weight:580;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rec .meta{font-size:11.5px;color:var(--faint);margin-top:4px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .rec .right{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+  .empty{text-align:center;color:var(--faint);font-size:13px;padding:38px 10px;border:1px dashed var(--line);border-radius:var(--r)}
+
+  /* ---------- badges ---------- */
+  .pill{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:3px 7px;border-radius:6px;border:1px solid;white-space:nowrap}
+  .tag{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--bg4);border:1px solid var(--line2);border-radius:6px;padding:2px 6px}
+  .due{font-family:var(--mono);font-size:11px;color:var(--muted)}
   .due.over{color:var(--red)}.due.soon{color:var(--amber)}
-  .meta2{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:7px}
-  .ctag{font-size:10px;font-weight:600;color:var(--accent);background:rgba(143,184,232,.1);border:1px solid rgba(143,184,232,.3);border-radius:5px;padding:2px 7px}
-  .lk{font-family:var(--mono);font-size:10px;color:var(--faint)}
-  .empty{color:var(--faint);font-size:13px;padding:24px 4px;text-align:center}
-  .sev{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:5px;flex:none;border:1px solid transparent}
-  /* modal */
-  .modal{position:fixed;inset:0;background:rgba(6,11,22,.7);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
-  .modal.open{display:flex}
-  .sheet{width:100%;max-width:480px;max-height:92vh;overflow:auto;background:var(--ink2);border:1px solid var(--line);border-radius:12px;padding:16px}
-  .mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:15px;font-weight:650}
-  .x{border:none;background:none;color:var(--faint);font-size:20px;cursor:pointer;padding:2px 6px;border-radius:6px;line-height:1}
-  .x:hover{color:var(--red);background:rgba(216,104,95,.1)}
-  .sheet label{display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;font-weight:600}
-  .sheet input,.sheet select,.sheet textarea{width:100%;background:var(--ink3);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13.5px;outline:none}
-  .sheet input:focus,.sheet select:focus,.sheet textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(143,184,232,.12)}
-  .sheet textarea{min-height:52px;resize:vertical}
-  .sheet input[type=date]{font-family:var(--mono);font-size:12.5px;color-scheme:dark}
-  .frow{display:flex;gap:10px}.frow>div{flex:1}
-  .frow.tight{align-items:flex-end}.frow.tight .btn{margin-bottom:0}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-  .chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--accent);background:rgba(143,184,232,.1);border:1px solid rgba(143,184,232,.3);border-radius:6px;padding:3px 8px}
-  .chip b{font-weight:600}
-  .chip button{border:none;background:none;color:var(--faint);cursor:pointer;font-size:13px;line-height:1;padding:0 2px}
-  .chip button:hover{color:var(--red)}
-  .linkitem{display:flex;align-items:center;gap:8px;font-size:12.5px;padding:5px 0;border-top:1px solid var(--line2)}
-  .linkitem:first-child{border-top:none}
-  .linkitem .lt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .errbox{color:var(--red);font-size:12px;margin-top:10px}
-  .mfoot{display:flex;align-items:center;gap:8px;margin-top:16px}
-  .seclabel{font-family:var(--mono);font-size:10px;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;margin-top:14px}
-  .ae{padding:8px 4px;border-top:1px solid var(--line2);font-size:12.5px}
-  .ae:first-child{border-top:none}
-  .ae .at{font-family:var(--mono);font-size:10px;color:var(--accent)}
-  .backlinks{margin-top:6px;font-size:12px;color:var(--muted)}
-  .shell{display:flex;align-items:stretch;height:100vh;overflow:hidden}
-  .sidebar{width:204px;flex:none;align-self:stretch;position:sticky;top:0;height:100vh;box-sizing:border-box;border-right:1px solid var(--line2);background:rgba(15,26,46,.55);display:flex;flex-direction:column;padding:14px 10px}
-  .sidebar .brand{display:flex;align-items:center;gap:9px;padding:4px 8px 14px}
-  .sidebar .logo{width:30px;height:30px;border-radius:8px;background:var(--accent);color:var(--ink);display:grid;place-items:center;font-weight:700;font-size:12px;flex:none}
-  .sidebar .bn{font-size:13.5px;font-weight:650}
-  .sidebar .ar{font-size:11px;color:var(--muted)}
-  .nav{display:flex;flex-direction:column;gap:2px;flex:1;min-height:0;overflow:auto}
-  .nav a{display:block;padding:9px 11px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:13.5px;font-weight:500}
-  .nav a:hover{background:var(--ink3);color:var(--text)}
-  .nav a.on{background:var(--accent);color:var(--ink);font-weight:600}
-  .sidefoot{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--line2)}
-  .content{flex:1;min-width:0;box-sizing:border-box;padding:0 20px 24px;max-width:1040px;height:100vh;overflow-y:auto}
-  .topbar{position:sticky;top:0;z-index:6;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;padding:16px 0 12px;background:linear-gradient(var(--ink) 80%,transparent)}
-  .topbar h2{margin:0;font-size:18px;font-weight:650}
-  .topactions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-  .card{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:12px}
-  .card h3{margin:0 0 4px;font-size:15px;font-weight:650}
-  .ftabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-  .ftab{font-size:12.5px;font-weight:600;color:var(--muted);background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
-  .ftab:hover{color:var(--text);border-color:var(--accent)}
-  .ftab.on{background:var(--accent);color:var(--ink);border-color:var(--accent)}
-  .exbadge{font-family:var(--mono);font-size:8.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--green);background:rgba(95,174,134,.12);border:1px solid rgba(95,174,134,.35);border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle}
-  .metafoot{margin-top:12px;border-top:1px solid var(--line2);padding-top:8px;font-family:var(--mono);font-size:10px;color:var(--faint);line-height:1.7}
-  .card input{width:100%;background:var(--ink3);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:8px 10px;font-size:13.5px;outline:none}
-  .card input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(143,184,232,.12)}
-  .card.danger-zone{border-color:rgba(216,104,95,.45);background:rgba(216,104,95,.05)}
-  .card.danger-zone h3{color:var(--red)}
-  .muted{color:var(--muted);font-size:12.5px}
-  .srow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-  .kv{width:100%;font-size:13px;border-collapse:collapse;margin-top:4px}
-  .kv td{padding:7px 0;border-top:1px solid var(--line2)}
-  .kv td:first-child{color:var(--muted);width:45%}
-  .kv tr:first-child td{border-top:none}
-  @media (max-width:760px){
-    .shell{flex-direction:column;height:100vh;overflow:hidden}
-    .sidebar{position:static;height:auto;width:auto;flex:none;flex-direction:row;align-items:center;border-right:none;border-bottom:1px solid var(--line2);overflow-x:auto;padding:8px 10px}
-    .sidebar .brand{padding:0 8px 0 2px}.sidebar .ar{display:none}.sidebar .bn{font-size:12.5px}
-    .nav{flex-direction:row;gap:4px;overflow:visible}
-    .nav a{white-space:nowrap;padding:7px 10px}
-    .sidefoot{flex-direction:row;border-top:none;padding-top:0;margin-left:auto}
-    .content{height:auto;flex:1;min-height:0;overflow-y:auto;padding:0 12px 16px;max-width:none}
-    .topbar{padding:12px 0 10px}
+  .type{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+
+  /* ---------- modal ---------- */
+  #modal{position:fixed;inset:0;background:rgba(6,9,15,.66);backdrop-filter:blur(3px);display:flex;align-items:flex-start;justify-content:center;padding:40px 18px;overflow:auto;z-index:40}
+  .sheet{width:100%;max-width:560px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r2);box-shadow:0 30px 80px -30px rgba(0,0,0,.7)}
+  .sheet .sh{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line2)}
+  .sheet .sh h2{margin:0;font-size:16px;font-weight:640;flex:1}
+  .sheet .sh .x{cursor:pointer;color:var(--faint);font-size:22px;line-height:1;background:none;border:none;padding:0 4px}
+  .sheet .sh .x:hover{color:var(--text)}
+  .sbody{padding:18px 20px;max-height:66vh;overflow:auto}
+  .sfoot{display:flex;gap:9px;padding:14px 20px;border-top:1px solid var(--line2)}
+  .sfoot .sp{flex:1}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:600}
+  .field input,.field select,.field textarea{width:100%;background:var(--bg3);border:1px solid var(--line);border-radius:8px;padding:9px 11px;color:var(--text);font-size:13.5px;outline:none}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent)}
+  .field textarea{resize:vertical;min-height:74px;line-height:1.5}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .kv{width:100%;border-collapse:collapse;font-size:13px}
+  .kv td{padding:8px 0;border-bottom:1px solid var(--line2);vertical-align:top}
+  .kv td:first-child{color:var(--muted);width:42%}
+  .kv .mono{font-family:var(--mono);font-size:12px;word-break:break-all}
+
+  /* activity */
+  .log{display:flex;flex-direction:column;gap:1px;font-size:12.5px}
+  .logrow{display:flex;gap:12px;padding:9px 2px;border-bottom:1px solid var(--line2)}
+  .logrow .ts{font-family:var(--mono);font-size:11px;color:var(--faint);flex:0 0 auto;width:150px}
+  .logrow .ac{color:var(--muted)}
+  .verify{font-size:12px;padding:8px 11px;border-radius:8px;margin-bottom:12px}
+  .verify.ok{color:var(--green);background:rgba(87,185,138,.08);border:1px solid rgba(87,185,138,.24)}
+  .verify.bad{color:var(--red);background:rgba(224,115,106,.08);border:1px solid rgba(224,115,106,.24)}
+
+  /* toast */
+  #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg4);border:1px solid var(--line);color:var(--text);font-size:13px;padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:60;box-shadow:0 12px 30px -12px rgba(0,0,0,.6)}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  @media(max-width:820px){
+    .shell{flex-direction:column}
+    .sidebar{width:auto;flex:none;height:auto;position:static;flex-direction:row;align-items:center;padding:10px 12px;gap:8px;overflow-x:auto}
+    .brand{padding:0 8px 0 2px}.brand b{display:none}
+    .nav{flex-direction:row;flex:1;gap:2px}
+    .nav a .ct{display:none}
+    .sidefoot{border-top:none;border-left:1px solid var(--line2);padding:0 0 0 10px;flex-direction:row;align-items:center}
+    .lockpill{display:none}
+    .row2{grid-template-columns:1fr}
   }
-  .d-pending{border:1px solid var(--line);border-radius:var(--r);background:var(--ink2);padding:9px 12px;margin-bottom:12px}
-  .d-pending.alert{border-color:rgba(216,162,79,.45);background:rgba(216,162,79,.07)}
-  .d-pending.crit{border-color:rgba(216,104,95,.5);background:rgba(216,104,95,.08)}
-  .d-pending .ptitle{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--amber);margin-bottom:7px}
-  .d-pending.crit .ptitle{color:var(--red)}
-  .pchips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
-  .pchip{flex:none;cursor:pointer;border:1px solid;border-radius:8px;padding:6px 10px;max-width:250px}
-  .pchip .pt{font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:228px}
-  .pchip .pm{font-family:var(--mono);font-size:9.5px}
-  .d-clear{color:var(--green);font-size:12.5px}
-  .dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-  .dpanel{background:var(--ink2);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-  .dpanel .ph{display:flex;align-items:center;justify-content:space-between;padding:9px 11px;background:rgba(222,234,246,.05);border-bottom:1px solid rgba(222,234,246,.12)}
-  .dpanel .ph .t{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em}
-  .dpanel .ph .c{font-family:var(--mono);font-size:10px;color:var(--faint)}
-  .dpanel .pb{max-height:340px;overflow:auto;padding:6px 8px}
-  .drow{display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:7px;cursor:pointer}
-  .drow:hover{background:var(--ink3)}
-  .drow.done .dt{color:var(--faint);text-decoration:line-through}
-  .drow .dt{flex:1;min-width:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  @media (max-width:760px){.dgrid{grid-template-columns:1fr}}
-  @media (max-width:620px){header h1{font-size:15px}.clock{display:none}}
 </style>
 </head>
 <body>
+
+<!-- ============ LOCK SCREEN ============ -->
 <div id="lock"></div>
 
+<!-- ============ APP ============ -->
 <div id="app" hidden>
   <div class="shell">
     <aside class="sidebar">
-      <div class="brand"><span class="logo">TP</span><div><div class="bn">Test page</div></div></div>
-      <nav class="nav">
-        <a href="#/dashboard" data-nav="dashboard">Dashboard</a>
-        <a href="#/records" data-nav="records">Records</a>
-        <a href="#/vendors" data-nav="vendors">Vendors</a>
-        <a href="#/risks" data-nav="risks">Risks</a>
-        <a href="#/tasks" data-nav="tasks">Tasks</a>
-        <a href="#/forms" data-nav="forms">Forms</a>
-        <a href="#/settings" data-nav="settings">Settings</a>
-      </nav>
+      <div class="brand"><span class="logo">AG</span><b>Aegis</b></div>
+      <nav class="nav" id="nav"></nav>
       <div class="sidefoot">
-        <span class="lockpill" id="lockpill" title="Vault encrypted with your passphrase (AES-GCM). Data at rest is ciphertext."><span class="dot"></span>ENCRYPTED</span>
+        <span class="lockpill"><span class="dot"></span>ENCRYPTED</span>
         <button class="btn ghost sm" data-action="lock">Lock vault</button>
       </div>
     </aside>
-    <section class="content">
-      <div class="topbar"><h2 id="pagetitle">Dashboard</h2><div class="topactions" id="topactions"></div></div>
-      <div id="stagebar"></div>
-      <div id="page"></div>
-    </section>
+    <div class="content">
+      <div class="topbar">
+        <h2 id="pagetitle">Dashboard</h2>
+        <div class="topact" id="topact"></div>
+      </div>
+      <div class="page" id="page"></div>
+    </div>
   </div>
 </div>
 
-<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div id="modal" hidden><div class="sheet" id="sheet"></div></div>
+<div id="toast"></div>
 
 <script>
+(function(){
 "use strict";
-/* ============================================================
-   CISO Workspace — v1 secure foundation
-   Modules: Vault · Store · Schema · Repo · Audit · Authz · App
-   Each module is a seam. The Store/Authz/Audit interfaces are
-   what a backend implements later (see SECURITY.md) — no rebuild.
-   ============================================================ */
-function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
-function uid(){return (crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36));}
-function now(){return new Date().toISOString();}
-function $(s,r){return (r||document).querySelector(s);}
-function ab2b64(buf){var b="",x=new Uint8Array(buf);for(var i=0;i<x.length;i++)b+=String.fromCharCode(x[i]);return btoa(b);}
-function b642ab(s){var bin=atob(s),x=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)x[i]=bin.charCodeAt(i);return x.buffer;}
-var APP_VERSION="1.0";
-/* ISO-8601 timestamp WITH local timezone offset, e.g. 2026-06-21T14:33:07+03:00 */
-function nowTZ(){var d=new Date(),off=-d.getTimezoneOffset(),s=off>=0?"+":"-",a=Math.abs(off);function p(n){return ("0"+n).slice(-2);}return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds())+s+p((a/60)|0)+":"+p(a%60);}
-function fmtTs(ts){if(!ts)return "—";var d=new Date(ts);return isNaN(d.getTime())?String(ts):d.toLocaleString();}
-/* SHA-256 hex via WebCrypto (used only for the advisory log hash-chain — not the Vault) */
-async function sha256hex(str){var buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(str));var x=new Uint8Array(buf),h="";for(var i=0;i<x.length;i++)h+=("0"+x[i].toString(16)).slice(-2);return h;}
-/* Self-reported device label from the UA string — NOT attested */
-function deviceLabelFromUA(ua){ua=ua||"";var os="Unknown OS";if(/Windows/.test(ua))os="Windows";else if(/Mac OS X/.test(ua))os="macOS";else if(/Android/.test(ua))os="Android";else if(/(iPhone|iPad|iPod)/.test(ua))os="iOS";else if(/CrOS/.test(ua))os="ChromeOS";else if(/Linux/.test(ua))os="Linux";var br="Browser";if(/Edg\//.test(ua))br="Edge";else if(/OPR\//.test(ua)||/Opera/.test(ua))br="Opera";else if(/Firefox\//.test(ua))br="Firefox";else if(/Chrome\//.test(ua)&&!/Chromium/.test(ua))br="Chrome";else if(/Safari\//.test(ua)&&/Version\//.test(ua))br="Safari";return os+" — "+br;}
 
+/* =========================================================
+   Small utilities
+========================================================= */
+const el = id => document.getElementById(id);
+const enc = new TextEncoder(), dec = new TextDecoder();
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function uuid(){return (crypto.randomUUID&&crypto.randomUUID())||("id-"+Array.from(crypto.getRandomValues(new Uint8Array(10))).map(b=>b.toString(16).padStart(2,"0")).join(""));}
+function todayStr(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function nowISO(){return new Date().toISOString();}
+function fmtTs(iso){try{const d=new Date(iso);return d.toLocaleString(undefined,{year:"numeric",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"});}catch(e){return iso;}}
+function ab2b64(buf){let s="",b=new Uint8Array(buf);for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s);}
+function b642ab(b64){const bin=atob(b64),a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return a.buffer;}
+let _toastT=null;
+function toast(msg){const t=el("toast");t.textContent=msg;t.classList.add("show");clearTimeout(_toastT);_toastT=setTimeout(()=>t.classList.remove("show"),2200);}
 
-/* ---------- Vault: encryption at rest (WebCrypto) ---------- */
-var Vault=(function(){
-  var key=null,E=new TextEncoder(),D=new TextDecoder(),ITER=600000;
-  async function derive(pass,salt,iters){
-    var base=await crypto.subtle.importKey("raw",E.encode(pass),"PBKDF2",false,["deriveKey"]);
-    return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:iters||ITER,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+/* =========================================================
+   Vault — WebCrypto encryption at rest
+========================================================= */
+const Vault=(function(){
+  const ITER=600000;
+  let key=null;
+  async function derive(pass,saltArr,iter){
+    const base=await crypto.subtle.importKey("raw",enc.encode(pass),"PBKDF2",false,["deriveKey"]);
+    return crypto.subtle.deriveKey(
+      {name:"PBKDF2",salt:new Uint8Array(saltArr),iterations:iter,hash:"SHA-256"},
+      base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
   }
-  async function enc(obj){
-    var iv=crypto.getRandomValues(new Uint8Array(12));
-    var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key,E.encode(JSON.stringify(obj)));
+  async function encObj(obj,k){
+    const iv=crypto.getRandomValues(new Uint8Array(12));
+    const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},k||key,enc.encode(JSON.stringify(obj)));
     return {v:1,alg:"AES-GCM",iv:Array.from(iv),ct:ab2b64(ct)};
   }
-  async function dec(rec){
-    var pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:new Uint8Array(rec.iv)},key,b642ab(rec.ct));
-    return JSON.parse(D.decode(pt));
+  async function decObj(rec,k){
+    const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:new Uint8Array(rec.iv)},k||key,b642ab(rec.ct));
+    return JSON.parse(dec.decode(pt));
   }
-  async function decWith(rec,k){
-    var pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:new Uint8Array(rec.iv)},k,b642ab(rec.ct));
-    return JSON.parse(D.decode(pt));
-  }
-  return {ITER:ITER,derive:derive,enc:enc,dec:dec,decWith:decWith,set:function(k){key=k;},clear:function(){key=null;},ready:function(){return !!key;}};
+  return {
+    ITER,
+    async setFrom(pass,saltArr,iter){key=await derive(pass,saltArr,iter||ITER);},
+    async deriveAdhoc(pass,saltArr,iter){return derive(pass,saltArr,iter||ITER);},
+    enc:o=>encObj(o),
+    dec:r=>decObj(r),
+    encWith:(o,k)=>encObj(o,k),
+    decWith:(r,k)=>decObj(r,k),
+    ready:()=>!!key,
+    clear:()=>{key=null;}
+  };
 })();
 
-/* ---------- Store: persistence seam (IndexedDB, ls fallback) ---------- */
-var Store=(function(){
-  var DB="ciso_ws",VER=1,OS="vault",failed=false,mode="IndexedDB";
-  function idb(){return new Promise(function(res,rej){try{var r=indexedDB.open(DB,VER);r.onupgradeneeded=function(){r.result.createObjectStore(OS,{keyPath:"id"});};r.onsuccess=function(){res(r.result);};r.onerror=function(){rej(r.error);};}catch(e){rej(e);}});}
-  async function lsGet(id){try{if(window.storage&&window.storage.get){var r=await window.storage.get("ws_"+id);return r?JSON.parse(r.value):null;}}catch(e){}try{var v=localStorage.getItem("ws_"+id);return v?JSON.parse(v):null;}catch(e){return null;}}
-  async function lsPut(rec){var s=JSON.stringify(rec);try{if(window.storage&&window.storage.set){await window.storage.set("ws_"+rec.id,s);return;}}catch(e){}try{localStorage.setItem("ws_"+rec.id,s);}catch(e){}}
-  async function lsClear(){var ids=["meta","data"];for(var i=0;i<ids.length;i++){try{if(window.storage&&window.storage.delete)await window.storage.delete("ws_"+ids[i]);}catch(e){}try{localStorage.removeItem("ws_"+ids[i]);}catch(e){}}}
-  async function get(id){if(!failed){try{var db=await idb();return await new Promise(function(res,rej){var t=db.transaction(OS,"readonly").objectStore(OS).get(id);t.onsuccess=function(){res(t.result||null);};t.onerror=function(){rej(t.error);};});}catch(e){failed=true;mode="local storage (fallback)";}}return lsGet(id);}
-  async function put(rec){if(!failed){try{var db=await idb();return await new Promise(function(res,rej){var tx=db.transaction(OS,"readwrite");tx.objectStore(OS).put(rec);tx.oncomplete=function(){res();};tx.onerror=function(){rej(tx.error);};});}catch(e){failed=true;mode="local storage (fallback)";}}return lsPut(rec);}
-  async function clearAll(){if(!failed){try{var db=await idb();await new Promise(function(res,rej){var tx=db.transaction(OS,"readwrite");tx.objectStore(OS).clear();tx.oncomplete=function(){res();};tx.onerror=function(){rej(tx.error);};});}catch(e){failed=true;}}await lsClear();}
-  return {get:get,put:put,clearAll:clearAll,mode:function(){return mode;}};
+async function sha256hex(str){
+  const buf=await crypto.subtle.digest("SHA-256",enc.encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+/* =========================================================
+   Store — IndexedDB primary, localStorage fallback
+========================================================= */
+const Store=(function(){
+  const DB="aegis_ws",VER=1,ST="vault",PFX="aegis_";
+  let dbp=null,failed=false,mode="indexeddb";
+  function open(){
+    if(dbp)return dbp;
+    dbp=new Promise((res,rej)=>{
+      let r;try{r=indexedDB.open(DB,VER);}catch(e){return rej(e);}
+      r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(ST))r.result.createObjectStore(ST,{keyPath:"id"});};
+      r.onsuccess=()=>res(r.result);
+      r.onerror=()=>rej(r.error);
+    });
+    return dbp;
+  }
+  function lsGet(id){try{const v=localStorage.getItem(PFX+id);return v?JSON.parse(v):null;}catch(e){return null;}}
+  function lsPut(o){localStorage.setItem(PFX+o.id,JSON.stringify(o));}
+  async function get(id){
+    if(!failed){try{const db=await open();return await new Promise((res,rej)=>{const t=db.transaction(ST,"readonly").objectStore(ST).get(id);t.onsuccess=()=>res(t.result||null);t.onerror=()=>rej(t.error);});}catch(e){failed=true;mode="local storage (fallback)";}}
+    return lsGet(id);
+  }
+  async function put(o){
+    if(!failed){try{const db=await open();return await new Promise((res,rej)=>{const t=db.transaction(ST,"readwrite").objectStore(ST).put(o);t.onsuccess=()=>res();t.onerror=()=>rej(t.error);});}catch(e){failed=true;mode="local storage (fallback)";}}
+    lsPut(o);
+  }
+  async function clearAll(){
+    try{const db=await open();await new Promise((res)=>{const t=db.transaction(ST,"readwrite").objectStore(ST).clear();t.onsuccess=()=>res();t.onerror=()=>res();});}catch(e){}
+    try{Object.keys(localStorage).filter(k=>k.indexOf(PFX)===0).forEach(k=>localStorage.removeItem(k));}catch(e){}
+  }
+  return {get,put,clearAll,modeName:()=>mode};
 })();
 
-/* ---------- Schema: types, validation, frameworks ---------- */
-var Schema={
-  types:[["document","Document"],["vendor","Vendor / processor"],["risk","Risk"],["project","Project"],["task","Task / deadline"],["person","Person (JML)"],["note","Note"]],
-  statuses:[["open","Open"],["progress","In progress"],["blocked","Blocked"],["done","Done"]],
-  severities:[["low","Low"],["med","Medium"],["high","High"],["crit","Critical"]],
-  frameworks:["PDPL","CMA","NCA ECC","ISO 27001","Internal"],
-  typeLabel:function(t){var f=this.types.filter(function(x){return x[0]===t;})[0];return f?f[1]:t;},
-  statusLabel:function(s){var f=this.statuses.filter(function(x){return x[0]===s;})[0];return f?f[1]:s;},
-  statusColor:function(s){return {open:"#7e90a8",progress:"#6fa3dd",blocked:"#d8685f",done:"#5fae86"}[s]||"#7e90a8";},
-  sevLabel:function(s){var f=this.severities.filter(function(x){return x[0]===s;})[0];return f?f[1]:s;},
-  sevColor:function(s){return {low:"#6cae86",med:"#d8c45f",high:"#e0915b",crit:"#d8685f"}[s]||"#d8c45f";},
-  validate:function(r){
-    var e=[];
-    if(!r.title||!String(r.title).trim())e.push("Title is required.");
-    if(String(r.title||"").length>200)e.push("Title is too long (max 200).");
-    if(!this.types.some(function(x){return x[0]===r.type;}))e.push("Invalid type.");
-    if(r.status&&!this.statuses.some(function(x){return x[0]===r.status;}))e.push("Invalid status.");
-    if(r.due&&isNaN(Date.parse(r.due)))e.push("Invalid date.");
-    if(r.type==="risk"&&r.severity&&!this.severities.some(function(x){return x[0]===r.severity;}))e.push("Invalid severity.");
-    if(String(r.note||"").length>5000)e.push("Notes too long (max 5000).");
-    return e;
-  }
-};
+/* =========================================================
+   Schema — record types / statuses / severities
+========================================================= */
+const Schema=(function(){
+  const TYPES=[
+    {k:"risk",label:"Risk",ico:"▲"},
+    {k:"vendor",label:"Vendor",ico:"◆"},
+    {k:"task",label:"Task",ico:"✓"},
+    {k:"project",label:"Project",ico:"❖"},
+    {k:"document",label:"Document",ico:"▤"},
+    {k:"note",label:"Note",ico:"✎"}
+  ];
+  const STATUS=[
+    {k:"open",label:"Open",c:"var(--blue)"},
+    {k:"progress",label:"In progress",c:"var(--violet)"},
+    {k:"blocked",label:"Blocked",c:"var(--red)"},
+    {k:"done",label:"Done",c:"var(--green)"}
+  ];
+  const SEV=[
+    {k:"low",label:"Low",c:"var(--green)"},
+    {k:"med",label:"Medium",c:"var(--amber)"},
+    {k:"high",label:"High",c:"var(--red)"},
+    {k:"crit",label:"Critical",c:"var(--red)"}
+  ];
+  const SEVRANK={low:1,med:2,high:3,crit:4};
+  const map=(arr)=>{const m={};arr.forEach(x=>m[x.k]=x);return m;};
+  const TM=map(TYPES),SM=map(STATUS),VM=map(SEV);
+  return {
+    TYPES,STATUS,SEV,SEVRANK,
+    typeLabel:k=>(TM[k]&&TM[k].label)||k,
+    typeIco:k=>(TM[k]&&TM[k].ico)||"•",
+    statusLabel:k=>(SM[k]&&SM[k].label)||k,
+    statusColor:k=>(SM[k]&&SM[k].c)||"var(--muted)",
+    sevLabel:k=>(VM[k]&&VM[k].label)||k,
+    sevColor:k=>(VM[k]&&VM[k].c)||"var(--muted)"
+  };
+})();
 
-/* ---------- Forms: request-intake config (extend here to add a type) ----------
-   Each form type is pure config: field schema (rendered as the New/Edit modal),
-   a pdfFieldMap (AcroForm field name -> schema key) for fillable-PDF import, and
-   an email template whose {{fieldKey}} placeholders are filled from a submission.
-   Adding a new form type is a matter of adding one entry below. */
-var FORM_TYPES={
-  vpn_access:{
-    key:"vpn_access",label:"VPN Access",
-    fields:[
-      {key:"fullName",label:"Full name",type:"text",required:true},
-      {key:"email",label:"Email",type:"email",required:true},
-      {key:"employeeId",label:"Employee ID",type:"text"},
-      {key:"department",label:"Department",type:"text"},
-      {key:"manager",label:"Manager",type:"text"},
-      {key:"accessProfile",label:"Access profile",type:"select",options:["Standard","Privileged","Third-party","Break-glass"]},
-      {key:"justification",label:"Business justification",type:"text"},
-      {key:"startDate",label:"Start date",type:"date"},
-      {key:"endDate",label:"End date",type:"date"}
-    ],
-    pdfFieldMap:{"Full Name":"fullName","Name":"fullName","Requester":"fullName","Email":"email","Email Address":"email","Employee ID":"employeeId","EmployeeID":"employeeId","Department":"department","Manager":"manager","Line Manager":"manager","Access Profile":"accessProfile","Profile":"accessProfile","Justification":"justification","Business Justification":"justification","Start Date":"startDate","End Date":"endDate"},
-    email:{subject:"VPN access request — {{fullName}}",body:"Hi {{manager}},\n\nPlease review/approve VPN access for the following request:\n\nRequester: {{fullName}} ({{email}})\nEmployee ID: {{employeeId}}\nDepartment: {{department}}\nAccess profile: {{accessProfile}}\nPeriod: {{startDate}} to {{endDate}}\n\nJustification:\n{{justification}}\n\nThank you."}
-  },
-  jml_joiner:{
-    key:"jml_joiner",label:"JML — Joiner",
-    fields:[
-      {key:"fullName",label:"Full name",type:"text",required:true},
-      {key:"email",label:"Email",type:"email"},
-      {key:"startDate",label:"Start date",type:"date",required:true},
-      {key:"department",label:"Department",type:"text"},
-      {key:"manager",label:"Manager",type:"text"},
-      {key:"role",label:"Role / job title",type:"text"},
-      {key:"systemsToGrant",label:"Systems to grant",type:"text"}
-    ],
-    pdfFieldMap:{"Full Name":"fullName","Name":"fullName","New Joiner":"fullName","Email":"email","Email Address":"email","Start Date":"startDate","Department":"department","Manager":"manager","Line Manager":"manager","Role":"role","Job Title":"role","Systems":"systemsToGrant","Systems to Grant":"systemsToGrant","Access Required":"systemsToGrant"},
-    email:{subject:"Joiner onboarding — {{fullName}} ({{startDate}})",body:"Hi IT/Access team,\n\nPlease provision access for a new joiner:\n\nName: {{fullName}} ({{email}})\nStart date: {{startDate}}\nDepartment: {{department}}\nManager: {{manager}}\nRole: {{role}}\n\nSystems to grant:\n{{systemsToGrant}}\n\nThank you."}
-  },
-  jml_mover:{
-    key:"jml_mover",label:"JML — Mover",
-    fields:[
-      {key:"fullName",label:"Full name",type:"text",required:true},
-      {key:"email",label:"Email",type:"email"},
-      {key:"fromDept",label:"From department",type:"text"},
-      {key:"toDept",label:"To department",type:"text"},
-      {key:"fromRole",label:"From role",type:"text"},
-      {key:"toRole",label:"To role",type:"text"},
-      {key:"accessChanges",label:"Access changes",type:"text"},
-      {key:"effectiveDate",label:"Effective date",type:"date"}
-    ],
-    pdfFieldMap:{"Full Name":"fullName","Name":"fullName","Email":"email","Email Address":"email","From Department":"fromDept","Current Department":"fromDept","To Department":"toDept","New Department":"toDept","From Role":"fromRole","Current Role":"fromRole","To Role":"toRole","New Role":"toRole","Access Changes":"accessChanges","Effective Date":"effectiveDate"},
-    email:{subject:"Mover access change — {{fullName}} (eff. {{effectiveDate}})",body:"Hi IT/Access team,\n\nPlease action an internal move:\n\nName: {{fullName}} ({{email}})\nFrom: {{fromDept}} / {{fromRole}}\nTo: {{toDept}} / {{toRole}}\nEffective date: {{effectiveDate}}\n\nAccess changes required:\n{{accessChanges}}\n\nThank you."}
-  },
-  jml_leaver:{
-    key:"jml_leaver",label:"JML — Leaver",
-    fields:[
-      {key:"fullName",label:"Full name",type:"text",required:true},
-      {key:"email",label:"Email",type:"email"},
-      {key:"lastWorkingDay",label:"Last working day",type:"date",required:true},
-      {key:"manager",label:"Manager",type:"text"},
-      {key:"systemsToRevoke",label:"Systems to revoke",type:"text"},
-      {key:"assetsToReturn",label:"Assets to return",type:"text"}
-    ],
-    pdfFieldMap:{"Full Name":"fullName","Name":"fullName","Leaver":"fullName","Email":"email","Email Address":"email","Last Working Day":"lastWorkingDay","Leaving Date":"lastWorkingDay","Termination Date":"lastWorkingDay","Manager":"manager","Line Manager":"manager","Systems to Revoke":"systemsToRevoke","Access to Revoke":"systemsToRevoke","Assets to Return":"assetsToReturn","Equipment":"assetsToReturn"},
-    email:{subject:"Leaver offboarding — {{fullName}} (LWD {{lastWorkingDay}})",body:"Hi IT/Access team,\n\nPlease offboard the following leaver:\n\nName: {{fullName}} ({{email}})\nLast working day: {{lastWorkingDay}}\nManager: {{manager}}\n\nSystems to revoke:\n{{systemsToRevoke}}\n\nAssets to return:\n{{assetsToReturn}}\n\nThank you."}
-  }
-};
+/* =========================================================
+   App state
+========================================================= */
+let state=null; // {records:[], audit:[], meta:{}}
+let vmeta=null; // {id:"meta", salt, kdf, version, created}
+let idleTimer=null, saveTimer=null;
+const IDLE_MS=15*60*1000;
+const APP_VERSION="2.0";
 
-/* ---------- Repo: CRUD over state ---------- */
-var Repo={
-  create:function(s,d){var r=Object.assign({id:uid(),type:"task",title:"",status:"open",severity:"",due:"",owner:"",note:"",complianceRefs:[],links:[]},d||{});var dev=(s.meta&&s.meta.deviceId)||"";r.createdAt=now();r.updatedAt=now();r.createdBy=dev;r.updatedBy=dev;s.records.push(r);return r;},
-  update:function(s,id,d){var r=this.get(s,id);if(r){Object.assign(r,d);r.updatedAt=now();r.updatedBy=(s.meta&&s.meta.deviceId)||"";}return r;},
-  remove:function(s,id){s.records=s.records.filter(function(x){return x.id!==id;});s.records.forEach(function(x){x.links=(x.links||[]).filter(function(l){return l!==id;});});},
-  get:function(s,id){return s.records.filter(function(x){return x.id===id;})[0]||null;},
-  backlinks:function(s,id){return s.records.filter(function(x){return (x.links||[]).indexOf(id)>=0;});}
-};
-
-/* ---------- Audit: append-only LOCAL activity log (advisory, not tamper-proof) ----------
-   Entries are hash-chained (SHA-256 of the previous entry over canonical JSON).
-   HONEST LIMITATION: this detects casual tampering (an edited/removed entry breaks
-   the chain), but it is NOT proof against an attacker who controls the app code and
-   can recompute the whole chain. Immutable, evidential audit requires a server.
-   The signature is extended (action,target,details) — not parallel logging. */
-var Audit=(function(){
-  var MAX=5000;
-  function canon(e){return JSON.stringify([e.ts,e.action,e.target||null,e.details||"",e.deviceId||"",e.deviceLabel||"",e.prevHash||null]);}
-  function log(s,action,target,details){
-    var m=s.meta||{};
-    var e={ts:nowTZ(),action:action,target:target||null,details:details||"",deviceId:m.deviceId||"",deviceLabel:m.deviceLabel||"",prevHash:null,hash:null};
-    s.audit.push(e);
-    if(s.audit.length>MAX)s.audit=s.audit.slice(-MAX);
-    return e;
+/* ---- audit log (hash-chained, advisory) ---- */
+const Audit=(function(){
+  const MAX=5000;
+  function log(action,target,details){
+    state.audit.push({ts:nowISO(),action,target:target||null,details:details||"",prevHash:null,hash:null});
+    if(state.audit.length>MAX)state.audit=state.audit.slice(-MAX);
   }
-  /* assign prevHash + hash to any unsealed tail entries (called before each persist) */
-  async function seal(s){
-    if(!s||!s.audit)return;
-    var prev=null,i=0;
-    for(i=0;i<s.audit.length;i++){if(s.audit[i].hash)prev=s.audit[i].hash;else break;}
-    for(;i<s.audit.length;i++){var e=s.audit[i];e.prevHash=prev;e.hash=await sha256hex(canon(e));prev=e.hash;}
-  }
-  /* recompute the chain and report the first break, if any */
-  async function verify(s){
-    if(!s||!s.audit||!s.audit.length)return {ok:true,count:0,brokenAt:-1};
-    var prev=null;
-    for(var i=0;i<s.audit.length;i++){
-      var e=s.audit[i];
-      if((e.prevHash||null)!==prev)return {ok:false,count:s.audit.length,brokenAt:i,reason:"chain link"};
-      if(e.hash!==await sha256hex(canon(e)))return {ok:false,count:s.audit.length,brokenAt:i,reason:"content hash"};
+  function canon(e){return JSON.stringify({ts:e.ts,action:e.action,target:e.target,details:e.details,prevHash:e.prevHash});}
+  async function seal(){
+    let prev="";
+    for(let i=0;i<state.audit.length;i++){if(state.audit[i].hash)prev=state.audit[i].hash;}
+    for(let i=0;i<state.audit.length;i++){
+      const e=state.audit[i];
+      if(e.hash)continue;
+      e.prevHash=prev;
+      e.hash=await sha256hex(canon(e));
       prev=e.hash;
     }
-    return {ok:true,count:s.audit.length,brokenAt:-1};
   }
-  return {log:log,seal:seal,verify:verify};
+  async function verify(){
+    let prev="";
+    for(let i=0;i<state.audit.length;i++){
+      const e=state.audit[i];
+      if(!e.hash)return {ok:false,at:i};
+      if(e.prevHash!==prev)return {ok:false,at:i};
+      const h=await sha256hex(canon(e));
+      if(h!==e.hash)return {ok:false,at:i};
+      prev=e.hash;
+    }
+    return {ok:true,count:state.audit.length};
+  }
+  return {log,seal,verify};
 })();
 
-/* ---------- Authz: policy seam (single-user no-op; server enforces later) ---------- */
-var Authz={can:function(action,record){return true;}};
+/* =========================================================
+   Persistence
+========================================================= */
+async function persist(){
+  await Audit.seal();
+  const encData=await Vault.enc(state);
+  await Store.put({id:"data",enc:encData,updatedAt:nowISO()});
+}
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{persist().catch(e=>toast("Save failed"));},250);
+}
 
-/* ---------- App: UI controller ---------- */
-var App=(function(){
-  var state=null,editingId=null,work=null,saveTimer=null,idleTimer=null,vmeta=null,pendingRestore=null,view="dashboard";
-  var formSel=null,fType=null,fEditId=null,emailDraft=null,_pdflibP=null;
-  var filter={type:"all",fw:"all",q:""};
-  var actFilter={action:"all",from:"",to:""};
-  var IDLE_MS=15*60*1000, MAX_IMPORT=25*1024*1024;
-  function denied(){alert("Not permitted by the current authorization policy.");}
-  function pwScore(p){var s=0;if(p.length>=14)s++;if(p.length>=20){s+=2;}else{var c=(/[a-z]/.test(p)?1:0)+(/[A-Z]/.test(p)?1:0)+(/\d/.test(p)?1:0)+(/[^A-Za-z0-9]/.test(p)?1:0);if(c>=3)s++;}return s;}
-  function pwLabel(p){if(p.length<14)return{pct:Math.min(Math.round(p.length/14*99),99),txt:"Too short — use 14+ characters",c:"#d8685f"};var s=pwScore(p);if(s>=3)return{pct:100,txt:"Strong",c:"#5fae86"};if(s>=2)return{pct:78,txt:"Good",c:"#6fa3dd"};return{pct:55,txt:"Weak — add length or variety",c:"#d8a24f"};}
-  function updateMeter(){var p=$("#vp").value,l=pwLabel(p),f=$("#pwfill"),lb=$("#pwlbl");if(f){f.style.width=l.pct+"%";f.style.background=l.c;}if(lb){lb.textContent=l.txt;lb.style.color=l.c;}}
+/* =========================================================
+   Records repository
+========================================================= */
+const Repo=(function(){
+  function get(id){return state.records.find(r=>r.id===id);}
+  function create(data){
+    const r=Object.assign({
+      id:uuid(),type:"note",title:"Untitled",status:"open",severity:"med",
+      due:"",owner:"",tags:[],note:"",createdAt:nowISO(),updatedAt:nowISO()
+    },data);
+    state.records.push(r);
+    Audit.log("record.create",{type:r.type,id:r.id,title:r.title});
+    return r;
+  }
+  function update(id,data){
+    const r=get(id);if(!r)return;
+    Object.assign(r,data,{updatedAt:nowISO()});
+    Audit.log("record.update",{type:r.type,id:r.id,title:r.title});
+    return r;
+  }
+  function remove(id){
+    const r=get(id);if(!r)return;
+    state.records=state.records.filter(x=>x.id!==id);
+    Audit.log("record.delete",{type:r.type,id:r.id,title:r.title});
+  }
+  return {get,create,update,remove};
+})();
 
-  /* lock screen */
+/* =========================================================
+   App controller
+========================================================= */
+const App=(function(){
+  const ROUTES=["dashboard","records","risks","vendors","tasks","settings"];
+  const ROUTE_TYPE={risks:"risk",vendors:"vendor",tasks:"task"};
+
+  /* ---------- LOCK ---------- */
+  function pwScore(p){
+    if(!p)return 0;
+    let s=0;
+    if(p.length>=14)s++;
+    if(p.length>=20)s+=2;
+    else{let v=0;if(/[a-z]/.test(p))v++;if(/[A-Z]/.test(p))v++;if(/[0-9]/.test(p))v++;if(/[^a-zA-Z0-9]/.test(p))v++;if(v>=3)s++;}
+    return s;
+  }
+  function pwInfo(p){
+    if(!p||p.length<14)return {w:"20%",c:"var(--red)",t:"Too short — 14+ characters"};
+    const s=pwScore(p);
+    if(s>=3)return {w:"100%",c:"var(--green)",t:"Strong"};
+    if(s>=2)return {w:"72%",c:"var(--blue)",t:"Good"};
+    return {w:"48%",c:"var(--amber)",t:"Weak — add length or variety"};
+  }
   function renderLock(first,errMsg){
-    $("#app").hidden=true;
-    var l=$("#lock");l.hidden=false;
-    l.innerHTML=
-      '<div class="vault">'
-      +'<div class="vlogo">TP</div>'
-      +'<div class="vbrand">Test page</div>'
-      +'<h1>'+(first?"Create your vault":"Sign in")+'</h1>'
-      +'<p>'+(first?"Set a passphrase to create your encrypted vault. It never leaves this device and cannot be recovered if lost.":"Enter your passphrase to unlock your workspace.")+'</p>'
-      +'<label for="vp">Passphrase</label><input id="vp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">'
-      +(first?'<div class="pwmeter" id="pwmeter"><div class="pwbar"><i id="pwfill"></i></div><span id="pwlbl">Use a passphrase of 14+ characters</span></div>':'')
-      +(first?'<label for="vp2">Confirm passphrase</label><input id="vp2" type="password" autocomplete="off">':'')
-      +'<div class="err" id="verr">'+esc(errMsg||"")+'</div>'
-      +'<button class="btn block" data-action="'+(first?"create":"unlock")+'">'+(first?"Create vault":"Sign in")+'</button>'
-      +'<div class="note">Encryption: AES-GCM-256, key derived from your passphrase (PBKDF2-SHA-256, '+Vault.ITER.toLocaleString()+' iterations, per current OWASP guidance). KDF parameters are stored with the vault so they can be raised later without breaking it. This protects data at rest on this device — it is not an access-control gate (that arrives with hosted auth). Nothing is uploaded.</div>'
-      +(first?'':'<div class="dz"><h2>Danger zone</h2><p>Permanently delete the vault, all records, and metadata from this browser. This cannot be undone and there is no recovery without a backup — export the encrypted backup first.</p><button class="btn ghost sm danger" data-action="wipe">Wipe all data from this device</button></div>')
-      +'</div>';
-    var ip=$("#vp");if(ip)ip.focus();
-    if(first&&ip)ip.addEventListener("input",updateMeter);
-    Array.prototype.forEach.call(l.querySelectorAll("input"),function(inp){
-      inp.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();if(first)createVault();else unlock();}});
-    });
+    el("app").hidden=true;
+    const L=el("lock");L.hidden=false;
+    L.innerHTML=
+      '<div class="vault">'+
+        '<div class="vlogo">AG</div>'+
+        '<div class="vbrand">Aegis · Encrypted workspace</div>'+
+        '<h1>'+(first?"Create your vault":"Unlock vault")+'</h1>'+
+        '<p>'+(first
+          ?"Choose a strong passphrase. It derives the encryption key for everything stored on this device. There is no recovery — if you forget it, the data is gone."
+          :"Enter your passphrase to decrypt this workspace.")+'</p>'+
+        '<label>Passphrase</label>'+
+        '<input id="pw" type="password" autocomplete="'+(first?"new-password":"current-password")+'" spellcheck="false">'+
+        (first?
+          '<div class="pwmeter"><div class="pwbar"><i id="pwfill"></i></div><span id="pwlbl">—</span></div>'+
+          '<label>Confirm passphrase</label>'+
+          '<input id="pw2" type="password" autocomplete="new-password" spellcheck="false">'
+          :'')+
+        '<div class="err" id="lerr">'+(errMsg?esc(errMsg):"")+'</div>'+
+        '<button class="btn block" data-action="'+(first?"create":"unlock")+'">'+(first?"Create vault":"Unlock")+'</button>'+
+        '<div class="note">AES-GCM-256 · PBKDF2-SHA-256 ('+Vault.ITER.toLocaleString()+' iterations). '+
+          'Everything is encrypted in your browser and never leaves this device. This is data-at-rest encryption, not an access-control gate.</div>'+
+        (first?'':
+          '<div class="dz"><h2>Danger zone</h2><p>Forgot your passphrase? You can erase this vault and start fresh. All data is permanently destroyed.</p>'+
+          '<button class="btn danger" data-action="wipe">Erase vault &amp; start over</button></div>')+
+      '</div>';
+    const pw=el("pw");
+    if(pw){pw.focus();pw.addEventListener("keydown",e=>{if(e.key==="Enter"){if(first){el("pw2").focus();}else{doUnlock();}}});}
+    if(first){
+      const upd=()=>{const i=pwInfo(el("pw").value);el("pwfill").style.width=i.w;el("pwfill").style.background=i.c;el("pwlbl").textContent=i.t;el("pwlbl").style.color=i.c;};
+      el("pw").addEventListener("input",upd);
+      el("pw2").addEventListener("keydown",e=>{if(e.key==="Enter")doCreate();});
+    }
   }
-
-  async function createVault(){
-    var p=$("#vp").value,p2=$("#vp2")?$("#vp2").value:"";
-    if(p.length<14){$("#verr").textContent="Use a passphrase of at least 14 characters.";return;}
-    if(pwScore(p)<2){$("#verr").textContent="Passphrase is too weak — add length, or mix in upper-case, digits and symbols.";return;}
-    if(p!==p2){$("#verr").textContent="Passphrases do not match.";return;}
-    var salt=crypto.getRandomValues(new Uint8Array(16));
-    var kdf={algo:"PBKDF2",hash:"SHA-256",iterations:Vault.ITER};
-    Vault.set(await Vault.derive(p,salt,kdf.iterations));
-    vmeta={salt:Array.from(salt),kdf:kdf,version:2,created:now()};
-    await Store.put(Object.assign({id:"meta"},vmeta));
-    var dev=(crypto.randomUUID?crypto.randomUUID():uid()),label=deviceLabelFromUA(navigator.userAgent),names={};names[dev]=label;
-    state={records:[],audit:[],staging:[],meta:{version:2,created:now(),deviceId:dev,deviceLabel:label,deviceNames:names}};
-    Audit.log(state,"vault.created",null,"Encrypted vault initialised on “"+label+"” (PBKDF2 "+kdf.iterations.toLocaleString()+")");
-    await persist();startSession();
+  async function doCreate(){
+    const p=el("pw").value,p2=el("pw2").value;
+    if(p.length<14)return renderLock(true,"Passphrase must be at least 14 characters.");
+    if(pwScore(p)<2)return renderLock(true,"Passphrase is too weak. Add length or character variety.");
+    if(p!==p2)return renderLock(true,"Passphrases do not match.");
+    const salt=Array.from(crypto.getRandomValues(new Uint8Array(16)));
+    const kdf={algo:"PBKDF2",hash:"SHA-256",iterations:Vault.ITER};
+    await Vault.setFrom(p,salt,kdf.iterations);
+    vmeta={id:"meta",salt,kdf,version:2,created:nowISO()};
+    await Store.put(vmeta);
+    state={records:[],audit:[],meta:{version:2,created:nowISO(),deviceId:uuid(),deviceLabel:deviceLabel()}};
+    Audit.log("vault.created",null,"New encrypted vault initialized");
+    await persist();
+    startSession();
   }
-  async function unlock(){
-    var p=$("#vp").value;if(!p){return;}
-    var m=await Store.get("meta");vmeta=m;
-    var iters=(m&&m.kdf&&m.kdf.iterations)||310000;
-    Vault.set(await Vault.derive(p,new Uint8Array(m.salt),iters));
-    var data=await Store.get("data");
-    if(!data||!data.enc){state={records:[],audit:[],staging:[],meta:{version:2}};}
-    else{try{state=await Vault.dec(data.enc);}catch(e){Vault.clear();renderLock(false,"Incorrect passphrase.");return;}}
-    if(!state.staging)state.staging=[];if(!state.audit)state.audit=[];
-    ensureDeviceMeta();
-    /* migrate pre-1.0 log entries (detail -> details) so they join the chain cleanly */
-    state.audit=state.audit.map(function(e){if(e&&e.details==null&&e.detail!=null)e.details=e.detail;return e;});
-    Audit.log(state,"vault.unlocked",null,"Unlocked on “"+state.meta.deviceLabel+"”");
-    await persist();startSession();
+  async function doUnlock(){
+    const p=el("pw").value;
+    if(!p)return;
+    try{
+      await Vault.setFrom(p,vmeta.salt,(vmeta.kdf&&vmeta.kdf.iterations)||310000);
+      const rec=await Store.get("data");
+      state=rec?await Vault.dec(rec.enc):{records:[],audit:[],meta:{}};
+    }catch(e){
+      Vault.clear();
+      return renderLock(false,"Incorrect passphrase.");
+    }
+    if(!state.meta)state.meta={};
+    if(!state.meta.deviceId){state.meta.deviceId=uuid();state.meta.deviceLabel=deviceLabel();}
+    if(!Array.isArray(state.audit))state.audit=[];
+    if(!Array.isArray(state.records))state.records=[];
+    Audit.log("vault.unlocked",null,"");
+    await persist();
+    startSession();
   }
-  function lock(){
-    Vault.clear();state=null;clearTimeout(idleTimer);closeModal();
-    var p=$("#page");if(p)p.innerHTML="";var sb=$("#stagebar");if(sb)sb.innerHTML="";
-    if(location.hash!=="#/unlock")location.hash="#/unlock";
-    renderLock(false);
+  function deviceLabel(){
+    const ua=navigator.userAgent||"";
+    let os="Unknown";
+    if(/Windows/.test(ua))os="Windows";else if(/Mac OS X|Macintosh/.test(ua))os="macOS";
+    else if(/Android/.test(ua))os="Android";else if(/iPhone|iPad/.test(ua))os="iOS";else if(/Linux/.test(ua))os="Linux";
+    let br="Browser";
+    if(/Edg\//.test(ua))br="Edge";else if(/Chrome\//.test(ua))br="Chrome";else if(/Firefox\//.test(ua))br="Firefox";else if(/Safari\//.test(ua))br="Safari";
+    return br+" · "+os;
   }
-
-  async function wipeAll(){
-    if(!confirm("Permanently DELETE the vault, all records, and metadata from this browser?\n\nThis cannot be undone. If you have not exported an encrypted backup, the data is gone for good."))return;
-    if(!confirm("Final confirmation — wipe everything from this device now?"))return;
-    if(state)Audit.log(state,"vault.wiped",null,"All local data deleted from this device");
+  async function doWipe(){
+    if(!confirm("Erase this vault permanently? All data will be destroyed."))return;
+    if(!confirm("This cannot be undone. Continue?"))return;
+    if(state){Audit.log("vault.wiped",null,"");try{await persist();}catch(e){}}
     await Store.clearAll();
     Vault.clear();state=null;vmeta=null;
-    clearTimeout(saveTimer);clearTimeout(idleTimer);
-    closeModal();
-    var p=$("#page");if(p)p.innerHTML="";var sb=$("#stagebar");if(sb)sb.innerHTML="";
-    if(location.hash!=="#/unlock")location.hash="#/unlock";
     renderLock(true);
   }
 
-  /* ensure this (possibly older) vault has a self-reported device identity */
-  function ensureDeviceMeta(){
-    if(!state.meta)state.meta={version:2};
-    if(!state.meta.deviceNames)state.meta.deviceNames={};
-    if(!state.meta.deviceId)state.meta.deviceId=(crypto.randomUUID?crypto.randomUUID():uid());
-    if(!state.meta.deviceLabel)state.meta.deviceLabel=deviceLabelFromUA(navigator.userAgent);
-    state.meta.deviceNames[state.meta.deviceId]=state.meta.deviceLabel;
-  }
-  /* resolve a deviceId to a friendly label (self-reported; falls back to short id) */
-  function deviceName(id){
-    if(!id)return "—";
-    var m=state&&state.meta&&state.meta.deviceNames;
-    if(m&&m[id])return m[id];
-    if(state&&state.meta&&id===state.meta.deviceId)return state.meta.deviceLabel||("device "+String(id).slice(0,8));
-    return "device "+String(id).slice(0,8);
-  }
-  function renameDevice(){
-    var el=$("#devlabel");if(!el)return;var v=String(el.value||"").trim().slice(0,60);if(!v)return;
-    var old=state.meta.deviceLabel;state.meta.deviceLabel=v;state.meta.deviceNames[state.meta.deviceId]=v;
-    Audit.log(state,"device.renamed",null,"Device label “"+(old||"")+"” → “"+v+"”");
-    render();save();
-  }
-  function tgt(r){return r?{type:r.type,id:r.id,title:r.title}:null;}
-  function trunc(s,n){s=String(s==null?"":s);n=n||32;return s.length>n?s.slice(0,n-1)+"…":s;}
-  function diffSummary(o,d){
-    if(!o)return "created";
-    var parts=[],keys=[["title","title"],["type","type"],["status","status"],["severity","severity"],["due","due"],["owner","owner"]];
-    keys.forEach(function(k){var ov=o[k[0]]||"",nv=d[k[0]]||"";if(String(ov)!==String(nv))parts.push(k[1]+": "+(ov?("“"+trunc(ov)+"”"):"∅")+"→"+(nv?("“"+trunc(nv)+"”"):"∅"));});
-    if(String(o.note||"")!==String(d.note||""))parts.push("note edited");
-    var oc=(o.complianceRefs||[]).length,nc=(d.complianceRefs||[]).length;if(oc!==nc)parts.push("tags "+oc+"→"+nc);
-    var ol=(o.links||[]).length,nl=(d.links||[]).length;if(ol!==nl)parts.push("links "+ol+"→"+nl);
-    return parts.length?parts.join("; "):"no field changes";
-  }
-
-  async function persist(){if(!Vault.ready()||!state)return;await Audit.seal(state);var enc=await Vault.enc(state);await Store.put({id:"data",enc:enc,updatedAt:now()});}
-  function save(){clearTimeout(saveTimer);saveTimer=setTimeout(persist,250);resetIdle();}
-
+  /* ---------- SESSION ---------- */
   function startSession(){
-    $("#lock").hidden=true;$("#app").hidden=false;
-    if(/^#\/(dashboard|records|vendors|risks|tasks|forms|settings)$/.test(location.hash))route();
-    else location.hash="#/dashboard";
+    el("lock").hidden=true;el("lock").innerHTML="";
+    el("app").hidden=false;
+    buildNav();
     resetIdle();
+    ["mousemove","keydown","click","touchstart"].forEach(ev=>document.addEventListener(ev,resetIdle,{passive:true}));
+    if(!location.hash||location.hash==="#/unlock")location.hash="#/dashboard";
+    route();
   }
-  function resetIdle(){clearTimeout(idleTimer);idleTimer=setTimeout(lock,IDLE_MS);}
+  function resetIdle(){if(!Vault.ready())return;clearTimeout(idleTimer);idleTimer=setTimeout(lock,IDLE_MS);}
+  function lock(){
+    clearTimeout(idleTimer);
+    Vault.clear();state=null;
+    closeModal();
+    el("app").hidden=true;el("page").innerHTML="";
+    location.hash="#/unlock";
+    renderLock(false);
+  }
 
-  /* ----- routing ----- */
-  var routeType=null;
+  /* ---------- NAV / ROUTING ---------- */
+  function counts(){
+    const c={records:0,risks:0,vendors:0,tasks:0};
+    state.records.forEach(r=>{
+      c.records++;
+      if(r.type==="risk")c.risks++;
+      if(r.type==="vendor")c.vendors++;
+      if(r.type==="task")c.tasks++;
+    });
+    return c;
+  }
+  function buildNav(){
+    const c=counts();
+    const items=[
+      ["dashboard","▦","Dashboard",null],
+      ["records","▤","Records",c.records],
+      ["risks","▲","Risks",c.risks],
+      ["vendors","◆","Vendors",c.vendors],
+      ["tasks","✓","Tasks",c.tasks],
+      ["settings","⚙","Settings",null]
+    ];
+    const cur=curRoute();
+    el("nav").innerHTML=items.map(it=>
+      '<a data-nav="'+it[0]+'" class="'+(it[0]===cur?"on":"")+'"><span class="ico">'+it[1]+'</span>'+it[2]+
+      (it[3]!=null?'<span class="ct">'+it[3]+'</span>':'')+'</a>').join("");
+  }
+  function curRoute(){
+    const h=(location.hash||"").replace(/^#\//,"").split("/")[0];
+    return ROUTES.indexOf(h)>=0?h:"dashboard";
+  }
   function route(){
     if(!Vault.ready())return;
-    var h=(location.hash||"").replace(/^#\/?/,"").split("/")[0]||"dashboard";
-    if(["dashboard","records","vendors","risks","tasks","forms","settings"].indexOf(h)<0)h="dashboard";
-    view=h;renderNav();renderStaging();renderPage(h);
-    var c=$(".content");if(c)c.scrollTop=0;window.scrollTo(0,0);
+    const r=curRoute();
+    buildNav();
+    const titles={dashboard:"Dashboard",records:"All records",risks:"Risk register",vendors:"Vendors",tasks:"Tasks & deadlines",settings:"Settings"};
+    el("pagetitle").textContent=titles[r]||"Dashboard";
+    el("topact").innerHTML=topActions(r);
+    ({dashboard:renderDashboard,records:renderList,risks:renderList,vendors:renderList,tasks:renderList,settings:renderSettings}[r]||renderDashboard)(r);
   }
-  function renderNav(){var n=$(".nav");if(!n)return;Array.prototype.forEach.call(n.querySelectorAll("a"),function(a){a.classList.toggle("on",a.getAttribute("data-nav")===view);});}
-  function render(){if(!Vault.ready())return;renderNav();renderStaging();renderPage(view);}
-  function renderPage(page){
-    routeType={vendors:"vendor",risks:"risk",tasks:"task"}[page]||null;
-    var titles={dashboard:"Dashboard",records:"All records",vendors:"Vendors & processors",risks:"Risk register",tasks:"Tasks & deadlines",forms:"Forms",settings:"Settings"};
-    $("#pagetitle").textContent=titles[page]||"Dashboard";
-    var ta="";
-    if(page==="dashboard")ta='<button class="btn ghost sm" data-action="activity">Activity</button>';
-    else if(page==="records")ta='<button class="btn sm" data-action="new">+ New record</button>';
-    else if(page==="vendors")ta='<button class="btn sm" data-action="new" data-type="vendor">+ New vendor</button>';
-    else if(page==="risks")ta='<button class="btn sm" data-action="new" data-type="risk">+ New risk</button>';
-    else if(page==="tasks")ta='<button class="btn sm" data-action="new" data-type="task">+ New task</button>';
-    $("#topactions").innerHTML=ta;
-    if(page==="dashboard")renderDashboard();
-    else if(page==="settings")renderSettings();
-    else if(page==="forms")renderForms();
-    else renderRegister(page);
+  function topActions(r){
+    if(r==="dashboard")return '<button class="btn ghost sm" data-action="activity">Activity log</button>';
+    if(r==="settings")return "";
+    const t=ROUTE_TYPE[r]||"";
+    const label=t?("+ New "+Schema.typeLabel(t).toLowerCase()):"+ New record";
+    return '<button class="btn sm" data-action="new" data-type="'+t+'">'+label+'</button>';
   }
 
-  function dueTag(iso){if(!iso)return null;var t=new Date(iso+"T00:00:00");if(isNaN(t))return null;var n=new Date();n.setHours(0,0,0,0);var d=Math.round((t-n)/86400000);if(d<0)return{t:Math.abs(d)+"d ago",c:"over"};if(d===0)return{t:"today",c:"soon"};if(d<=7)return{t:"in "+d+"d",c:"soon"};return{t:iso.slice(5),c:""};}
-
-  var SEVRANK={crit:0,high:1,med:2,low:3};
-  function isOver(r){return r.status==="blocked"||r.severity==="crit"||(dueTag(r.due)||{}).c==="over";}
-  function isPending(r){if(r.status==="done")return false;if(r.status==="blocked")return true;if(r.type==="risk"&&(r.severity==="high"||r.severity==="crit"))return true;var dt=dueTag(r.due);return !!(dt&&(dt.c==="over"||dt.c==="soon"||dt.c==="today"));}
+  /* ---------- DASHBOARD ---------- */
+  function isOverdue(r){return r.due&&r.status!=="done"&&r.due<todayStr();}
+  function isSoon(r){if(!r.due||r.status==="done")return false;const diff=(new Date(r.due)-new Date(todayStr()))/86400000;return diff>=0&&diff<=7;}
   function renderDashboard(){
-    var R=state.records.filter(function(r){return Authz.can("read",r);});
-    var pend=R.filter(isPending).sort(function(a,b){var ao=isOver(a),bo=isOver(b);if(ao!==bo)return ao?-1:1;return recSort(a,b);});
-    var crit=pend.some(isOver);
-    var pendHTML;
-    if(pend.length){
-      pendHTML='<div class="d-pending '+(crit?"crit":"alert")+'"><div class="ptitle">NEEDS ATTENTION · '+pend.length+'</div><div class="pchips">'
-        +pend.map(function(r){var over=isOver(r),c=over?"var(--red)":"var(--amber)",dt=dueTag(r.due);var reason=r.status==="blocked"?"blocked":r.type==="risk"?("risk · "+Schema.sevLabel(r.severity||"med").toLowerCase()):((dt&&dt.t)||Schema.statusLabel(r.status));return '<div class="pchip" data-action="edit" data-id="'+r.id+'" style="border-color:'+c+'66;background:'+c+'14"><span class="pt">'+esc(r.title)+'</span><span class="pm" style="color:'+c+'">'+esc(Schema.typeLabel(r.type).split(" ")[0])+' · '+esc(reason)+'</span></div>';}).join("")
-        +'</div></div>';
+    const R=state.records;
+    const attention=R.filter(r=>r.status!=="done"&&(isOverdue(r)||r.status==="blocked"||(r.type==="risk"&&(r.severity==="high"||r.severity==="crit"))))
+      .sort((a,b)=>(isOverdue(b)-isOverdue(a))||((Schema.SEVRANK[b.severity]||0)-(Schema.SEVRANK[a.severity]||0)));
+    const open=R.filter(r=>r.status!=="done").length;
+    const risks=R.filter(r=>r.type==="risk");
+    const highRisk=risks.filter(r=>r.status!=="done"&&(r.severity==="high"||r.severity==="crit")).length;
+    const overdue=R.filter(isOverdue).length;
+
+    let h="";
+    if(attention.length){
+      h+='<div class="attention"><h3>Needs attention <span class="ct">'+attention.length+'</span></h3><div class="chips">'+
+        attention.slice(0,14).map(r=>
+          '<div class="pchip'+(isOverdue(r)?" over":"")+'" data-open="'+r.id+'"><div class="t">'+esc(r.title)+'</div>'+
+          '<div class="s">'+badge(r)+(r.due?' <span class="due '+(isOverdue(r)?"over":isSoon(r)?"soon":"")+'">'+esc(r.due)+'</span>':'')+'</div></div>').join("")+
+        '</div></div>';
     }else{
-      pendHTML='<div class="d-pending"><div class="ptitle" style="color:var(--green)">NOTHING PENDING</div><div class="d-clear">No overdue, blocked, or high-risk items.</div></div>';
+      h+='<div class="attention ok"><h3>All clear <span class="ct">0</span></h3><div style="font-size:12.5px;color:var(--muted)">Nothing overdue, blocked, or high-severity right now.</div></div>';
     }
-    function rank(r){return SEVRANK[r.severity]==null?2:SEVRANK[r.severity];}
-    var risks=R.filter(function(r){return r.type==="risk";}).sort(function(a,b){return (rank(a)-rank(b))||recSort(a,b);});
-    var projects=R.filter(function(r){return r.type==="project";}).sort(recSort);
-    var tasks=R.filter(function(r){return r.type==="task";}).sort(recSort);
-    $("#page").innerHTML=pendHTML+'<div class="dgrid">'+dpanel("Risk register",risks)+dpanel("Projects",projects)+dpanel("Tasks &amp; due",tasks)+'</div>';
+    h+='<div class="grid stats" style="margin-top:14px">'+
+      stat("Open items",open,R.length+" total records")+
+      stat("Overdue",overdue,overdue?"needs action":"on track")+
+      stat("Risks tracked",risks.length,highRisk+" high / critical")+
+      stat("Vendors",R.filter(r=>r.type==="vendor").length,"processors & suppliers")+
+    '</div>';
+    h+='<div class="grid cols">'+
+      panel("Risk register",risks.length,
+        risks.slice().sort((a,b)=>(Schema.SEVRANK[b.severity]||0)-(Schema.SEVRANK[a.severity]||0)).slice(0,6),
+        r=>miniRow(r,'<span class="pill" style="color:'+Schema.sevColor(r.severity)+';border-color:'+Schema.sevColor(r.severity)+'">'+Schema.sevLabel(r.severity)+'</span>'),
+        "No risks logged.")+
+      panel("Upcoming & due",null,
+        R.filter(r=>r.due&&r.status!=="done").sort((a,b)=>a.due<b.due?-1:1).slice(0,6),
+        r=>miniRow(r,'<span class="due '+(isOverdue(r)?"over":isSoon(r)?"soon":"")+'">'+esc(r.due)+'</span>'),
+        "Nothing scheduled.")+
+      panel("Recent activity",null,
+        state.audit.slice(-7).reverse(),
+        e=>'<div class="rec" style="cursor:default"><div class="tw"><div class="tt" style="font-size:13px">'+esc(actionText(e))+'</div>'+
+           '<div class="meta"><span class="due">'+esc(fmtTs(e.ts))+'</span></div></div></div>',
+        "No activity yet.")+
+    '</div>';
+    el("page").innerHTML=h;
   }
-  function dpanel(label,items){
-    var openN=items.filter(function(r){return r.status!=="done";}).length;
-    var rows=items.length?items.map(drow).join(""):'<div class="empty" style="padding:14px 4px">None.</div>';
-    return '<div class="dpanel"><div class="ph"><span class="t">'+label+'</span><span class="c">'+openN+' open</span></div><div class="pb">'+rows+'</div></div>';
+  function stat(k,v,m){return '<div class="stat"><div class="k">'+esc(k)+'</div><div class="v">'+v+'</div><div class="m">'+esc(m)+'</div></div>';}
+  function panel(title,ct,items,rowFn,emptyMsg){
+    return '<div class="panel"><h3>'+esc(title)+(ct!=null?' <span class="ct">'+ct+'</span>':'')+'</h3>'+
+      (items.length?'<div class="list">'+items.map(rowFn).join("")+'</div>':'<div class="empty">'+esc(emptyMsg)+'</div>')+'</div>';
   }
-  function drow(r){
-    var dt=dueTag(r.due),sc=Schema.statusColor(r.status);
-    var lead=r.type==="risk"&&r.severity?'<span class="sev" style="color:'+Schema.sevColor(r.severity)+';background:'+Schema.sevColor(r.severity)+'1a;border-color:'+Schema.sevColor(r.severity)+'40">'+esc(Schema.sevLabel(r.severity).toUpperCase())+'</span>':'<span class="pill" style="color:'+sc+';background:'+sc+'1a;border-color:'+sc+'40"><span class="dot" style="background:'+sc+'"></span>'+esc(Schema.statusLabel(r.status))+'</span>';
-    return '<div class="drow '+(r.status==="done"?"done":"")+'" data-action="edit" data-id="'+r.id+'" title="'+esc(r.note||"")+'">'+lead+'<span class="dt">'+esc(r.title)+'</span>'+(dt?'<span class="due '+dt.c+'">'+esc(dt.t)+'</span>':'')+'</div>';
+  function miniRow(r,right){
+    return '<div class="rec" data-open="'+r.id+'"><div class="tw"><div class="tt" style="font-size:13px">'+esc(r.title)+'</div>'+
+      '<div class="meta"><span class="type">'+esc(Schema.typeLabel(r.type))+'</span></div></div>'+
+      '<div class="right">'+(right||"")+'</div></div>';
   }
 
-  function renderStaging(){
-    var n=state.staging.length;
-    $("#stagebar").innerHTML=n?'<div class="banner"><span>'+n+' imported record(s) awaiting review — untrusted until you commit.</span><span class="spacer"></span><button class="btn sm" data-action="stage-open">Review</button></div>':"";
+  /* ---------- LIST (records / risks / vendors / tasks) ---------- */
+  let listFilter={q:"",type:"",status:""};
+  function renderList(routeName){
+    listFilter={q:"",type:"",status:""};
+    const forcedType=ROUTE_TYPE[routeName]||"";
+    el("page").innerHTML=
+      '<div class="toolbar">'+
+        '<input type="search" id="q" placeholder="Search title, owner, tags, notes…">'+
+        (forcedType?"":'<select id="ftype"><option value="">All types</option>'+Schema.TYPES.map(t=>'<option value="'+t.k+'">'+t.label+'</option>').join("")+'</select>')+
+        '<select id="fstatus"><option value="">Any status</option>'+Schema.STATUS.map(s=>'<option value="'+s.k+'">'+s.label+'</option>').join("")+'</select>'+
+      '</div><div id="listbody"></div>';
+    const rerender=()=>{
+      listFilter.q=(el("q").value||"").toLowerCase().trim();
+      if(el("ftype"))listFilter.type=el("ftype").value;
+      if(el("fstatus"))listFilter.status=el("fstatus").value;
+      drawList(forcedType);
+    };
+    el("q").addEventListener("input",rerender);
+    if(el("ftype"))el("ftype").addEventListener("change",rerender);
+    el("fstatus").addEventListener("change",rerender);
+    drawList(forcedType);
+  }
+  function drawList(forcedType){
+    let rows=state.records.slice();
+    if(forcedType)rows=rows.filter(r=>r.type===forcedType);
+    if(listFilter.type)rows=rows.filter(r=>r.type===listFilter.type);
+    if(listFilter.status)rows=rows.filter(r=>r.status===listFilter.status);
+    if(listFilter.q){
+      const q=listFilter.q;
+      rows=rows.filter(r=>(r.title+" "+r.owner+" "+(r.tags||[]).join(" ")+" "+r.note).toLowerCase().indexOf(q)>=0);
+    }
+    rows.sort((a,b)=>{
+      const ao=isOverdue(a),bo=isOverdue(b);if(ao!==bo)return ao?-1:1;
+      if(a.due&&b.due&&a.due!==b.due)return a.due<b.due?-1:1;
+      return (b.updatedAt||"").localeCompare(a.updatedAt||"");
+    });
+    const body=el("listbody");
+    if(!rows.length){body.innerHTML='<div class="empty">No matching records. Use the button above to add one.</div>';return;}
+    body.innerHTML='<div class="list">'+rows.map(recRow).join("")+'</div>';
+  }
+  function badge(r){
+    return '<span class="pill" style="color:'+Schema.statusColor(r.status)+';border-color:'+Schema.statusColor(r.status)+'">'+Schema.statusLabel(r.status)+'</span>';
+  }
+  function recRow(r){
+    const sev=r.type==="risk"?' <span class="pill" style="color:'+Schema.sevColor(r.severity)+';border-color:'+Schema.sevColor(r.severity)+'">'+Schema.sevLabel(r.severity)+'</span>':'';
+    const tags=(r.tags||[]).slice(0,3).map(t=>'<span class="tag">'+esc(t)+'</span>').join(" ");
+    return '<div class="rec" data-open="'+r.id+'">'+
+      '<div class="tw"><div class="tt">'+esc(r.title)+'</div>'+
+        '<div class="meta"><span class="type">'+Schema.typeIco(r.type)+' '+esc(Schema.typeLabel(r.type))+'</span>'+
+        (r.owner?'<span>'+esc(r.owner)+'</span>':'')+
+        (r.due?'<span class="due '+(isOverdue(r)?"over":isSoon(r)?"soon":"")+'">⧗ '+esc(r.due)+'</span>':'')+
+        tags+'</div></div>'+
+      '<div class="right">'+sev+badge(r)+'</div></div>';
   }
 
-  function matches(r,fixedType){
-    if(fixedType){if(r.type!==fixedType)return false;}
-    else if(filter.type!=="all"&&r.type!==filter.type)return false;
-    if(filter.fw!=="all"&&!(r.complianceRefs||[]).some(function(c){return c.fw===filter.fw;}))return false;
-    if(filter.q){var q=filter.q.toLowerCase();if((r.title||"").toLowerCase().indexOf(q)<0&&(r.note||"").toLowerCase().indexOf(q)<0)return false;}
-    return true;
+  /* ---------- RECORD MODAL ---------- */
+  function openRecord(id,presetType){
+    const r=id?Repo.get(id):null;
+    const rec=r||{type:presetType||"note",title:"",status:"open",severity:"med",due:"",owner:"",tags:[],note:""};
+    const sheet=el("sheet");
+    sheet.innerHTML=
+      '<div class="sh"><h2>'+(r?"Edit record":"New record")+'</h2><button class="x" data-action="closeModal">×</button></div>'+
+      '<div class="sbody">'+
+        '<div class="field"><label>Title</label><input id="f_title" value="'+esc(rec.title)+'" placeholder="Short, descriptive title"></div>'+
+        '<div class="row2">'+
+          '<div class="field"><label>Type</label><select id="f_type">'+Schema.TYPES.map(t=>'<option value="'+t.k+'"'+(t.k===rec.type?" selected":"")+'>'+t.label+'</option>').join("")+'</select></div>'+
+          '<div class="field"><label>Status</label><select id="f_status">'+Schema.STATUS.map(s=>'<option value="'+s.k+'"'+(s.k===rec.status?" selected":"")+'>'+s.label+'</option>').join("")+'</select></div>'+
+        '</div>'+
+        '<div class="row2">'+
+          '<div class="field" id="sevwrap"'+(rec.type==="risk"?"":' hidden')+'><label>Severity</label><select id="f_sev">'+Schema.SEV.map(s=>'<option value="'+s.k+'"'+(s.k===rec.severity?" selected":"")+'>'+s.label+'</option>').join("")+'</select></div>'+
+          '<div class="field"><label>Due / review date</label><input id="f_due" type="date" value="'+esc(rec.due)+'"></div>'+
+        '</div>'+
+        '<div class="row2">'+
+          '<div class="field"><label>Owner</label><input id="f_owner" value="'+esc(rec.owner)+'" placeholder="Responsible person"></div>'+
+          '<div class="field"><label>Tags (comma-separated)</label><input id="f_tags" value="'+esc((rec.tags||[]).join(", "))+'" placeholder="pdpl, iso27001"></div>'+
+        '</div>'+
+        '<div class="field"><label>Notes</label><textarea id="f_note" placeholder="Details, context, evidence links…">'+esc(rec.note)+'</textarea></div>'+
+        (r?'<table class="kv"><tr><td>Created</td><td class="mono">'+esc(fmtTs(r.createdAt))+'</td></tr><tr><td>Updated</td><td class="mono">'+esc(fmtTs(r.updatedAt))+'</td></tr><tr><td>ID</td><td class="mono">'+esc(r.id)+'</td></tr></table>':'')+
+      '</div>'+
+      '<div class="sfoot">'+
+        (r?'<button class="btn danger" data-action="delRecord" data-id="'+r.id+'">Delete</button>':'')+
+        '<span class="sp"></span>'+
+        '<button class="btn ghost" data-action="closeModal">Cancel</button>'+
+        '<button class="btn" data-action="saveRecord" data-id="'+(r?r.id:"")+'">Save</button>'+
+      '</div>';
+    el("modal").hidden=false;
+    el("f_type").addEventListener("change",()=>{el("sevwrap").hidden=el("f_type").value!=="risk";});
+    setTimeout(()=>el("f_title").focus(),30);
   }
-  function recSort(a,b){
-    if((a.status==="done")!==(b.status==="done"))return a.status==="done"?1:-1;
-    var da=a.due?Date.parse(a.due):Infinity,db=b.due?Date.parse(b.due):Infinity;
-    if(da!==db)return da-db;
-    return (b.updatedAt||"").localeCompare(a.updatedAt||"");
+  function saveRecord(id){
+    const title=el("f_title").value.trim();
+    if(!title){toast("Title is required");el("f_title").focus();return;}
+    const data={
+      title,
+      type:el("f_type").value,
+      status:el("f_status").value,
+      severity:el("f_sev")?el("f_sev").value:"med",
+      due:el("f_due").value,
+      owner:el("f_owner").value.trim(),
+      tags:el("f_tags").value.split(",").map(s=>s.trim()).filter(Boolean),
+      note:el("f_note").value
+    };
+    if(id)Repo.update(id,data);else Repo.create(data);
+    save();closeModal();route();toast(id?"Saved":"Record created");
   }
-  function renderRegister(page){
-    var showType=(page==="records");
-    var tb='<div class="toolbar">'
-      +(showType?('<select id="ftype"><option value="all">All types</option>'+Schema.types.map(function(t){return '<option value="'+t[0]+'"'+(filter.type===t[0]?" selected":"")+'>'+esc(t[1])+'</option>';}).join("")+'</select>'):'')
-      +'<select id="ffw"><option value="all">All frameworks</option>'+Schema.frameworks.map(function(f){return '<option value="'+esc(f)+'"'+(filter.fw===f?" selected":"")+'>'+esc(f)+'</option>';}).join("")+'</select>'
-      +'<input id="fq" placeholder="Search title or notes…" value="'+esc(filter.q||"")+'">'
-      +'</div>';
-    $("#page").innerHTML=tb+'<div class="list" id="list"></div>';
-    renderRows();
+  function delRecord(id){
+    if(!confirm("Delete this record permanently?"))return;
+    Repo.remove(id);save();closeModal();route();toast("Deleted");
   }
-  function renderRows(){
-    var rows=state.records.filter(function(r){return Authz.can("read",r);}).filter(function(r){return matches(r,routeType);}).sort(recSort);
-    var list=$("#list");if(!list)return;
-    if(!rows.length){
-      var msg=routeType?("No "+routeType+" records yet — add one with the button above.")
-        :(state.records.length?"No records match the filter.":"No records yet. Add your first with “+ New record”.");
-      list.innerHTML='<div class="empty">'+esc(msg)+'</div>';return;
-    }
-    list.innerHTML=rows.map(recCard).join("");
+
+  /* ---------- ACTIVITY LOG ---------- */
+  function actionText(e){
+    const t=e.target;
+    const map={
+      "vault.created":"Vault created","vault.unlocked":"Vault unlocked","vault.wiped":"Vault erased",
+      "record.create":"Created","record.update":"Updated","record.delete":"Deleted",
+      "backup.export":"Backup exported","backup.restore":"Backup restored","log.export":"Activity exported"
+    };
+    let base=map[e.action]||e.action;
+    if(t&&t.title)return base+' “'+t.title+'” ('+Schema.typeLabel(t.type)+')';
+    return base+(e.details?" — "+e.details:"");
   }
-  function recCard(r){
-    var dt=dueTag(r.due);
-    var lead=r.type==="risk"&&r.severity?'<span class="sev" style="color:'+Schema.sevColor(r.severity)+';background:'+Schema.sevColor(r.severity)+'1a;border-color:'+Schema.sevColor(r.severity)+'40">'+esc(Schema.sevLabel(r.severity).toUpperCase())+'</span>':'';
-    var sc=Schema.statusColor(r.status);
-    var tags=(r.complianceRefs||[]).map(function(c){return '<span class="ctag">'+esc(c.fw)+(c.ref?' '+esc(c.ref):'')+'</span>';}).join("");
-    var nl=(r.links||[]).length;
-    return '<div class="rec '+(r.status==="done"?"done":"")+'" data-action="edit" data-id="'+r.id+'">'
-      +'<div class="rline"><span class="ttag">'+esc(r.type)+'</span>'+lead
-      +'<span class="rtitle">'+esc(r.title)+'</span>'
-      +'<span class="pill" style="color:'+sc+';background:'+sc+'1a;border-color:'+sc+'40"><span class="dot" style="background:'+sc+'"></span>'+esc(Schema.statusLabel(r.status))+'</span>'
-      +(dt?'<span class="due '+dt.c+'">'+esc(dt.t)+'</span>':'')+'</div>'
-      +((tags||nl)?'<div class="meta2">'+tags+(nl?'<span class="lk">'+nl+' linked</span>':'')+'</div>':'')
-      +'</div>';
+  async function openActivity(){
+    const sheet=el("sheet");
+    clearTimeout(saveTimer);
+    await persist();           // flush + seal any pending entries before verifying
+    const v=await Audit.verify();
+    const rows=state.audit.slice().reverse();
+    sheet.innerHTML=
+      '<div class="sh"><h2>Activity log</h2><button class="x" data-action="closeModal">×</button></div>'+
+      '<div class="sbody">'+
+        '<div class="verify '+(v.ok?"ok":"bad")+'">'+(v.ok?"✓ Integrity verified — hash chain intact ("+v.count+" entries)":"✗ Integrity check failed at entry "+v.at)+'</div>'+
+        (rows.length?'<div class="log">'+rows.map(e=>
+          '<div class="logrow"><span class="ts">'+esc(fmtTs(e.ts))+'</span><span class="ac">'+esc(actionText(e))+'</span></div>').join("")+'</div>'
+          :'<div class="empty">No activity recorded.</div>')+
+      '</div>'+
+      '<div class="sfoot"><span class="sp"></span><button class="btn ghost" data-action="exportLog">Export CSV</button><button class="btn" data-action="closeModal">Close</button></div>';
+    el("modal").hidden=false;
   }
+  function exportLog(){
+    const head="timestamp,action,target_type,target_title,details\n";
+    const body=state.audit.map(e=>[e.ts,e.action,(e.target&&e.target.type)||"",(e.target&&e.target.title)||"",e.details||""]
+      .map(x=>'"'+String(x).replace(/"/g,'""')+'"').join(",")).join("\n");
+    download("aegis-activity-"+todayStr()+".csv","text/csv",head+body);
+    Audit.log("log.export",null,state.audit.length+" entries");save();toast("Exported activity log");
+  }
+
+  /* ---------- SETTINGS ---------- */
   function renderSettings(){
-    var kdf=(vmeta&&vmeta.kdf)||{hash:"SHA-256",iterations:Vault.ITER};
-    var created=(vmeta&&vmeta.created)?new Date(vmeta.created).toLocaleString():"—";
-    $("#page").innerHTML=
-      '<div class="card"><h3>Vault &amp; backup</h3>'
-      +'<p class="muted">Back up regularly. Backups are encrypted with your passphrase and restore independently of this device — after device loss, in a new browser, or into a fresh vault.</p>'
-      +'<div class="srow"><button class="btn sm" data-action="backup">Export encrypted backup</button>'
-      +'<label class="btn ghost sm" style="display:inline-block"><input type="file" id="restorein" accept="application/json" style="display:none">Restore from backup</label>'
-      +'<button class="btn ghost sm" data-action="activity">Activity log</button>'
-      +'<button class="btn ghost sm danger" data-action="lock">Lock vault</button></div></div>'
-      +'<div class="card"><h3>Security</h3><table class="kv">'
-      +'<tr><td>Encryption</td><td>AES-GCM-256 (data at rest on this device)</td></tr>'
-      +'<tr><td>Key derivation</td><td>PBKDF2-'+esc(kdf.hash||"SHA-256")+' · '+(kdf.iterations||Vault.ITER).toLocaleString()+' iterations</td></tr>'
-      +'<tr><td>Storage backend</td><td>'+esc(Store.mode())+'</td></tr>'
-      +'<tr><td>Vault created</td><td>'+esc(created)+'</td></tr>'
-      +'<tr><td>Records held</td><td>'+state.records.length+'</td></tr>'
-      +'<tr><td>Auto-lock</td><td>After 15 minutes idle</td></tr>'
-      +'</table>'
-      +'<p class="muted" style="margin-top:10px">The passphrase unlocks local encryption — it is not an access-control gate. Real authentication, roles, and tamper-proof audit arrive with the hosted backend phase.</p></div>'
-      +'<div class="card"><h3>This device</h3>'
-      +'<p class="muted">Activity is stamped with a self-reported device identity. It is not attested — a new browser or cleared storage produces a new device ID.</p>'
-      +'<table class="kv"><tr><td>Device ID</td><td style="font-family:var(--mono);font-size:11px">'+esc(state.meta.deviceId||"—")+'</td></tr></table>'
-      +'<label for="devlabel" style="display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;font-weight:600">Device label</label>'
-      +'<div class="frow tight"><div><input id="devlabel" maxlength="60" value="'+esc(state.meta.deviceLabel||"")+'" placeholder="e.g. Work laptop — Edge"></div><button class="btn sm" data-action="device-rename">Save</button></div></div>'
-      +'<div class="card danger-zone"><h3>Danger zone</h3>'
-      +'<p class="muted">Permanently delete the vault, all records, and metadata from this browser. This cannot be undone and there is no recovery without a backup — export the encrypted backup above first.</p>'
-      +'<div class="srow"><button class="btn sm danger" data-action="wipe">Wipe all data from this device</button></div></div>';
+    const m=state.meta||{};
+    el("page").innerHTML=
+      '<div class="grid cols" style="margin-top:0">'+
+        '<div class="panel"><h3>Backup &amp; restore</h3>'+
+          '<p style="font-size:12.5px;color:var(--muted);margin:0 0 12px">Export an encrypted backup file, or import one into this vault. Backups are encrypted with your current passphrase.</p>'+
+          '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-action="backup">Export encrypted backup</button>'+
+          '<button class="btn ghost sm" data-action="importPick">Import backup…</button></div>'+
+          '<input type="file" id="fileimport" accept="application/json,.json" hidden>'+
+        '</div>'+
+        '<div class="panel"><h3>Security</h3><table class="kv">'+
+          '<tr><td>Encryption</td><td>AES-GCM-256</td></tr>'+
+          '<tr><td>Key derivation</td><td>PBKDF2-SHA-256</td></tr>'+
+          '<tr><td>Iterations</td><td class="mono">'+((vmeta&&vmeta.kdf&&vmeta.kdf.iterations)||Vault.ITER).toLocaleString()+'</td></tr>'+
+          '<tr><td>Storage</td><td>'+esc(Store.modeName())+'</td></tr>'+
+          '<tr><td>Auto-lock</td><td>15 min idle</td></tr>'+
+        '</table></div>'+
+        '<div class="panel"><h3>This device</h3><table class="kv">'+
+          '<tr><td>Label</td><td>'+esc(m.deviceLabel||deviceLabel())+'</td></tr>'+
+          '<tr><td>Device ID</td><td class="mono">'+esc(m.deviceId||"—")+'</td></tr>'+
+          '<tr><td>Vault created</td><td class="mono">'+esc(m.created?fmtTs(m.created):(vmeta?fmtTs(vmeta.created):"—"))+'</td></tr>'+
+          '<tr><td>Records</td><td>'+state.records.length+'</td></tr>'+
+          '<tr><td>Log entries</td><td>'+state.audit.length+'</td></tr>'+
+        '</table></div>'+
+        '<div class="panel" style="border-color:rgba(224,115,106,.3)"><h3 style="color:var(--red)">Danger zone</h3>'+
+          '<p style="font-size:12.5px;color:var(--muted);margin:0 0 12px">Permanently erase this vault and all its data from this device. This cannot be undone.</p>'+
+          '<button class="btn danger" data-action="wipe">Erase vault</button></div>'+
+      '</div>';
+    el("fileimport").addEventListener("change",onImportFile);
   }
-
-  /* ----- record modal ----- */
-  function openModal(id,presetType){
-    var r=id?Repo.get(state,id):null;
-    editingId=id||null;
-    var nt=presetType||"task";
-    work={refs:r?JSON.parse(JSON.stringify(r.complianceRefs||[])):[],links:r?(r.links||[]).slice():[]};
-    $("#sheet").innerHTML=
-      '<div class="mhead"><span>'+(r?"Edit record":"New record")+'</span><button class="x" data-action="m-close">×</button></div>'
-      +'<label for="f-title">Title</label><input id="f-title" maxlength="200" value="'+esc(r?r.title:"")+'">'
-      +'<div class="frow"><div><label for="f-type">Type</label><select id="f-type">'+Schema.types.map(function(t){return '<option value="'+t[0]+'"'+((r?r.type===t[0]:t[0]===nt)?' selected':'')+'>'+esc(t[1])+'</option>';}).join("")+'</select></div>'
-      +'<div><label for="f-status">Status</label><select id="f-status">'+Schema.statuses.map(function(s){return '<option value="'+s[0]+'"'+(r&&r.status===s[0]?' selected':'')+'>'+esc(s[1])+'</option>';}).join("")+'</select></div></div>'
-      +'<div class="frow"><div><label for="f-due">Due / review date</label><input type="date" id="f-due" value="'+esc(r?r.due:"")+'"></div>'
-      +'<div><label for="f-owner">Owner</label><input id="f-owner" maxlength="80" value="'+esc(r?r.owner:"")+'"></div></div>'
-      +'<div id="f-sevwrap" style="display:'+(((r&&r.type==="risk")||(!r&&nt==="risk"))?"block":"none")+'"><label for="f-sev">Severity</label><select id="f-sev">'+Schema.severities.map(function(s){return '<option value="'+s[0]+'"'+(r&&r.severity===s[0]?' selected':'')+'>'+esc(s[1])+'</option>';}).join("")+'</select></div>'
-      +'<div class="seclabel">Compliance / evidence tags</div>'
-      +'<div class="frow tight"><div><select id="cf-fw">'+Schema.frameworks.map(function(f){return '<option value="'+esc(f)+'">'+esc(f)+'</option>';}).join("")+'</select></div>'
-      +'<div style="flex:1.4"><input id="cf-ref" maxlength="60" placeholder="reference — e.g. Art. 17, ECC 2-3-1, A.5.1"></div>'
-      +'<button class="btn ghost sm" data-action="cf-add">Tag</button></div>'
-      +'<div class="chips" id="cf-list"></div>'
-      +'<div class="seclabel">Linked records</div>'
-      +'<div class="frow tight"><div><select id="lk-sel"></select></div><button class="btn ghost sm" data-action="lk-add">Link</button></div>'
-      +'<div id="lk-list"></div>'
-      +'<label for="f-note">Notes</label><textarea id="f-note" maxlength="5000">'+esc(r?r.note:"")+'</textarea>'
-      +(r?'<div class="backlinks" id="backlinks"></div>':'')
-      +(r?'<div class="metafoot">Created '+esc(fmtTs(r.createdAt))+' · '+esc(deviceName(r.createdBy))+'<br>Last updated '+esc(fmtTs(r.updatedAt))+' · '+esc(deviceName(r.updatedBy))+'</div>':'')
-      +'<div class="errbox" id="m-err"></div>'
-      +'<div class="mfoot">'+(r?'<button class="btn ghost sm danger" data-action="m-del">Delete</button>':'')+'<span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Cancel</button><button class="btn sm" data-action="m-save">Save</button></div>';
-    renderRefs();renderLinkSel();renderLinks();
-    if(r)renderBacklinks(r.id);
-    $("#f-type").addEventListener("change",function(){$("#f-sevwrap").style.display=this.value==="risk"?"block":"none";});
-    $("#modal").classList.add("open");$("#f-title").focus();
-  }
-  function renderRefs(){
-    $("#cf-list").innerHTML=work.refs.length?work.refs.map(function(c,i){return '<span class="chip"><b>'+esc(c.fw)+'</b>'+(c.ref?' '+esc(c.ref):'')+'<button data-action="cf-del" data-i="'+i+'" aria-label="remove">×</button></span>';}).join(""):'<span class="lk" style="color:var(--faint);font-size:11px">No tags yet — link this to PDPL, CMA, NCA ECC, ISO 27001 or an internal control.</span>';
-  }
-  function renderLinkSel(){
-    var opts=state.records.filter(function(x){return x.id!==editingId&&work.links.indexOf(x.id)<0;}).map(function(x){return '<option value="'+x.id+'">'+esc(Schema.typeLabel(x.type))+": "+esc(x.title)+'</option>';}).join("");
-    $("#lk-sel").innerHTML=opts||'<option value="">— no other records —</option>';
-  }
-  function renderLinks(){
-    $("#lk-list").innerHTML=work.links.length?work.links.map(function(id){var t=Repo.get(state,id);return '<div class="linkitem"><span class="ttag">'+esc(t?t.type:"?")+'</span><span class="lt">'+esc(t?t.title:"(missing)")+'</span><button class="x" data-action="lk-del" data-id="'+id+'" style="font-size:16px">×</button></div>';}).join(""):'<span class="lk" style="color:var(--faint);font-size:11px">Not linked to anything yet.</span>';
-  }
-  function renderBacklinks(id){var bl=Repo.backlinks(state,id);$("#backlinks").innerHTML=bl.length?'Referenced by: '+bl.map(function(x){return esc(x.title);}).join(", "):"";}
-
-  function saveModal(){
-    var data={
-      title:$("#f-title").value.trim(),type:$("#f-type").value,status:$("#f-status").value,
-      due:$("#f-due").value,owner:$("#f-owner").value.trim(),note:$("#f-note").value.trim(),
-      severity:$("#f-type").value==="risk"?$("#f-sev").value:"",
-      complianceRefs:work.refs,links:work.links
-    };
-    var errs=Schema.validate(data);
-    if(errs.length){$("#m-err").innerHTML=errs.map(esc).join("<br>");return;}
-    if(!Authz.can(editingId?"update":"create",data)){denied();return;}
-    if(editingId){var oldRec=Repo.get(state,editingId),summary=diffSummary(oldRec,data);Repo.update(state,editingId,data);Audit.log(state,"record.update",tgt(Repo.get(state,editingId)),summary);}
-    else{var r=Repo.create(state,data);Audit.log(state,"record.create",tgt(r),"Created "+r.type);editingId=r.id;}
-    closeModal();render();save();
-  }
-  function delRecord(){if(!editingId)return;var r=Repo.get(state,editingId);if(!Authz.can("delete",r)){denied();return;}if(!confirm("Delete this record? This also removes links to it."))return;Repo.remove(state,editingId);Audit.log(state,"record.delete",tgt(r),"Deleted "+(r?r.type:"record"));closeModal();render();save();}
-  function closeModal(){$("#modal").classList.remove("open");editingId=null;work=null;pendingRestore=null;fEditId=null;fType=null;emailDraft=null;}
-
-  /* ----- activity (local, advisory log) ----- */
-  function openActivity(){actFilter={action:"all",from:"",to:""};renderActivity();$("#modal").classList.add("open");}
-  function activityRows(){
-    var f=actFilter;
-    return state.audit.slice().reverse().filter(function(e){
-      if(f.action!=="all"&&e.action!==f.action)return false;
-      var d=(e.ts||"").slice(0,10);
-      if(f.from&&d<f.from)return false;
-      if(f.to&&d>f.to)return false;
-      return true;
-    });
-  }
-  function activityListHTML(rows){
-    if(!rows.length)return '<div class="empty">No matching activity.</div>';
-    return rows.map(function(e){
-      var t=e.target,tg=t?(esc(Schema.typeLabel(t.type||""))+(t.title?' · '+esc(trunc(t.title,48)):'')):"";
-      var det=e.details||e.detail||"";
-      return '<div class="ae"><span class="at">'+esc(fmtTs(e.ts))+'</span> · '+esc(deviceName(e.deviceId))+' · <b>'+esc(e.action)+'</b>'
-        +(tg?' — '+tg:'')+(det?'<div class="lk" style="margin-top:2px;color:var(--muted)">'+esc(det)+'</div>':'')+'</div>';
-    }).join("");
-  }
-  function renderActivity(){
-    var actions=Object.keys(state.audit.reduce(function(m,e){m[e.action]=1;return m;},{})).sort();
-    var rows=activityRows();
-    $("#sheet").innerHTML='<div class="mhead"><span>Activity log</span><button class="x" data-action="m-close">×</button></div>'
-      +'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:4px">Local activity log — recorded on this device. Advisory, not a tamper-proof audit trail.</div>'
-      +'<div class="lk" title="Device identity is self-reported by the browser, not attested. A new browser or cleared storage produces a new device ID." style="color:var(--faint);font-size:11px;margin-bottom:8px">This device: '+esc(deviceName(state.meta.deviceId))+' · identity is self-reported (ⓘ).</div>'
-      +'<div class="toolbar">'
-        +'<select id="act-action"><option value="all">All actions</option>'+actions.map(function(a){return '<option value="'+esc(a)+'"'+(actFilter.action===a?" selected":"")+'>'+esc(a)+'</option>';}).join("")+'</select>'
-        +'<input type="date" id="act-from" value="'+esc(actFilter.from)+'" title="From date">'
-        +'<input type="date" id="act-to" value="'+esc(actFilter.to)+'" title="To date">'
-      +'</div>'
-      +'<div class="srow"><button class="btn ghost sm" data-action="act-verify">Verify log integrity</button><button class="btn ghost sm" data-action="act-csv">Export CSV</button><span class="spacer"></span><span class="lk" style="font-size:11px;align-self:center">'+rows.length+' / '+state.audit.length+' entries</span></div>'
-      +'<div id="act-result" class="lk" style="font-size:11px;margin:6px 0;min-height:14px"></div>'
-      +'<div id="act-list">'+activityListHTML(rows)+'</div>'
-      +'<div class="lk" style="color:var(--faint);font-size:10.5px;margin-top:10px;border-top:1px solid var(--line2);padding-top:8px">Entries are hash-chained (SHA-256) so a casual edit or deletion breaks the chain. This is not proof against an attacker who controls the app code — immutable audit requires a server.</div>';
-  }
-  async function verifyActivity(){
-    var el=$("#act-result");if(el)el.textContent="Verifying…";
-    var res=await Audit.verify(state);el=$("#act-result");if(!el)return;
-    if(res.ok)el.innerHTML='<span style="color:var(--green)">✓ Chain intact — '+res.count+' entr'+(res.count===1?"y":"ies")+' verify against their stored hashes.</span>';
-    else el.innerHTML='<span style="color:var(--red)">✗ Integrity check FAILED at entry #'+(res.brokenAt+1)+' ('+esc(res.reason)+'). The log may have been altered.</span>';
-  }
-  function exportActivityCSV(){
-    var cols=["timestamp","device_id","device_label","action","target_type","target_id","target_title","details","prevHash","hash"];
-    function q(v){return '"'+String(v==null?"":v).replace(/"/g,'""')+'"';}
-    var lines=[cols.join(",")];
-    state.audit.forEach(function(e){var t=e.target||{};lines.push([e.ts,e.deviceId,e.deviceLabel,e.action,t.type,t.id,t.title,(e.details||e.detail||""),e.prevHash,e.hash].map(q).join(","));});
-    var blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
-    var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="activity-log-"+now().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);
-    Audit.log(state,"log.export_csv",null,"Exported "+state.audit.length+" entries to CSV");save();
-    var el=$("#act-result");if(el)el.innerHTML='<span style="color:var(--green)">CSV downloaded ('+state.audit.length+' entries).</span>';
-  }
-
-  /* ----- staging review ----- */
-  function openStaging(){
-    var s=state.staging;
-    $("#sheet").innerHTML='<div class="mhead"><span>Review imported records</span><button class="x" data-action="m-close">×</button></div>'
-      +'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:8px">Imported data is untrusted until committed. Review, then commit or discard.</div>'
-      +(s.length?s.map(function(it,i){return '<div class="linkitem"><span class="ttag">'+esc(it.type||"task")+'</span><span class="lt">'+esc(it.title||"(no title)")+'</span><button class="btn sm" data-action="stage-commit" data-i="'+i+'">Commit</button> <button class="x" data-action="stage-discard" data-i="'+i+'" style="font-size:16px">×</button></div>';}).join(""):'<div class="empty">Nothing staged.</div>')
-      +(s.length?'<div class="mfoot"><button class="btn ghost sm danger" data-action="stage-clear">Discard all</button><span class="spacer"></span><button class="btn sm" data-action="stage-commitall">Commit all</button></div>':'');
-    $("#modal").classList.add("open");
-  }
-  function commitStaged(i){var it=state.staging[i];if(!it)return;if(!Authz.can("create",it)){denied();return;}var r=Repo.create(state,sanitizeImport(it));state.staging.splice(i,1);Audit.log(state,"import.commit",tgt(r),"Committed imported record");openStaging();render();save();}
-  function commitAllStaged(){if(!Authz.can("create",null)){denied();return;}var n=state.staging.length;state.staging.forEach(function(it){Repo.create(state,sanitizeImport(it));});Audit.log(state,"import.commit_all",null,"Committed "+n+" imported record(s)");state.staging=[];closeModal();render();save();}
-  function sanitizeImport(it){
-    return {
-      title:String(it.title||"").slice(0,200),
-      type:Schema.types.some(function(x){return x[0]===it.type;})?it.type:"note",
-      status:Schema.statuses.some(function(x){return x[0]===it.status;})?it.status:"open",
-      due:(it.due&&!isNaN(Date.parse(it.due)))?String(it.due).slice(0,10):"",
-      owner:String(it.owner||"").slice(0,80),
-      note:String(it.note||"").slice(0,5000),
-      severity:"",complianceRefs:[],links:[]
-    };
-  }
-
-  /* ----- backup / restore ----- */
   async function backup(){
-    if(!Authz.can("export",null)){denied();return;}
-    await Audit.seal(state);
-    var enc=await Vault.enc(state);
-    /* envelope metadata is NON-SECRET only; the payload encryption is unchanged */
-    var out={format:"ciso-ws-backup",v:2,encrypted:true,exported:nowTZ(),app:APP_VERSION,device:{id:(state.meta&&state.meta.deviceId)||"",label:(state.meta&&state.meta.deviceLabel)||""},kdf:(vmeta&&vmeta.kdf)||{algo:"PBKDF2",hash:"SHA-256",iterations:Vault.ITER},salt:(vmeta&&vmeta.salt)||null,payload:enc};
-    var blob=new Blob([JSON.stringify(out,null,2)],{type:"application/json"});
-    var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download="ciso-ws-backup-"+now().slice(0,10)+".enc.json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(u);
-    Audit.log(state,"backup.export",null,"Encrypted backup of "+state.records.length+" record(s) exported");save();
+    const payload=await Vault.enc(state);
+    const env={format:"aegis-backup",v:2,encrypted:true,exported:nowISO(),app:APP_VERSION,
+      device:{id:state.meta.deviceId,label:state.meta.deviceLabel},
+      kdf:vmeta.kdf,salt:vmeta.salt,payload};
+    download("aegis-backup-"+todayStr()+".enc.json","application/json",JSON.stringify(env,null,2));
+    Audit.log("backup.export",null,"encrypted");save();toast("Backup exported");
   }
-  function stageRecords(recs,origin){
-    if(!recs||!recs.length){alert("No records found in that backup.");return;}
-    if(!Authz.can("import",null)){denied();return;}
-    if(!confirm(recs.length+" record(s) found. They will be staged for review, not merged directly. Continue?"))return;
-    if(origin&&(origin.label||origin.id))state.meta.deviceNames[origin.id||("orig-"+origin.label)]=origin.label||("device "+String(origin.id).slice(0,8));
-    recs.forEach(function(r){state.staging.push(r);});
-    var src=origin&&(origin.label||origin.exported)?(" from “"+(origin.label||"unknown device")+"”"+(origin.exported?" exported "+fmtTs(origin.exported):"")):"";
-    Audit.log(state,"import.restore_staged",null,recs.length+" record(s) staged"+src);
-    render();save();openStaging();
-  }
-  function restore(file){
-    if(file.size>MAX_IMPORT){alert("This file is "+(file.size/1048576).toFixed(1)+" MB and exceeds the v1 import limit (25 MB). Streamed large-file handling arrives in stage 2.");return;}
-    var rd=new FileReader();
-    rd.onload=function(){
-      var obj;try{obj=JSON.parse(rd.result);}catch(e){alert("That file is not valid JSON.");return;}
-      if(obj&&obj.payload&&obj.payload.ct&&obj.salt){
-        pendingRestore=obj;openRestore();
-      }else if(obj&&obj.state&&Array.isArray(obj.state.records)){
-        if(!confirm("This is an UNENCRYPTED backup. New backups are encrypted by default. Import it anyway?"))return;
-        stageRecords(obj.state.records);
-      }else if(obj&&Array.isArray(obj.records)){
-        stageRecords(obj.records);
-      }else{alert("This does not look like a workspace backup.");}
+  function onImportFile(ev){
+    const f=ev.target.files&&ev.target.files[0];if(!f)return;
+    if(f.size>25*1024*1024){toast("File too large (max 25 MB)");ev.target.value="";return;}
+    const rd=new FileReader();
+    rd.onload=()=>{
+      let env;try{env=JSON.parse(rd.result);}catch(e){toast("Not a valid JSON backup");ev.target.value="";return;}
+      ev.target.value="";
+      openRestore(env);
     };
-    rd.readAsText(file);
+    rd.readAsText(f);
   }
-  function openRestore(){
-    var b=pendingRestore||{},dev=(b.device&&(b.device.label||b.device.id))?(b.device.label||("device "+String(b.device.id).slice(0,8))):null;
-    var origin=(dev||b.exported||b.app)?('<div class="lk" style="font-size:11px;color:var(--muted);background:var(--ink3);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px">Backup origin (self-reported): <b>'+esc(dev||"unknown device")+'</b>'+(b.exported?' · exported '+esc(fmtTs(b.exported)):'')+(b.app?' · app v'+esc(b.app):'')+'</div>'):'';
-    $("#sheet").innerHTML='<div class="mhead"><span>Restore encrypted backup</span><button class="x" data-action="m-close">×</button></div>'
-      +origin
-      +'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:8px">Enter the passphrase this backup was created with. It is decrypted using the backup\u2019s own salt and KDF parameters \u2014 independent of your current vault \u2014 so it restores after device loss, in a new browser, or into a fresh vault.</div>'
-      +'<label for="rp">Backup passphrase</label><input id="rp" type="password" autocomplete="off" autocapitalize="off" spellcheck="false">'
-      +'<div class="errbox" id="r-err"></div>'
-      +'<div class="mfoot"><span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Cancel</button><button class="btn sm" data-action="restore-decrypt">Decrypt &amp; stage</button></div>';
-    $("#modal").classList.add("open");var ip=$("#rp");if(ip)ip.focus();
+  function openRestore(env){
+    const encrypted=!!(env&&env.encrypted&&env.payload);
+    const sheet=el("sheet");
+    sheet.innerHTML=
+      '<div class="sh"><h2>Restore backup</h2><button class="x" data-action="closeModal">×</button></div>'+
+      '<div class="sbody">'+
+        '<p style="font-size:12.5px;color:var(--muted);margin-top:0">Restoring <b>replaces</b> the current vault contents with the backup. Exported '+
+          esc(env&&env.exported?fmtTs(env.exported):"unknown")+'.</p>'+
+        (encrypted?'<div class="field"><label>Backup passphrase</label><input id="r_pw" type="password" spellcheck="false" placeholder="Passphrase used when exporting"></div>'
+          :'<p style="font-size:12px;color:var(--amber)">This backup is not encrypted.</p>')+
+        '<div class="err" id="r_err"></div>'+
+      '</div>'+
+      '<div class="sfoot"><span class="sp"></span><button class="btn ghost" data-action="closeModal">Cancel</button>'+
+      '<button class="btn" id="r_go">Restore</button></div>';
+    el("modal").hidden=false;
+    el("r_go").addEventListener("click",()=>doRestore(env,encrypted));
+    if(el("r_pw"))el("r_pw").focus();
   }
-  async function restoreDecrypt(){
-    if(!pendingRestore){closeModal();return;}
-    var p=$("#rp").value;if(!p){$("#r-err").textContent="Enter the backup passphrase.";return;}
-    var b=pendingRestore,iters=(b.kdf&&b.kdf.iterations)||600000;
+  async function doRestore(env,encrypted){
+    let data;
     try{
-      var k=await Vault.derive(p,new Uint8Array(b.salt),iters);
-      var d=await Vault.decWith(b.payload,k);
-      var recs=(d&&Array.isArray(d.records))?d.records:null;
-      if(!recs){$("#r-err").textContent="Decrypted, but no records were found in this backup.";return;}
-      var origin={id:(b.device&&b.device.id)||"",label:(b.device&&b.device.label)||"",exported:b.exported||""};
-      pendingRestore=null;closeModal();stageRecords(recs,origin);
-    }catch(e){$("#r-err").textContent="Incorrect passphrase, or the backup is corrupt.";}
-  }
-
-  /* ----- forms: request-intake module ----- */
-  function deriveFormTitle(ftKey,fields){var ft=FORM_TYPES[ftKey];var who=(fields.fullName||fields.email||"Untitled").toString().trim()||"Untitled";return who+" — "+(ft?ft.label:"Form");}
-  function fillTpl(tpl,fields){return String(tpl).replace(/\{\{(\w+)\}\}/g,function(_,k){return (fields&&fields[k]!=null&&fields[k]!=="")?String(fields[k]):"";});}
-  function formDiff(oldRec,newFields,ft){
-    var of=(oldRec&&oldRec.fields)||{},parts=[];
-    ft.fields.forEach(function(f){var ov=of[f.key]||"",nv=newFields[f.key]||"";if(String(ov)!==String(nv))parts.push(f.label+": "+(ov?("“"+trunc(ov)+"”"):"∅")+"→"+(nv?("“"+trunc(nv)+"”"):"∅"));});
-    return parts.length?parts.join("; "):"";
-  }
-
-  function renderForms(){
-    var keys=Object.keys(FORM_TYPES);
-    if(!formSel||!FORM_TYPES[formSel])formSel=keys[0];
-    var ft=FORM_TYPES[formSel];
-    var tabs='<div class="ftabs">'+keys.map(function(k){return '<button class="ftab'+(k===formSel?" on":"")+'" data-action="form-type" data-key="'+esc(k)+'">'+esc(FORM_TYPES[k].label)+'</button>';}).join("")+'</div>';
-    var subs=state.records.filter(function(r){return r.type==="form"&&r.formType===formSel&&Authz.can("read",r);}).sort(recSort);
-    var list=subs.length?subs.map(formRow).join(""):'<div class="empty">No '+esc(ft.label)+' submissions yet. Use “+ New” or “Import PDF”.</div>';
-    $("#page").innerHTML=tabs
-      +'<div class="toolbar"><span class="muted" style="flex:1;min-width:120px">'+esc(ft.label)+' · '+subs.length+' submission(s)</span>'
-      +'<button class="btn sm" data-action="form-new">+ New</button>'
-      +'<label class="btn ghost sm" style="display:inline-block;margin:0;cursor:pointer">Import PDF<input type="file" id="pdfin" accept="application/pdf" style="display:none"></label></div>'
-      +'<div class="list">'+list+'</div>';
-  }
-  function formRow(r){
-    var f=r.fields||{},sc=Schema.statusColor(r.status);
-    var sub=[f.email,f.department||f.role||f.toDept||f.manager].filter(Boolean).map(esc).join(" · ");
-    var dt=dueTag(r.due);
-    return '<div class="rec '+(r.status==="done"?"done":"")+'">'
-      +'<div class="rline"><span class="rtitle" data-action="form-edit" data-id="'+r.id+'" style="cursor:pointer">'+esc(r.title)+'</span>'
-      +'<span class="pill" style="color:'+sc+';background:'+sc+'1a;border-color:'+sc+'40"><span class="dot" style="background:'+sc+'"></span>'+esc(Schema.statusLabel(r.status))+'</span>'
-      +(dt?'<span class="due '+dt.c+'">'+esc(dt.t)+'</span>':'')+'</div>'
-      +(sub?'<div class="meta2"><span class="lk">'+sub+'</span></div>':'')
-      +'<div class="meta2"><button class="btn ghost sm" data-action="form-email" data-id="'+r.id+'">Draft email</button>'
-      +'<button class="btn ghost sm" data-action="form-edit" data-id="'+r.id+'">Edit</button>'
-      +'<button class="btn ghost sm danger" data-action="form-del" data-id="'+r.id+'">Delete</button></div>'
-      +'</div>';
-  }
-
-  function openFormModal(ftKey,id,prefill,extracted){
-    var ft=FORM_TYPES[ftKey];if(!ft)return;
-    var rec=id?Repo.get(state,id):null;
-    fType=ftKey;fEditId=id||null;
-    var vals=rec?Object.assign({},rec.fields||{}):(prefill||{});
-    var ex=extracted||{};
-    var statusVal=rec?rec.status:"open";
-    var rows=ft.fields.map(function(f){
-      var v=vals[f.key]!=null?vals[f.key]:"";
-      var mark=ex[f.key]?'<span class="exbadge" title="Extracted from the imported PDF — review">auto</span>':"";
-      var input;
-      if(f.type==="select"){
-        input='<select id="ff-'+esc(f.key)+'">'+(f.options||[]).map(function(o){return '<option'+(String(v)===o?" selected":"")+'>'+esc(o)+'</option>';}).join("")+'</select>';
+      if(encrypted){
+        const pw=el("r_pw").value;
+        const k=await Vault.deriveAdhoc(pw,env.salt,(env.kdf&&env.kdf.iterations)||Vault.ITER);
+        data=await Vault.decWith(env.payload,k);
       }else{
-        var ty=f.type==="date"?"date":f.type==="email"?"email":"text";
-        input='<input id="ff-'+esc(f.key)+'" type="'+ty+'" maxlength="500" value="'+esc(v)+'">';
+        data=env.state||env;
       }
-      return '<label for="ff-'+esc(f.key)+'">'+esc(f.label)+(f.required?" *":"")+mark+'</label>'+input;
-    }).join("");
-    var statusSel='<label for="ff-status">Status</label><select id="ff-status">'+Schema.statuses.map(function(s){return '<option value="'+s[0]+'"'+(statusVal===s[0]?" selected":"")+'>'+esc(s[1])+'</option>';}).join("")+'</select>';
-    $("#sheet").innerHTML=
-      '<div class="mhead"><span>'+(rec?"Edit ":"New ")+esc(ft.label)+'</span><button class="x" data-action="m-close">×</button></div>'
-      +(Object.keys(ex).length?'<div class="lk" style="color:var(--faint);font-size:11px;margin-bottom:8px">Fields marked “auto” were read from the imported PDF — review them. Nothing is stored until you press Save.</div>':"")
-      +rows+statusSel
-      +(rec?'<div class="metafoot">Created '+esc(fmtTs(rec.createdAt))+' · '+esc(deviceName(rec.createdBy))+'<br>Last updated '+esc(fmtTs(rec.updatedAt))+' · '+esc(deviceName(rec.updatedBy))+'</div>':'')
-      +'<div class="errbox" id="fm-err"></div>'
-      +'<div class="mfoot">'+(rec?'<button class="btn ghost sm danger" data-action="fm-del">Delete</button>':"")+'<span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Cancel</button><button class="btn sm" data-action="fm-save">Save</button></div>';
-    $("#modal").classList.add("open");
-    var first=$("#ff-"+ft.fields[0].key);if(first)first.focus();
-  }
-  function saveForm(){
-    var ft=FORM_TYPES[fType];if(!ft)return;
-    var fields={},errs=[];
-    ft.fields.forEach(function(f){
-      var el=$("#ff-"+f.key),v=el?String(el.value).trim():"";
-      if(f.required&&!v)errs.push(esc(f.label)+" is required.");
-      if(f.type==="email"&&v&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v))errs.push(esc(f.label)+" is not a valid email.");
-      if(f.type==="date"&&v&&isNaN(Date.parse(v)))errs.push(esc(f.label)+" is not a valid date.");
-      fields[f.key]=v.slice(0,500);
-    });
-    if(errs.length){$("#fm-err").innerHTML=errs.join("<br>");return;}
-    var status=$("#ff-status")?$("#ff-status").value:"open";
-    var title=deriveFormTitle(fType,fields);
-    var due=fields.endDate||fields.effectiveDate||fields.lastWorkingDay||fields.startDate||"";
-    var owner=fields.manager||"";
-    if(!Authz.can(fEditId?"update":"create",null)){denied();return;}
-    if(fEditId){var ofr=Repo.get(state,fEditId),fsum=formDiff(ofr,fields,ft);Repo.update(state,fEditId,{title:title,status:status,fields:fields,due:due,owner:owner});Audit.log(state,"form.update",tgt(Repo.get(state,fEditId)),(fsum||"updated")+" · status "+status);}
-    else{var nfr=Repo.create(state,{type:"form",formType:fType,title:title,status:status,fields:fields,due:due,owner:owner,note:""});Audit.log(state,"form.create",tgt(nfr),ft.label+" submitted");}
-    closeModal();render();save();
-  }
-  function delForm(){
-    if(!fEditId)return;var r=Repo.get(state,fEditId);
-    if(!Authz.can("delete",r)){denied();return;}
-    if(!confirm("Delete this submission? This cannot be undone."))return;
-    Repo.remove(state,fEditId);Audit.log(state,"form.delete",tgt(r),"Deleted submission");
-    closeModal();render();save();
+    }catch(e){el("r_err").textContent="Could not decrypt — wrong passphrase or corrupt file.";return;}
+    if(!data||!Array.isArray(data.records)){el("r_err").textContent="Backup does not contain valid records.";return;}
+    state.records=data.records;
+    Audit.log("backup.restore",null,data.records.length+" records");
+    await persist();closeModal();route();toast("Backup restored — "+data.records.length+" records");
   }
 
-  /* draft email from the form type's template */
-  function openEmailDraft(id){
-    var r=Repo.get(state,id);if(!r||r.type!=="form")return;
-    var ft=FORM_TYPES[r.formType];if(!ft||!ft.email){alert("No email template for this form type.");return;}
-    var fields=r.fields||{};
-    var subj=fillTpl(ft.email.subject,fields),body=fillTpl(ft.email.body,fields),to=fields.email||"";
-    emailDraft={subj:subj,body:body};
-    var mailto="mailto:"+encodeURIComponent(to)+"?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(body);
-    $("#sheet").innerHTML=
-      '<div class="mhead"><span>Draft email</span><button class="x" data-action="m-close">×</button></div>'
-      +'<label>To</label><input value="'+esc(to)+'" readonly>'
-      +'<label>Subject</label><input value="'+esc(subj)+'" readonly>'
-      +'<label>Body</label><textarea readonly style="min-height:200px">'+esc(body)+'</textarea>'
-      +'<div class="lk" style="color:var(--faint);font-size:11px;margin-top:8px">“Open in mail app” uses a mailto: link; very long bodies can be truncated by the OS — use “Copy draft” for those.</div>'
-      +'<div class="mfoot"><a class="btn sm" href="'+esc(mailto)+'">Open in mail app</a><button class="btn ghost sm" data-action="email-copy">Copy draft</button><span class="spacer"></span><button class="btn ghost sm" data-action="m-close">Close</button></div>';
-    $("#modal").classList.add("open");
+  /* ---------- helpers ---------- */
+  function download(name,mime,content){
+    const blob=new Blob([content],{type:mime});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},100);
   }
-  function copyText(txt,btn){
-    function done(){if(btn){var o=btn.textContent;btn.textContent="Copied";setTimeout(function(){btn.textContent=o;},1200);}}
-    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done);});}
-    else fallbackCopy(txt,done);
-  }
-  function fallbackCopy(txt,done){try{var ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.focus();ta.select();document.execCommand("copy");ta.remove();done();}catch(e){alert("Copy failed — select the text and copy manually.");}}
+  function closeModal(){el("modal").hidden=true;el("sheet").innerHTML="";}
 
-  /* ----- PDF import: parse as UNTRUSTED data, never execute, confirm before save ----- */
-  function loadPdfLib(){
-    if(window.PDFLib)return Promise.resolve(window.PDFLib);
-    if(_pdflibP)return _pdflibP;
-    _pdflibP=new Promise(function(res,rej){
-      var s=document.createElement("script");s.src="vendor/pdf-lib.min.js";
-      s.onload=function(){window.PDFLib?res(window.PDFLib):rej(new Error("PDF engine loaded but unavailable."));};
-      s.onerror=function(){_pdflibP=null;rej(new Error("Could not load the local PDF engine (vendor/pdf-lib.min.js). Serve the app from its folder so same-origin scripts can load."));};
-      document.head.appendChild(s);
-    });
-    return _pdflibP;
-  }
-  function normName(s){return String(s).toLowerCase().replace(/[^a-z0-9]/g,"");}
-  function readAcro(doc,ft){
-    var out={},form,fs;
-    try{form=doc.getForm();}catch(e){return out;}
-    try{fs=form.getFields();}catch(e){return out;}
-    if(!fs||!fs.length)return out;
-    var map={};Object.keys(ft.pdfFieldMap).forEach(function(k){map[normName(k)]=ft.pdfFieldMap[k];});
-    fs.forEach(function(f){
-      var name;try{name=f.getName();}catch(e){return;}
-      var key=map[normName(name)];if(!key)return;
-      var val="";
-      try{
-        if(typeof f.getText==="function")val=f.getText()||"";
-        else if(typeof f.getSelected==="function"){var sel=f.getSelected();val=(sel&&sel.join(", "))||"";}
-        else if(typeof f.isChecked==="function")val=f.isChecked()?"Yes":"";
-      }catch(e){}
-      if(val)out[key]=String(val).slice(0,500);
-    });
-    return out;
-  }
-  function regesc(s){return String(s).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");}
-  function pdfUnesc(lit){
-    return lit.slice(1,-1).replace(/\\([nrtbf()\\]|[0-7]{1,3})/g,function(_,c){
-      if(c==="n")return "\n";if(c==="r")return "\r";if(c==="t")return "\t";if(c==="b")return "\b";if(c==="f")return "\f";
-      if(c==="("||c===")"||c==="\\")return c;return String.fromCharCode(parseInt(c,8)&255);
-    });
-  }
-  async function inflate(u8){
-    if(typeof DecompressionStream==="undefined")return null;
-    var fmts=["deflate","deflate-raw"];
-    for(var i=0;i<fmts.length;i++){
-      try{var ds=new DecompressionStream(fmts[i]);var ab=await new Response(new Blob([u8]).stream().pipeThrough(ds)).arrayBuffer();return new Uint8Array(ab);}catch(e){}
-    }
-    return null;
-  }
-  /* best-effort flat-text extraction (worker-free): inflate FlateDecode content
-     streams and pull literal strings. Reliable AcroForm path is preferred. */
-  async function extractText(u8){
-    var dec=new TextDecoder("latin1"),s=dec.decode(u8),out=[],pos=0,guard=0;
-    while(guard++<5000){
-      var si=s.indexOf("stream",pos);if(si<0)break;
-      var ei=s.indexOf("endstream",si);if(ei<0)break;
-      var start=si+6;if(s[start]==="\r")start++;if(s[start]==="\n")start++;
-      var raw=u8.subarray(start,ei);
-      var dictStart=s.lastIndexOf("<<",si),dict=dictStart>=0?s.slice(dictStart,si):"";
-      var content=null;
-      if(/\/FlateDecode/.test(dict)){var inf=await inflate(raw);if(inf)content=dec.decode(inf);}
-      else content=dec.decode(raw);
-      if(content){var m,re=/\((?:\\[\s\S]|[^\\()])*\)/g;while((m=re.exec(content))){out.push(pdfUnesc(m[0]));}}
-      pos=ei+9;
-    }
-    return out.join(" ");
-  }
-  var LABEL_ALIASES={fullName:["full name","name","employee name","requester"],email:["email","e-mail","email address"],employeeId:["employee id","employee number","staff id"],department:["department","dept"],manager:["manager","line manager","reporting manager"],role:["role","job title","title","position"],startDate:["start date","commencement date"],endDate:["end date","expiry date"],lastWorkingDay:["last working day","leaving date","termination date","last day"],effectiveDate:["effective date","effective from"],fromDept:["from department","current department"],toDept:["to department","new department"],fromRole:["from role","current role"],toRole:["to role","new role"]};
-  function heuristicExtract(text,ft){
-    var found={},fields={},flat=(text||"").replace(/[ \t]+/g," ");
-    var em=flat.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
-    ft.fields.forEach(function(f){
-      var aliases=[f.label].concat(LABEL_ALIASES[f.key]||[]);
-      for(var i=0;i<aliases.length;i++){
-        var rx=new RegExp(regesc(aliases[i])+"\\s*[:\\-\\u2013]\\s*([^\\n\\r]{1,120}?)(?:\\s{2,}|[\\n\\r]|$)","i");
-        var mm=flat.match(rx);
-        if(mm&&mm[1]&&mm[1].trim()){fields[f.key]=mm[1].trim().slice(0,500);found[f.key]=true;break;}
-      }
-      if(!fields[f.key]&&f.type==="email"&&em){fields[f.key]=em[0];found[f.key]=true;}
-    });
-    return {fields:fields,found:found};
-  }
-  async function importFormPdf(file){
-    if(!Authz.can("import",null)){denied();return;}
-    if(file.size>MAX_IMPORT){alert("This file is "+(file.size/1048576).toFixed(1)+" MB and exceeds the "+(MAX_IMPORT/1048576)+" MB import limit.");return;}
-    var ftKey=formSel,ft=FORM_TYPES[ftKey];if(!ft)return;
-    var bytes;try{bytes=new Uint8Array(await file.arrayBuffer());}catch(e){alert("Could not read that file.");return;}
-    var fields={},extracted={},note="";
-    try{
-      var PDFLib=await loadPdfLib();
-      var doc=await PDFLib.PDFDocument.load(bytes,{ignoreEncryption:true,updateMetadata:false});
-      var acro=readAcro(doc,ft);
-      if(Object.keys(acro).length){Object.assign(fields,acro);Object.keys(acro).forEach(function(k){extracted[k]=true;});note="acroform";}
-      else{var text=await extractText(bytes);var h=heuristicExtract(text,ft);Object.assign(fields,h.fields);Object.assign(extracted,h.found);note="text-heuristic";}
-    }catch(e){alert("Couldn't parse this PDF ("+((e&&e.message)||"unknown error")+"). You can still fill the form in manually.");}
-    Audit.log(state,"form.pdf_import",null,ft.label+" · "+note+" · "+Object.keys(extracted).length+" field(s) extracted (pending review)");save();
-    openFormModal(ftKey,null,fields,extracted);
-  }
-
-  /* ----- events ----- */
+  /* ---------- event delegation ---------- */
   function onClick(e){
-    var t=e.target.closest("[data-action]");if(!t)return;
-    var a=t.getAttribute("data-action"),id=t.getAttribute("data-id"),i=t.getAttribute("data-i");
-    if(a==="create"){createVault();return;}
-    if(a==="unlock"){unlock();return;}
-    if(a==="lock"){lock();return;}
-    if(a==="wipe"){wipeAll();return;}
-    if(!Vault.ready())return;
-    if(a==="new"){openModal(null,t.getAttribute("data-type")||null);return;}
-    if(a==="edit"){var _er=Repo.get(state,id);if(_er&&_er.type==="form"){openFormModal(_er.formType,id);}else{openModal(id);}return;}
-    if(a==="form-type"){formSel=t.getAttribute("data-key");render();return;}
-    if(a==="form-new"){openFormModal(formSel,null,{},{});return;}
-    if(a==="form-edit"){var _fr=Repo.get(state,id);openFormModal(_fr?_fr.formType:formSel,id);return;}
-    if(a==="form-email"){openEmailDraft(id);return;}
-    if(a==="form-del"){fEditId=id;delForm();return;}
-    if(a==="fm-save"){saveForm();return;}
-    if(a==="fm-del"){delForm();return;}
-    if(a==="email-copy"){copyText(emailDraft?(emailDraft.subj+"\n\n"+emailDraft.body):"",t);return;}
-    if(a==="m-close"){closeModal();return;}
-    if(a==="m-save"){saveModal();return;}
-    if(a==="m-del"){delRecord();return;}
-    if(a==="cf-add"){var fw=$("#cf-fw").value,ref=$("#cf-ref").value.trim().slice(0,60);work.refs.push({fw:fw,ref:ref});$("#cf-ref").value="";renderRefs();return;}
-    if(a==="cf-del"){work.refs.splice(+i,1);renderRefs();return;}
-    if(a==="lk-add"){var v=$("#lk-sel").value;if(v){work.links.push(v);renderLinkSel();renderLinks();}return;}
-    if(a==="lk-del"){work.links=work.links.filter(function(x){return x!==id;});renderLinkSel();renderLinks();return;}
-    if(a==="activity"){openActivity();return;}
-    if(a==="backup"){backup();return;}
-    if(a==="restore-decrypt"){restoreDecrypt();return;}
-    if(a==="stage-open"){openStaging();return;}
-    if(a==="stage-commit"){commitStaged(+i);return;}
-    if(a==="stage-commitall"){commitAllStaged();return;}
-    if(a==="stage-discard"){state.staging.splice(+i,1);Audit.log(state,"import.discard",null,"Discarded 1 staged record");openStaging();render();save();return;}
-    if(a==="act-verify"){verifyActivity();return;}
-    if(a==="act-csv"){exportActivityCSV();return;}
-    if(a==="device-rename"){renameDevice();return;}
-    if(a==="stage-clear"){if(confirm("Discard all staged records?")){state.staging=[];closeModal();render();save();}return;}
+    const nav=e.target.closest("[data-nav]");
+    if(nav){location.hash="#/"+nav.getAttribute("data-nav");return;}
+    const open=e.target.closest("[data-open]");
+    if(open&&Vault.ready()){openRecord(open.getAttribute("data-open"));return;}
+    const a=e.target.closest("[data-action]");
+    if(!a)return;
+    const act=a.getAttribute("data-action"),id=a.getAttribute("data-id"),type=a.getAttribute("data-type");
+    switch(act){
+      case "create":doCreate();break;
+      case "unlock":doUnlock();break;
+      case "wipe":doWipe();break;
+      case "lock":lock();break;
+      case "new":openRecord(null,type);break;
+      case "saveRecord":saveRecord(id);break;
+      case "delRecord":delRecord(id);break;
+      case "closeModal":closeModal();break;
+      case "activity":openActivity();break;
+      case "exportLog":exportLog();break;
+      case "backup":backup();break;
+      case "importPick":el("fileimport").click();break;
+    }
   }
 
   function boot(){
     document.addEventListener("click",onClick);
-    window.addEventListener("hashchange",route);
-    document.addEventListener("input",function(e){if(e.target&&e.target.id==="fq"){filter.q=e.target.value;renderRows();}});
-    document.addEventListener("change",function(e){
-      if(!e.target)return;
-      if(e.target.id==="ftype"){filter.type=e.target.value;renderRows();return;}
-      if(e.target.id==="ffw"){filter.fw=e.target.value;renderRows();return;}
-      if(e.target.id==="restorein"){var f=e.target.files&&e.target.files[0];e.target.value="";if(f)restore(f);return;}
-      if(e.target.id==="pdfin"){var pf=e.target.files&&e.target.files[0];e.target.value="";if(pf)importFormPdf(pf);return;}
-      if(e.target.id==="act-action"){actFilter.action=e.target.value;renderActivity();return;}
-      if(e.target.id==="act-from"){actFilter.from=e.target.value;renderActivity();return;}
-      if(e.target.id==="act-to"){actFilter.to=e.target.value;renderActivity();return;}
-    });
-    ["mousemove","keydown","click","touchstart"].forEach(function(ev){document.addEventListener(ev,function(){if(Vault.ready())resetIdle();},{passive:true});});
-    Store.get("meta").then(function(meta){renderLock(!meta);});
+    document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!el("modal").hidden)closeModal();});
+    window.addEventListener("hashchange",()=>{if(Vault.ready())route();});
+    (async ()=>{
+      vmeta=await Store.get("meta");
+      renderLock(!vmeta);
+    })();
   }
-  return {boot:boot};
+  return {boot};
 })();
 
-/* the persisted 'data' record wraps the encrypted payload under .enc */
 App.boot();
+
+})();
 </script>
 </body>
 </html>
