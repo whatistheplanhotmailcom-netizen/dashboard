@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://api.github.com; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <title>CISSP CBK v19 — Study Engine</title>
 <script src="vendor/d3.min.js"></script>
@@ -404,6 +404,8 @@
       <button class="tbtn" id="imgExport">⬇ Images</button>
       <button class="tbtn" id="imgImport">⬆ Images</button>
       <input type="file" id="imgImportFile" accept=".json" style="display:none">
+      <button class="tbtn" id="cloudBtn">☁ Cloud sync</button>
+      <span class="qstat" id="cloudInd" style="align-self:center"></span>
     </div>
     <div id="qhome"></div>
     <div id="qarea"></div>
@@ -433,12 +435,36 @@
   </section>
 
   <footer>
-    <b>Structure: ISC² CISSP Detailed Content Outline, effective 15 Apr 2024</b> (weights D1 16 · D2 10 · D3 13 · D4 13 · D5 13 · D6 12 · D7 13 · D8 10%). Items badged OFFICIAL are outline items; SIMPLE/EXPLAIN/SCENARIO/ANALOGY/TRAP/PAIR/MAP layers are my study notes written to standard CISSP doctrine — verify against your study guide. 🆕 marks terms newer study material may cover thinly. This build folds in real content extracted from your uploaded <b>CISSP Combined Notes</b> (algorithms, RAID, biometrics, Kerberos, firewall generations, legal systems, WAN, evidence types, etc.); a known error in that source (IPv6 stated as 64-bit) is corrected to 128-bit here. v8 aggressively revisits the Matrices &amp; Glossary using all four books — canonical items now pull from the Sybex Official Study Guide 9E (tagged OSG), the (ISC)² CBK (CBK), CISSP for Dummies (FD) and the Combined Notes (NOTES); the tag appears at the end of each entry. v9 adds a cross-book pass on the ⚠ Pairs (Common Criteria, IPsec modes, confusion/diffusion, key-count formula, and more) and restyles the study-map layers into distinct COLOR-CODED sections per topic: blue EXPLAIN · green SCENARIO · violet ANALOGY · orange TRAP · pink ⚠ PAIRS · lime/​blue EXAM-vs-REAL · teal MAP. v10 colorizes the collapsed layer TOGGLE to match those section colors, and upgrades Quiz scenario mode: after you tap an answer you now get an instant Correct/Incorrect banner, a per-option explanation of why each choice is right or wrong, and a "Why this is the answer" takeaway. v11 adds an always-visible OBJECTIVE and KEY TAKEAWAY to every domain and every topic in the Study map — a quick overview of what each is for and the single most important point. v12 cross-links the views: tap a glossary term’s domain tag or a matrix’s domain tag to jump to that domain in the Study map, and each Study-map domain now has chips to open its filtered glossary terms and matrices. The Glossary also gained a domain filter rail. v13 upgrades those links to TOPIC level: a glossary term or matrix now jumps to the specific relevant topic (e.g. Bell-LaPadula → 3.2, ALE → 1.9), briefly highlighting it, and falls back to the domain only if no topic applies. v14 completes the loop the other way: EVERY study-map topic now shows "📖 N terms →" and "▦ N matrices →" chips that open the Glossary/Matrices filtered to exactly that topic (with a one-tap clear). v15 makes each topic’s MAP entries clickable — tap a related domain (e.g. “D6 — … ↗”) to jump straight to it — and adds a floating “← Back” button that returns you to wherever you jumped from (works for MAP, glossary/matrix and pair links). v16 adds two things: (1) you can attach test screenshots to any topic — tap “📎 Add test image”, give it a title, then rename/delete/reorder or view full-screen; a global “📎 Images” toggle shows/hides them, and “⬇ Images / ⬆ Images” in the Quiz tab export/import them for backup. (2) Following any link now flashes the destination 5 times in a neon-green glow. v17 extends that glow to EVERY link target globally — jumping to the Glossary or Matrices now scrolls the filtered results into view and flashes them too, matching the topic/domain flash. v18 anchors the flash to the exact TEXT being pointed at: a topic’s title, a domain’s name, or the specific glossary term / matrix title now flashes with a neon-green background highlight (instead of a glow around the whole card). v19 also scrolls the flashed text to the CENTER of the screen so it is clearly in view. The three larger PDFs (Sybex OSG 9E, CISSP for Dummies, cissp_cbk) can be mined for specific deeper topics on request. Progress saves to this browser via localStorage when available (in some embedded previews it will not persist — use ⬇ Progress JSON in the Quiz tab as your reliable backup, and ⬆ Import to restore).
-  </footer>
+    <b>Structure: ISC² CISSP Detailed Content Outline, effective 15 Apr 2024</b> (weights D1 16 · D2 10 · D3 13 · D4 13 · D5 13 · D6 12 · D7 13 · D8 10%). Items badged OFFICIAL are outline items; SIMPLE/EXPLAIN/SCENARIO/ANALOGY/TRAP/PAIR/MAP layers are my study notes written to standard CISSP doctrine — verify against your study guide. 🆕 marks terms newer study material may cover thinly. This build folds in real content extracted from your uploaded <b>CISSP Combined Notes</b> (algorithms, RAID, biometrics, Kerberos, firewall generations, legal systems, WAN, evidence types, etc.); a known error in that source (IPv6 stated as 64-bit) is corrected to 128-bit here. v8 aggressively revisits the Matrices &amp; Glossary using all four books — canonical items now pull from the Sybex Official Study Guide 9E (tagged OSG), the (ISC)² CBK (CBK), CISSP for Dummies (FD) and the Combined Notes (NOTES); the tag appears at the end of each entry. v9 adds a cross-book pass on the ⚠ Pairs (Common Criteria, IPsec modes, confusion/diffusion, key-count formula, and more) and restyles the study-map layers into distinct COLOR-CODED sections per topic: blue EXPLAIN · green SCENARIO · violet ANALOGY · orange TRAP · pink ⚠ PAIRS · lime/​blue EXAM-vs-REAL · teal MAP. v10 colorizes the collapsed layer TOGGLE to match those section colors, and upgrades Quiz scenario mode: after you tap an answer you now get an instant Correct/Incorrect banner, a per-option explanation of why each choice is right or wrong, and a "Why this is the answer" takeaway. v11 adds an always-visible OBJECTIVE and KEY TAKEAWAY to every domain and every topic in the Study map — a quick overview of what each is for and the single most important point. v12 cross-links the views: tap a glossary term’s domain tag or a matrix’s domain tag to jump to that domain in the Study map, and each Study-map domain now has chips to open its filtered glossary terms and matrices. The Glossary also gained a domain filter rail. v13 upgrades those links to TOPIC level: a glossary term or matrix now jumps to the specific relevant topic (e.g. Bell-LaPadula → 3.2, ALE → 1.9), briefly highlighting it, and falls back to the domain only if no topic applies. v14 completes the loop the other way: EVERY study-map topic now shows "📖 N terms →" and "▦ N matrices →" chips that open the Glossary/Matrices filtered to exactly that topic (with a one-tap clear). v15 makes each topic’s MAP entries clickable — tap a related domain (e.g. “D6 — … ↗”) to jump straight to it — and adds a floating “← Back” button that returns you to wherever you jumped from (works for MAP, glossary/matrix and pair links). v16 adds two things: (1) you can attach test screenshots to any topic — tap “📎 Add test image”, give it a title, then rename/delete/reorder or view full-screen; a global “📎 Images” toggle shows/hides them, and “⬇ Images / ⬆ Images” in the Quiz tab export/import them for backup. (2) Following any link now flashes the destination 5 times in a neon-green glow. v17 extends that glow to EVERY link target globally — jumping to the Glossary or Matrices now scrolls the filtered results into view and flashes them too, matching the topic/domain flash. v18 anchors the flash to the exact TEXT being pointed at: a topic’s title, a domain’s name, or the specific glossary term / matrix title now flashes with a neon-green background highlight (instead of a glow around the whole card). v19 also scrolls the flashed text to the CENTER of the screen so it is clearly in view. The three larger PDFs (Sybex OSG 9E, CISSP for Dummies, cissp_cbk) can be mined for specific deeper topics on request. Progress saves to this browser via localStorage when available (in some embedded previews it will not persist — use ⬇ Progress JSON in the Quiz tab as your reliable backup, and ⬆ Import to restore). v20 adds optional <b>☁ Cloud sync (Quiz tab)</b> for attached screenshots: connect a <b>private</b> GitHub repo with a fine-grained token (Contents: Read and write) and images upload to <code>cissp-images/</code> in that repo and sync across every device where you sign in. Without it, images stay local to this browser as before. The token is kept only in this browser (localStorage) — never committed or shared; anyone opening the public page still sees nothing without their own token.
+</footer>
 </div>
 
 <button id="backBtn" aria-label="Go back">← Back</button>
 <div id="imgLb"><button class="lbx" aria-label="Close">×</button><img alt=""><div class="lbcap"></div></div>
+<div id="cloudModal" style="position:fixed;inset:0;z-index:90;background:rgba(10,12,16,.55);display:none;align-items:center;justify-content:center;padding:16px">
+  <div style="width:100%;max-width:460px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 50px rgba(20,25,34,.28);padding:16px 16px 14px;max-height:90vh;overflow:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <h2 style="margin:0;font-family:var(--disp);font-size:18px">☁ Cloud sync — GitHub</h2>
+      <button class="tbtn" id="cloudClose" aria-label="Close">×</button>
+    </div>
+    <p style="font-size:12px;color:var(--muted);line-height:1.5;margin:8px 0 10px">Store your attached screenshots in a <b>private</b> GitHub repo so they sync across devices. Enter a <b>fine-grained Personal Access Token</b> scoped to only that repo (Contents: Read and write). The token is kept <b>only in this browser</b> — never uploaded or committed.</p>
+    <label class="qstat" style="display:block;margin:6px 0 2px">Repo owner (GitHub username)</label>
+    <input id="cfOwner" type="text" spellcheck="false" autocomplete="off" style="width:100%;font-family:var(--mono);font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:9px">
+    <label class="qstat" style="display:block;margin:8px 0 2px">Private repo name</label>
+    <input id="cfRepo" type="text" spellcheck="false" autocomplete="off" placeholder="cissp-study-images" style="width:100%;font-family:var(--mono);font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:9px">
+    <label class="qstat" style="display:block;margin:8px 0 2px">Branch</label>
+    <input id="cfBranch" type="text" spellcheck="false" autocomplete="off" placeholder="main" style="width:100%;font-family:var(--mono);font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:9px">
+    <label class="qstat" style="display:block;margin:8px 0 2px">Fine-grained token (stored only in this browser)</label>
+    <input id="cfTok" type="password" spellcheck="false" autocomplete="off" placeholder="github_pat_…" style="width:100%;font-family:var(--mono);font-size:13px;padding:8px 10px;border:1px solid var(--line);border-radius:9px">
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px">
+      <button class="tbtn" id="cfSave">Save &amp; connect</button>
+      <button class="tbtn" id="cfSync">⟳ Sync now</button>
+      <button class="tbtn" id="cfSignout">Sign out (clear token)</button>
+    </div>
+    <p id="cfStatus" class="qstat" style="margin:10px 0 0;line-height:1.5;word-break:break-word"></p>
+    <p style="font-size:11px;color:var(--faint);line-height:1.5;margin:10px 0 0">First time? Create a private repo (initialized with a README), then a fine-grained PAT limited to that one repo with <b>Contents: Read and write</b>. Images are saved to <code>cissp-images/</code> in that repo.</p>
+  </div>
+</div>
 <div id="info"><button id="iclose" aria-label="Close">×</button><p class="icrumb" id="icrumb"></p><p class="ittl" id="ittl"></p><div class="imeta" id="imeta"></div></div>
 
 <script>
@@ -2121,7 +2147,7 @@ function validateContent(){
 }
 validateContent();
 (function(){const b=document.getElementById('backBtn');if(b)b.addEventListener('click',goBack);})();
-/* ===== attached test images (per topic) — IndexedDB with in-memory fallback ===== */
+/* ===== attached test images (per topic) — IndexedDB cache + optional GitHub cloud sync ===== */
 (function(){
   const DBN='cissp_img_v1',STORE='imgs';let db=null,idbOK=false;const mem=new Map();
   function idbOpen(){return new Promise((res,rej)=>{try{if(typeof indexedDB==='undefined')return rej('no idb');const r=indexedDB.open(DBN,1);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains(STORE)){const os=d.createObjectStore(STORE,{keyPath:'id'});os.createIndex('topic','topic',{unique:false});}};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}});}
@@ -2135,15 +2161,39 @@ validateContent();
   const uid=()=>'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
   const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
   function compress(file){return new Promise(res=>{const fr=new FileReader();fr.onload=()=>{const img=new Image();img.onload=()=>{const max=1200;let w=img.width,h=img.height;if(w>max||h>max){const s=Math.min(max/w,max/h);w=Math.round(w*s);h=Math.round(h*s);}const cv=document.createElement('canvas');cv.width=w;cv.height=h;try{cv.getContext('2d').drawImage(img,0,0,w,h);res(cv.toDataURL('image/jpeg',0.72));}catch(e){res(fr.result);}};img.onerror=()=>res(fr.result);img.src=fr.result;};fr.readAsDataURL(file);});}
+
+  /* ---- GitHub cloud sync ---- */
+  const GH='https://api.github.com',CFGK='cisspCloudCfg',TOKK='cisspCloudTok',DIR='cissp-images',MANIFEST=DIR+'/manifest.json';
+  let manSha=null;
+  function cfg(){try{return JSON.parse(localStorage.getItem(CFGK))||{}}catch(e){return {}}}
+  function tok(){try{return localStorage.getItem(TOKK)||''}catch(e){return ''}}
+  function cloudOn(){const c=cfg();return !!(c.owner&&c.repo&&tok());}
+  const pathFor=id=>DIR+'/'+id+'.img';
+  function encB64(str){return btoa(unescape(encodeURIComponent(str)));}
+  function decB64(b64){return decodeURIComponent(escape(atob(String(b64||'').replace(/\s+/g,''))));}
+  function ghHead(){return {'Authorization':'Bearer '+tok(),'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};}
+  async function ghGet(path){const c=cfg();const q=c.branch?'?ref='+encodeURIComponent(c.branch):'';const r=await fetch(GH+'/repos/'+c.owner+'/'+c.repo+'/contents/'+path+q,{headers:ghHead()});if(r.status===404)return null;if(!r.ok)throw new Error('GET '+r.status+' '+(await r.text()).slice(0,120));return r.json();}
+  async function ghPut(path,b64,msg,sha){const c=cfg();const body={message:msg,content:b64,branch:c.branch||'main'};if(sha)body.sha=sha;const r=await fetch(GH+'/repos/'+c.owner+'/'+c.repo+'/contents/'+path,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},ghHead()),body:JSON.stringify(body)});if(!r.ok)throw new Error('PUT '+r.status+' '+(await r.text()).slice(0,120));return r.json();}
+  async function ghPutSafe(path,b64,msg,sha){try{return await ghPut(path,b64,msg,sha);}catch(e){const g=await ghGet(path);return await ghPut(path,b64,msg,g?g.sha:undefined);}}
+  async function ghDel(path,msg,sha){const c=cfg();const r=await fetch(GH+'/repos/'+c.owner+'/'+c.repo+'/contents/'+path,{method:'DELETE',headers:Object.assign({'Content-Type':'application/json'},ghHead()),body:JSON.stringify({message:msg,sha:sha,branch:c.branch||'main'})});if(!r.ok&&r.status!==404)throw new Error('DEL '+r.status);return r.ok;}
+  async function loadManifest(){const g=await ghGet(MANIFEST);if(!g){manSha=null;return {v:1,items:[]};}manSha=g.sha;try{return JSON.parse(decB64(g.content));}catch(e){return {v:1,items:[]};}}
+  async function saveManifest(man){const res=await ghPutSafe(MANIFEST,encB64(JSON.stringify(man)),'update manifest',manSha||undefined);manSha=res.content.sha;}
+  let busy=false;
+  function setStatus(msg,bad){const s=document.getElementById('cfStatus');if(s){s.textContent=msg;s.style.color=bad?'#C2255C':'var(--muted)';}const ind=document.getElementById('cloudInd');if(ind)ind.textContent=cloudOn()?('☁ '+msg):'';}
+  async function cloudPushImage(rec){if(!cloudOn())return;try{setStatus('Uploading…');const put=await ghPutSafe(pathFor(rec.id),rec.data.split(',')[1],'add image '+rec.id,rec.sha||undefined);rec.sha=put.content.sha;await putRec(rec);const man=await loadManifest();man.items=man.items.filter(i=>i.id!==rec.id);man.items.push({id:rec.id,topic:rec.topic,title:rec.title,ord:rec.ord,ts:rec.ts,mime:rec.mime||'image/jpeg',sha:rec.sha});await saveManifest(man);setStatus('Synced ✓');}catch(e){setStatus('Sync error: '+e.message,true);}}
+  async function cloudDeleteImage(id,sha){if(!cloudOn())return;try{setStatus('Deleting…');let s=sha;if(!s){const g=await ghGet(pathFor(id));s=g&&g.sha;}if(s)await ghDel(pathFor(id),'delete image '+id,s);const man=await loadManifest();man.items=man.items.filter(i=>i.id!==id);await saveManifest(man);setStatus('Synced ✓');}catch(e){setStatus('Sync error: '+e.message,true);}}
+  async function cloudPushMeta(){if(!cloudOn())return;try{const recs=await allRecs();const by={};recs.forEach(r=>by[r.id]=r);const man=await loadManifest();man.items=man.items.map(it=>{const r=by[it.id];return r?Object.assign({},it,{title:r.title,ord:r.ord,topic:r.topic}):it;});await saveManifest(man);setStatus('Synced ✓');}catch(e){setStatus('Sync error: '+e.message,true);}}
+  async function cloudPull(){if(!cloudOn()||busy)return;busy=true;try{setStatus('Syncing…');const man=await loadManifest();const local=await allRecs();const byId={};local.forEach(r=>byId[r.id]=r);let dl=0;for(const it of man.items){const cur=byId[it.id];if(!cur||cur.sha!==it.sha){const g=await ghGet(pathFor(it.id));if(g){await putRec({id:it.id,topic:it.topic,title:it.title,mime:it.mime||'image/jpeg',data:'data:'+(it.mime||'image/jpeg')+';base64,'+String(g.content||'').replace(/\s+/g,''),ord:it.ord,ts:it.ts,sha:it.sha});dl++;}}else if(cur.title!==it.title||cur.ord!==it.ord||cur.topic!==it.topic){cur.title=it.title;cur.ord=it.ord;cur.topic=it.topic;cur.sha=it.sha;await putRec(cur);}}const remote=new Set(man.items.map(i=>i.id));for(const r of local){if(r.sha&&!remote.has(r.id))await delRec(r.id);}await renderAll();setStatus('Synced ✓ ('+man.items.length+' in cloud'+(dl?', '+dl+' downloaded':'')+')');}catch(e){setStatus('Sync error: '+e.message,true);}finally{busy=false;}}
+
   async function renderTopic(n){const wrap=document.getElementById('timg-'+n);if(!wrap)return;const grid=wrap.querySelector('.timg-grid'),cnt=wrap.querySelector('.timg-count');const recs=(await allRecs()).filter(r=>r.topic===n).sort((a,b)=>(a.ord||0)-(b.ord||0));if(cnt)cnt.textContent=recs.length?(recs.length+' image'+(recs.length>1?'s':'')):'';grid.innerHTML=recs.map(r=>`<div class="timg-card" data-id="${r.id}"><img src="${r.data}" alt="${esc(r.title)}" data-lb="${r.id}"><div class="timg-ttl" data-lb="${r.id}">${esc(r.title||'Untitled')}</div><div class="timg-bar"><button data-iup="${r.id}" title="Move left">◀</button><button data-iren="${r.id}" title="Rename">✎</button><button data-idel="${r.id}" title="Delete">✖</button><button data-idn="${r.id}" title="Move right">▶</button></div></div>`).join('');}
   async function renderAll(){const ns=[...document.querySelectorAll('.timgs')].map(x=>x.dataset.topic);for(const n of ns)await renderTopic(n);}
   let pendingTopic=null;const fin=document.createElement('input');fin.type='file';fin.accept='image/*';fin.style.display='none';document.body.appendChild(fin);
-  fin.addEventListener('change',async()=>{const f=fin.files&&fin.files[0];if(!f||!pendingTopic){fin.value='';return;}const data=await compress(f);const def=(f.name||'image').replace(/\.[^.]+$/,'');const title=(prompt('Title for this image (helps you find/link it):',def)||'Untitled').slice(0,80);const recs=(await allRecs()).filter(r=>r.topic===pendingTopic);const ord=recs.length?Math.max.apply(null,recs.map(r=>r.ord||0))+1:0;await putRec({id:uid(),topic:pendingTopic,title:title,data:data,ord:ord,ts:Date.now()});const t=pendingTopic;pendingTopic=null;fin.value='';renderTopic(t);});
+  fin.addEventListener('change',async()=>{const f=fin.files&&fin.files[0];if(!f||!pendingTopic){fin.value='';return;}const data=await compress(f);const def=(f.name||'image').replace(/\.[^.]+$/,'');const title=(prompt('Title for this image (helps you find/link it):',def)||'Untitled').slice(0,80);const recs=(await allRecs()).filter(r=>r.topic===pendingTopic);const ord=recs.length?Math.max.apply(null,recs.map(r=>r.ord||0))+1:0;const mime=(/^data:([^;]+);/.exec(data)||[])[1]||'image/jpeg';const rec={id:uid(),topic:pendingTopic,title:title,data:data,mime:mime,ord:ord,ts:Date.now()};await putRec(rec);const t=pendingTopic;pendingTopic=null;fin.value='';renderTopic(t);cloudPushImage(rec);});
   document.addEventListener('click',async e=>{
     const add=e.target.closest('[data-imgadd]');if(add){pendingTopic=add.dataset.imgadd;fin.click();return;}
-    const del=e.target.closest('[data-idel]');if(del){if(confirm('Delete this image?')){await delRec(del.dataset.idel);const c=del.closest('.timgs');if(c)renderTopic(c.dataset.topic);}return;}
-    const ren=e.target.closest('[data-iren]');if(ren){const r=(await allRecs()).find(x=>x.id===ren.dataset.iren);if(r){const nt=prompt('Rename image:',r.title||'');if(nt!==null){r.title=nt.slice(0,80);await putRec(r);renderTopic(r.topic);}}return;}
-    const mv=e.target.closest('[data-iup],[data-idn]');if(mv){const up=mv.hasAttribute('data-iup');const id=up?mv.dataset.iup:mv.dataset.idn;const c=mv.closest('.timgs');const topic=c.dataset.topic;const list=(await allRecs()).filter(r=>r.topic===topic).sort((a,b)=>(a.ord||0)-(b.ord||0));const idx=list.findIndex(r=>r.id===id);const j=up?idx-1:idx+1;if(idx>=0&&j>=0&&j<list.length){const a=list[idx],b=list[j];const ao=a.ord||0,bo=b.ord||0;a.ord=bo;b.ord=ao;await putRec(a);await putRec(b);renderTopic(topic);}return;}
+    const del=e.target.closest('[data-idel]');if(del){if(confirm('Delete this image?')){const id=del.dataset.idel;const rec=(await allRecs()).find(x=>x.id===id);await delRec(id);const c=del.closest('.timgs');if(c)renderTopic(c.dataset.topic);cloudDeleteImage(id,rec&&rec.sha);}return;}
+    const ren=e.target.closest('[data-iren]');if(ren){const r=(await allRecs()).find(x=>x.id===ren.dataset.iren);if(r){const nt=prompt('Rename image:',r.title||'');if(nt!==null){r.title=nt.slice(0,80);await putRec(r);renderTopic(r.topic);cloudPushMeta();}}return;}
+    const mv=e.target.closest('[data-iup],[data-idn]');if(mv){const up=mv.hasAttribute('data-iup');const id=up?mv.dataset.iup:mv.dataset.idn;const c=mv.closest('.timgs');const topic=c.dataset.topic;const list=(await allRecs()).filter(r=>r.topic===topic).sort((a,b)=>(a.ord||0)-(b.ord||0));const idx=list.findIndex(r=>r.id===id);const j=up?idx-1:idx+1;if(idx>=0&&j>=0&&j<list.length){const a=list[idx],b=list[j];const ao=a.ord||0,bo=b.ord||0;a.ord=bo;b.ord=ao;await putRec(a);await putRec(b);renderTopic(topic);cloudPushMeta();}return;}
     const lb=e.target.closest('[data-lb]');if(lb){const r=(await allRecs()).find(x=>x.id===lb.dataset.lb);if(r)openLb(r);return;}
   });
   function openLb(r){const lb=document.getElementById('imgLb');if(!lb)return;lb.querySelector('img').src=r.data;lb.querySelector('.lbcap').textContent=r.title||'';lb.classList.add('show');}
@@ -2154,9 +2204,29 @@ validateContent();
   function dl2(name,text){const bl=new Blob([text],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=name;a.click();URL.revokeObjectURL(a.href);}
   (function(){const ex=document.getElementById('imgExport');if(ex)ex.addEventListener('click',async()=>{const recs=await allRecs();dl2('cissp-images.json',JSON.stringify({v:1,images:recs}));});
     const im=document.getElementById('imgImport'),imf=document.getElementById('imgImportFile');
-    if(im&&imf){im.addEventListener('click',()=>imf.click());imf.addEventListener('change',()=>{const f=imf.files[0];if(!f)return;const fr=new FileReader();fr.onload=async()=>{try{const j=JSON.parse(fr.result);const arr=j.images||j;let k=0;for(const r of arr){if(r&&r.id&&r.topic&&r.data){await putRec(r);k++;}}renderAll();alert('Imported '+k+' image(s).');}catch(e){alert('Invalid images file.');}imf.value='';};fr.readAsText(f);});}
+    if(im&&imf){im.addEventListener('click',()=>imf.click());imf.addEventListener('change',()=>{const f=imf.files[0];if(!f)return;const fr=new FileReader();fr.onload=async()=>{try{const j=JSON.parse(fr.result);const arr=j.images||j;let k=0;const added=[];for(const r of arr){if(r&&r.id&&r.topic&&r.data){delete r.sha;await putRec(r);added.push(r);k++;}}renderAll();alert('Imported '+k+' image(s).');if(cloudOn())for(const r of added)await cloudPushImage(r);}catch(e){alert('Invalid images file.');}imf.value='';};fr.readAsText(f);});}
   })();
-  (async function(){try{db=await idbOpen();idbOK=true;}catch(e){idbOK=false;}applyToggle();renderAll();})();
+  /* ---- cloud settings panel ---- */
+  (function(){
+    const modal=document.getElementById('cloudModal');if(!modal)return;
+    const O=document.getElementById('cfOwner'),R=document.getElementById('cfRepo'),B=document.getElementById('cfBranch'),T=document.getElementById('cfTok');
+    function open(){const c=cfg();O.value=c.owner||'';R.value=c.repo||'';B.value=c.branch||'main';T.value=tok();setStatus(cloudOn()?'Connected.':'Not connected yet.');modal.style.display='flex';}
+    function close(){modal.style.display='none';}
+    const cb=document.getElementById('cloudBtn');if(cb)cb.addEventListener('click',open);
+    const cc=document.getElementById('cloudClose');if(cc)cc.addEventListener('click',close);
+    modal.addEventListener('click',e=>{if(e.target===modal)close();});
+    document.getElementById('cfSave').addEventListener('click',async()=>{
+      const owner=O.value.trim(),repo=R.value.trim(),branch=(B.value.trim()||'main'),t=T.value.trim();
+      if(!owner||!repo||!t){setStatus('Owner, repo and token are all required.',true);return;}
+      try{localStorage.setItem(CFGK,JSON.stringify({owner,repo,branch}));localStorage.setItem(TOKK,t);}catch(e){}
+      manSha=null;setStatus('Testing connection…');
+      try{const r=await fetch(GH+'/repos/'+owner+'/'+repo,{headers:ghHead()});if(!r.ok)throw new Error('repo access '+r.status);setStatus('Connected ✓ — syncing…');await cloudPull();const mine=(await allRecs()).filter(x=>!x.sha);for(const x of mine)await cloudPushImage(x);const extra=mine.length?(' — uploaded '+mine.length+' local'):'';setStatus('Synced ✓'+extra);}
+      catch(e){setStatus('Could not connect: '+e.message+' (check repo name, branch and token scope).',true);}
+    });
+    document.getElementById('cfSync').addEventListener('click',()=>{if(!cloudOn()){setStatus('Enter repo + token, then Save.',true);return;}cloudPull();});
+    document.getElementById('cfSignout').addEventListener('click',()=>{try{localStorage.removeItem(TOKK);}catch(e){}T.value='';setStatus('Token cleared from this browser. Local cache kept.');const ind=document.getElementById('cloudInd');if(ind)ind.textContent='';});
+  })();
+  (async function(){try{db=await idbOpen();idbOK=true;}catch(e){idbOK=false;}applyToggle();await renderAll();if(cloudOn())cloudPull();})();
 })();
 
 paintProgress();
