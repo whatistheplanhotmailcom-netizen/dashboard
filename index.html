@@ -362,6 +362,8 @@
         <button class="tbtn" id="lopen">Layers +</button>
         <button class="tbtn" id="lclose">Layers −</button>
         <button class="tbtn" id="imgToggle">📎 Images</button>
+        <button class="tbtn cloudopen" id="cloudBtn2">☁ Cloud</button>
+        <span class="count" id="cloudInd2" style="display:inline;margin:0;align-self:center"></span>
       </div>
     </div>
     <div class="count" id="count"></div>
@@ -404,7 +406,7 @@
       <button class="tbtn" id="imgExport">⬇ Images</button>
       <button class="tbtn" id="imgImport">⬆ Images</button>
       <input type="file" id="imgImportFile" accept=".json" style="display:none">
-      <button class="tbtn" id="cloudBtn">☁ Cloud sync</button>
+      <button class="tbtn cloudopen" id="cloudBtn">☁ Cloud sync</button>
       <span class="qstat" id="cloudInd" style="align-self:center"></span>
     </div>
     <div id="qhome"></div>
@@ -2179,7 +2181,8 @@ validateContent();
   async function loadManifest(){const g=await ghGet(MANIFEST);if(!g){manSha=null;return {v:1,items:[]};}manSha=g.sha;try{return JSON.parse(decB64(g.content));}catch(e){return {v:1,items:[]};}}
   async function saveManifest(man){const res=await ghPutSafe(MANIFEST,encB64(JSON.stringify(man)),'update manifest',manSha||undefined);manSha=res.content.sha;}
   let busy=false;
-  function setStatus(msg,bad){const s=document.getElementById('cfStatus');if(s){s.textContent=msg;s.style.color=bad?'#C2255C':'var(--muted)';}const ind=document.getElementById('cloudInd');if(ind)ind.textContent=cloudOn()?('☁ '+msg):'';}
+  function setStatus(msg,bad){const s=document.getElementById('cfStatus');if(s){s.textContent=msg;s.style.color=bad?'#C2255C':'var(--muted)';}const ind=document.getElementById('cloudInd');if(ind)ind.textContent=cloudOn()?('☁ '+msg):'';refreshInd(msg,bad);}
+  function refreshInd(msg,bad){const i2=document.getElementById('cloudInd2');if(i2){if(cloudOn()){i2.innerHTML='<b>☁ synced</b>';i2.style.color=bad?'#C2255C':'#087F5B';i2.title=msg||'';}else{i2.textContent='local only';i2.style.color='var(--faint)';i2.title='Images stay on this device until you connect ☁ Cloud';}}const b2=document.getElementById('cloudBtn2');if(b2)b2.textContent=cloudOn()?'☁ Cloud: on':'☁ Cloud';}
   async function cloudPushImage(rec){if(!cloudOn())return;try{setStatus('Uploading…');const put=await ghPutSafe(pathFor(rec.id),rec.data.split(',')[1],'add image '+rec.id,rec.sha||undefined);rec.sha=put.content.sha;await putRec(rec);const man=await loadManifest();man.items=man.items.filter(i=>i.id!==rec.id);man.items.push({id:rec.id,topic:rec.topic,title:rec.title,ord:rec.ord,ts:rec.ts,mime:rec.mime||'image/jpeg',sha:rec.sha});await saveManifest(man);setStatus('Synced ✓');}catch(e){setStatus('Sync error: '+e.message,true);}}
   async function cloudDeleteImage(id,sha){if(!cloudOn())return;try{setStatus('Deleting…');let s=sha;if(!s){const g=await ghGet(pathFor(id));s=g&&g.sha;}if(s)await ghDel(pathFor(id),'delete image '+id,s);const man=await loadManifest();man.items=man.items.filter(i=>i.id!==id);await saveManifest(man);setStatus('Synced ✓');}catch(e){setStatus('Sync error: '+e.message,true);}}
   async function cloudPushMeta(){if(!cloudOn())return;try{const recs=await allRecs();const by={};recs.forEach(r=>by[r.id]=r);const man=await loadManifest();man.items=man.items.map(it=>{const r=by[it.id];return r?Object.assign({},it,{title:r.title,ord:r.ord,topic:r.topic}):it;});await saveManifest(man);setStatus('Synced ✓');}catch(e){setStatus('Sync error: '+e.message,true);}}
@@ -2214,7 +2217,7 @@ validateContent();
     const O=document.getElementById('cfOwner'),R=document.getElementById('cfRepo'),B=document.getElementById('cfBranch'),T=document.getElementById('cfTok');
     function open(){const c=cfg();O.value=c.owner||'';R.value=c.repo||'';B.value=c.branch||'main';T.value=tok();setStatus(cloudOn()?'Connected.':'Not connected yet.');modal.style.display='flex';}
     function close(){modal.style.display='none';}
-    const cb=document.getElementById('cloudBtn');if(cb)cb.addEventListener('click',open);
+    document.querySelectorAll('.cloudopen').forEach(cb=>cb.addEventListener('click',open));
     const cc=document.getElementById('cloudClose');if(cc)cc.addEventListener('click',close);
     modal.addEventListener('click',e=>{if(e.target===modal)close();});
     document.getElementById('cfSave').addEventListener('click',async()=>{
@@ -2228,7 +2231,7 @@ validateContent();
     document.getElementById('cfSync').addEventListener('click',()=>{if(!cloudOn()){setStatus('Enter repo + token, then Save.',true);return;}cloudPull();});
     document.getElementById('cfSignout').addEventListener('click',()=>{try{localStorage.removeItem(TOKK);}catch(e){}T.value='';setStatus('Token cleared from this browser. Local cache kept.');const ind=document.getElementById('cloudInd');if(ind)ind.textContent='';});
   })();
-  (async function(){try{db=await idbOpen();idbOK=true;}catch(e){idbOK=false;}applyToggle();await renderAll();if(cloudOn())cloudPull();})();
+  (async function(){try{db=await idbOpen();idbOK=true;}catch(e){idbOK=false;}applyToggle();refreshInd(cloudOn()?'Connected.':'');await renderAll();if(cloudOn())cloudPull();})();
 })();
 
 paintProgress();
