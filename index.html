@@ -7,6 +7,7 @@
 <meta name="referrer" content="no-referrer">
 <title>CISSP CBK v19 — Study Engine</title>
 <script src="vendor/d3.min.js"></script>
+<script>(function(){try{var t=localStorage.getItem('cisspTheme');if(t!=='light'&&t!=='dark')t=(window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 <style>
   @font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url('vendor/fonts/inter.woff2') format('woff2')}
   @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:300 700;font-display:swap;src:url('vendor/fonts/spacegrotesk.woff2') format('woff2')}
@@ -382,12 +383,71 @@
     #backBtn{bottom:82px}
     #info{bottom:82px}
   }
+  /* ============ DARK THEME ============ */
+  header.mast{position:relative}
+  :root[data-theme="dark"]{--bg:#0E1116;--card:#171C24;--ink:#E7ECF3;--muted:#9AA6B4;--faint:#6B7784;--line:#2A313C;--line2:#1E242D}
+  :root[data-theme="dark"] .tabs{background:rgba(14,17,22,.92)}
+  :root[data-theme="dark"] .tab{background:#1B212B}
+  :root[data-theme="dark"] .tab.on{background:#3B5BDB;border-color:#3B5BDB;color:#fff}
+  :root[data-theme="dark"] .dnum{background:color-mix(in srgb,var(--c) 26%,#171C24);border-color:color-mix(in srgb,var(--c) 42%,#171C24);color:color-mix(in srgb,var(--c) 72%,#fff)}
+  :root[data-theme="dark"] .tdef{background:color-mix(in srgb,var(--c) 13%,#171C24);border-color:color-mix(in srgb,var(--c) 24%,#171C24)}
+  :root[data-theme="dark"] details.layers>summary{background:#1E242D}
+  :root[data-theme="dark"] .mtag.simple,:root[data-theme="dark"] .mtag.off,:root[data-theme="dark"] .gtag{background:#232A34;color:#AEB8C6}
+  :root[data-theme="dark"] .mtag.off{border-color:#3A414D}
+  :root[data-theme="dark"] .mtag.explain,:root[data-theme="dark"] .lbchip.explain,:root[data-theme="dark"] .acchip.topic{background:#16233B;color:#8FB4F5}
+  :root[data-theme="dark"] .mtag.scen,:root[data-theme="dark"] .lbchip.scen{background:#0E241C;color:#5FD3A6}
+  :root[data-theme="dark"] .mtag.an,:root[data-theme="dark"] .lbchip.an{background:#1E1836;color:#B79CF5}
+  :root[data-theme="dark"] .mtag.trap,:root[data-theme="dark"] .lbchip.trap{background:#2E1F0F;color:#F0A868}
+  :root[data-theme="dark"] .mtag.pair,:root[data-theme="dark"] .lbchip.pair,:root[data-theme="dark"] .acchip.pair,:root[data-theme="dark"] .homechip{background:#301622;color:#F08BAB}
+  :root[data-theme="dark"] .mtag.map,:root[data-theme="dark"] .lbchip.map,:root[data-theme="dark"] .acchip.term{background:#0B252C;color:#57C6D8}
+  :root[data-theme="dark"] .mtag.nt,:root[data-theme="dark"] .ntchip{background:#2A2410;color:#E3C766;border-color:#4A3F16}
+  :root[data-theme="dark"] .mtag.er{background:#1B240F;color:#AFD66A}
+  :root[data-theme="dark"] .mtag.rw{background:#122130;color:#78B6EC}
+  :root[data-theme="dark"] .mtag.note{background:#2C1420;color:#F08FB4;border-color:#4A2233}
+  :root[data-theme="dark"] .lblock.explain{background:#111C2E;border-color:#22324C}
+  :root[data-theme="dark"] .lblock.scen{background:#0D2019;border-color:#1C382D}
+  :root[data-theme="dark"] .lblock.an{background:#18142B;border-color:#2E2748}
+  :root[data-theme="dark"] .lblock.trap{background:#241810;border-color:#3E2C16}
+  :root[data-theme="dark"] .lblock.er{background:#18220E;border-color:#2F4019}
+  :root[data-theme="dark"] .lblock.rw{background:#101F2D;border-color:#213649}
+  :root[data-theme="dark"] .lblock.note{background:#26131E;border-color:#421F30}
+  :root[data-theme="dark"] .lblock.map{background:#0A2027;border-color:#173B44}
+  :root[data-theme="dark"] .lblock.map .relchip{background:#171C24;border-color:#173B44}
+  :root[data-theme="dark"] .relchip{background:#0B252C;border-color:#173B44;color:var(--muted)}
+  :root[data-theme="dark"] .relchip b{color:#57C6D8}
+  :root[data-theme="dark"] details.pair{background:#191319;border-color:#3A2230}
+  :root[data-theme="dark"] table.big thead th{background:#0A0D12}
+  :root[data-theme="dark"] table.big tbody tr:hover td{background:color-mix(in srgb,var(--c) 12%,#171C24)}
+  :root[data-theme="dark"] table.big td.trc{color:#E0954B}
+  :root[data-theme="dark"] .mmcard.leafc{background:color-mix(in srgb,var(--c) 12%,#171C24)}
+  :root[data-theme="dark"] .mmcard.rootc{background:#0A0D12}
+  :root[data-theme="dark"] .link{stroke:#3A414D}
+  :root[data-theme="dark"] .cont .cgo{background:#3B5BDB}
+  :root[data-theme="dark"] .weakchip{background:#301622;color:#F08BAB;border-color:#4A2233}
+  :root[data-theme="dark"] .ovw{background:linear-gradient(180deg,#141C28,#151A22);border-color:#26303F}
+  :root[data-theme="dark"] .ovw-row.obj .ovw-l,:root[data-theme="dark"] .tovw-row.obj .tovw-l,:root[data-theme="dark"] .xchip.glos{background:#16233B;color:#8FB4F5}
+  :root[data-theme="dark"] .xchip.glos{border-color:#22324C}
+  :root[data-theme="dark"] .ovw-row.kt .ovw-l,:root[data-theme="dark"] .tovw-row.kt .tovw-l{background:#2A2410;color:#E3C766}
+  :root[data-theme="dark"] .ovw-row.kt .sx,:root[data-theme="dark"] .tovw-row.kt .sx{color:#E3C766}
+  :root[data-theme="dark"] .ovw-row .sx,:root[data-theme="dark"] .tovw-row.obj .sx{color:var(--ink)}
+  :root[data-theme="dark"] .xchip.mtx{background:#0B252C;color:#57C6D8;border-color:#173B44}
+  :root[data-theme="dark"] .gtag.cw{background:#301622;color:#F08BAB}
+  :root[data-theme="dark"] .qopt.ok{background:#18240E;border-color:#2F4019}
+  :root[data-theme="dark"] .qopt.bad{background:#281214;border-color:#48222A}
+  :root[data-theme="dark"] .qbanner.ok{background:#18240E;border-color:#2F4019;color:#AFD66A}
+  :root[data-theme="dark"] .qbanner.bad{background:#281214;border-color:#48222A;color:#F0909A}
+  :root[data-theme="dark"] .qkey{background:#111C2E;border-color:#22324C;color:#AAC4EE}
+  :root[data-theme="dark"] .qkey b{color:#8FB4F5}
+  :root[data-theme="dark"] .seqchip{background:#16233B;border-color:#22324C;color:#8FB4F5}
+  :root[data-theme="dark"] .timg-add{background:#221D12;color:#C9A86A;border-color:#4A3F22}
+  :root[data-theme="dark"] mark{background:rgba(233,171,60,.34);color:#fff}
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header class="mast">
+    <button id="themeBtn" class="tbtn" aria-label="Toggle dark mode" style="position:absolute;top:20px;right:0;z-index:5">🌙</button>
     <p class="eyebrow">ISC² · CISSP CBK · 2024 Outline · v19 · centered flash</p>
     <h1><span class="k">CISSP</span> study engine</h1>
     <p class="sub">Study map · confusing pairs · glossary · cheat matrices · quiz &amp; progress · mind map · table. OFFICIAL badges mark ISC² outline items; the rest is study doctrine — verify against your guide.</p>
@@ -2384,6 +2444,10 @@ validateContent();
 paintProgress();
 quizHome();
 renderDash();
+
+/* ---- theme toggle ---- */
+(function(){const btn=document.getElementById('themeBtn');const cur=()=>document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';const icon=()=>{if(btn)btn.textContent=cur()==='dark'?'☀️':'🌙';};icon();
+  if(btn)btn.addEventListener('click',()=>{const n=cur()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem('cisspTheme',n);}catch(e){}icon();if(mInit&&typeof drawMap==='function')drawMap();});})();
 
 /* ============ Tabs ============ */
 function switchTab(v){
