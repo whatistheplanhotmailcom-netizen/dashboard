@@ -511,3 +511,490 @@ CISSP_MODULES["1.3"] = {
     "COBIT 2019; ISO/IEC 38500"
   ]
 };
+
+CISSP_MODULES["1.4"] = {
+  title: "Understand legal, regulatory, and compliance issues (holistic context)",
+  simple:
+    "This objective is about how the law shapes security. Different countries and industries have different rules on cybercrime, who owns ideas (intellectual property), what data may cross borders, and how personal data (privacy) must be handled. Your job is to work out <b>which laws apply</b> to your specific data and systems and to design controls that satisfy them. It is called “holistic” because one company usually faces many overlapping laws at once — driven by where its data lives, where its customers live, and what industry it operates in.",
+  deep: [
+    "<b>Why it exists.</b> Security operates inside a legal system: non-compliance brings fines, lawsuits, and sometimes criminal liability. Laws also create obligations — breach notification, data-protection duties — that translate directly into control requirements. ISC² wants a professional who spots the legal dimension of a decision, not just the technical one.",
+    "<b>Legal-system taxonomy (common-law framing).</b> Civil/code law relies on codified statutes with weak precedent (most of the world). Common law makes judicial precedent binding (US/UK/Canada) and is the most exam-tested. There is also religious law (e.g., Sharia) and customary law. Within these, criminal law treats society as the victim and demands proof beyond a reasonable doubt; civil/tort law is a private dispute decided on a preponderance of evidence with damages (statutory, compensatory, punitive); administrative/regulatory law is agency rules and powers.",
+    "<b>The content areas.</b> Cybercrime and breach laws criminalize unauthorized access and impose breach-notification timelines (GDPR’s 72 hours, US state laws, HIPAA). Intellectual property splits into copyright (expression), patent (a public, time-limited invention), trademark (brand identity), and trade secret (protected only while secret). Import/export controls restrict strong cryptography and trade with sanctioned nations. Transborder data-flow rules stop data moving freely — GDPR bars EU transfers without adequacy, Standard Contractual Clauses, or Binding Corporate Rules, and localization laws (China’s PIPL, Russia) force data to stay in-country.",
+    "<b>Privacy specifics.</b> GDPR (EU), CCPA/CPRA (California), PIPL (China), POPIA (South Africa), HIPAA (US health), and GLBA (US finance) each impose duties. The pivotal roles: the <b>controller</b> decides why and how personal data is processed and keeps accountability; the <b>processor</b> acts only on the controller’s instructions; the <b>data subject</b> is the individual. GDPR applies by the data subject’s location, not the server’s (extraterritorial reach).",
+    "<b>Who is responsible.</b> Legal counsel, a privacy office / Data Protection Officer, and compliance determine obligations; security implements the controls; senior management is accountable. The data owner classifies; the controller/processor split governs privacy duties.",
+    "<b>Common misconceptions.</b> That PCI DSS or SOC 2 is a law (both are contractual/industry). That only the country where data is stored applies (subject location and company presence also pull in laws). That controller equals processor. That a privacy notice equals consent. That IP types are interchangeable.",
+    "<b>Relationship to governance and risk.</b> Compliance is a governance obligation and legal/regulatory exposure is enterprise risk — a major impact driver that shapes control selection (e.g., encryption to qualify for breach-notification safe harbors). Contracts add private obligations on top of the law.",
+    "<b>Cross-domain.</b> Data residency and retention (D2), breach-notification duties inside incident response (D7), licensing of acquired code (D8), and privacy of identity data (D5) are all this objective in action.",
+    "<b>How ISC² expects you to think.</b> Determine which law applies from data location, subject citizenship, and sector; comply with the strictest applicable requirement; remember the controller stays accountable in privacy; and know that criminal and civil matters carry different burdens of proof."
+  ],
+  objective:
+    "Determine which laws, regulations, and contracts apply to your data and systems, and design controls that satisfy the strictest applicable obligations.",
+  key:
+    "Jurisdiction and data location decide the rules — and in privacy, the controller stays accountable.",
+  realWorld:
+    "A US-based SaaS company processes EU customers’ personal data in a US cloud region. GDPR applies because the data subjects are in the EU (extraterritorial scope). The company is a processor for its business customers (the controllers) and a controller for its own employee data. It signs Data Processing Agreements, uses Standard Contractual Clauses for EU→US transfers, appoints an EU representative, encrypts the data, and builds a 72-hour breach-notification runbook — while also meeting CCPA for California consumers. Legal and security co-design the controls, the DPO oversees them, and senior management is accountable.",
+  examScenario:
+    "A multinational bank stores German customers’ personal data in a US data center and suffers a breach exposing it. Regulators, customers, and executives all demand action. Which obligation should drive the first 72 hours, and which law governs the German customers’ data even though it is stored in the US? Weigh: only US state law applies; GDPR’s notification duties apply; wait for full forensics before notifying; handle PR first.",
+  analogy:
+    "Data carries a passport and a visa. Where a person is a citizen (the data subject’s location) and where they travel (where the data is stored and processed) both determine which countries’ rules apply at the border. You cannot move data across a border just because it is convenient — customs (transborder rules) may stop it.",
+  traps: [
+    "Believing PCI DSS or SOC 2 is a law — both are contractual/industry standards.",
+    "Assuming only the country where data is stored applies — subject location and company presence also trigger laws (e.g., GDPR’s extraterritorial reach).",
+    "Confusing controller (decides why/how, accountable) with processor (acts on instructions).",
+    "Treating a privacy notice as consent — a notice informs, consent is an affirmative agreement.",
+    "Mixing up IP: copyright (expression) vs patent (invention) vs trademark (brand) vs trade secret (secrecy, lost on leak).",
+    "Confusing burdens: criminal is beyond a reasonable doubt; civil is a preponderance of evidence.",
+    "Assuming the least-strict applicable law is enough — comply with the strictest.",
+    "Forgetting that cryptography is subject to export controls."
+  ],
+  terms: [
+    { t: "Criminal vs civil vs regulatory law", def: "State-prosecuted crime; private dispute over damages; agency enforcement of rules.", purpose: "Determines who acts and to what standard.", diff: "Beyond-reasonable-doubt vs preponderance vs agency powers.", exam: "Match the scenario to the correct legal track." },
+    { t: "Tort", def: "A civil wrong (e.g., negligence) that one party sues another over.", purpose: "Basis for liability and damages.", diff: "A branch of civil law, not a third court system.", exam: "Suing a negligent vendor = a tort (civil)." },
+    { t: "Damages (statutory / compensatory / punitive)", def: "Fixed-by-law / actual-loss / punishment-and-deterrence awards.", purpose: "Remedies in civil cases.", diff: "Set by statute vs make-whole vs punish.", exam: "Punitive punishes; compensatory makes whole." },
+    { t: "Copyright / Patent / Trademark / Trade secret", def: "Protects expression / inventions / brand / secret information.", purpose: "Different IP protections.", diff: "Trade secrets last only while secret.", exam: "Match the asset to the right IP type." },
+    { t: "GDPR", def: "The EU’s data-protection regulation.", purpose: "Protect EU residents’ personal data.", diff: "Applies by subject location; 72-hour breach notice; heavy fines.", exam: "Extraterritorial — server location doesn’t exempt you." },
+    { t: "Controller vs Processor", def: "Decides why/how vs acts on instructions.", purpose: "Assign privacy accountability.", diff: "Controller keeps accountability.", exam: "A SaaS vendor is usually a processor for its customers." },
+    { t: "Transfer mechanisms (adequacy / SCCs / BCRs)", def: "Legal bases to move personal data across borders.", purpose: "Enable lawful transborder flow.", diff: "Country-level vs contract vs intra-group.", exam: "Needed for EU→non-adequate-country transfers." },
+    { t: "Breach notification", def: "A legal duty to report a breach within a set time.", purpose: "Protect and inform affected parties/regulators.", diff: "Timelines vary (GDPR 72h).", exam: "Drives incident-response timing." }
+  ],
+  pairs: [
+    { t: "Criminal vs Civil vs Tort", def: "State prosecutes a crime; private parties dispute; a tort is the civil wrong being sued over.", similar: "All can arise from the same act, and evidence discipline matters in each.", diff: "Beyond reasonable doubt vs preponderance; a tort is inside civil law.", clue: "‘Prosecute/jail’ → criminal; ‘sue for damages’ → civil/tort.", trick: "Tort is a Type of civil, not a third court.", ex: "Prosecuting the hacker (criminal) vs suing the negligent vendor (a tort in civil court)." },
+    { t: "Copyright vs Patent vs Trademark vs Trade secret", def: "Expression vs invention vs brand vs secret.", similar: "All protect intellectual property.", diff: "Patents are public and time-limited; trade secrets die on disclosure.", clue: "‘Logo’ → trademark; ‘formula kept secret’ → trade secret.", trick: "Copyright=Content, Patent=Product, Trademark=marK/brand, Secret=Secrecy.", ex: "Source-code text (copyright), a novel algorithm (patent), a logo (trademark), the Coca-Cola formula (trade secret)." },
+    { t: "Controller vs Processor", def: "Decides purpose/means vs processes on instruction.", similar: "Both handle personal data and sign a DPA.", diff: "Controller sets purpose and keeps accountability.", clue: "‘Decides why the data is used’ → controller.", trick: "Controller Commands; Processor Performs.", ex: "A retailer (controller) and its email-marketing SaaS (processor)." },
+    { t: "Privacy notice vs Consent", def: "One-way transparency vs an affirmative agreement.", similar: "Both relate to lawful processing.", diff: "A notice informs; consent is a chosen lawful basis.", clue: "‘Un-ticked opt-in box’ → consent.", trick: "Notice = Notify; Consent = agree.", ex: "A published privacy policy (notice) vs an opt-in checkbox (consent)." }
+  ],
+  cross: [
+    { d: "D2 → Data residency & retention", why: "Laws dictate where data may live, how long it’s kept, and how it must be classified and protected." },
+    { d: "D7 → Breach notification & incident response", why: "Legal notification timelines (e.g., 72 hours) become hard constraints on the incident-response process." },
+    { d: "D8 → Licensing & IP in software", why: "Acquired code carries licenses and IP obligations that must be honored in the SDLC." },
+    { d: "D5 → Privacy of identity data", why: "Personal data used for identity is subject to the same privacy laws and data-subject rights." },
+    { d: "D1 → Governance & contracts", why: "Compliance is a governance duty, and contracts layer private obligations on top of statute." }
+  ],
+  frameworks: [
+    { fw: "GDPR (Regulation 2016/679)", how: "The governing EU privacy law: controller/processor duties, lawful bases, data-subject rights, DPIAs, and 72-hour breach notification." },
+    { fw: "ISO/IEC 27701", how: "A privacy extension to the 27001 ISMS that operationalizes controller/processor privacy controls (a PIMS)." },
+    { fw: "ISO/IEC 27018", how: "Code of practice for protecting personally identifiable information in public clouds acting as processors." },
+    { fw: "NIST Privacy Framework", how: "A risk-based structure (Identify-P, Govern-P, Control-P, Communicate-P, Protect-P) to manage privacy risk alongside the CSF." },
+    { fw: "PCI DSS / HIPAA Security Rule", how: "Contractual (PCI) and statutory (HIPAA) mandates that translate into specific technical and administrative controls." }
+  ],
+  impl: {
+    people: "Legal counsel, a privacy office / DPO, compliance, security, and data owners, with senior management accountable.",
+    process: "Build a legal/regulatory inventory (which laws apply); map data (where it lives and flows); run DPIAs for high-risk processing; sign DPAs/SCCs; maintain records of processing and retention schedules; prepare breach-notification runbooks; and conduct vendor legal due diligence.",
+    tech: "Data discovery and classification, data-flow mapping, DLP, encryption, consent-management, and records-of-processing tooling.",
+    evidence: "Records of processing (ROPA), DPIAs, executed DPAs/SCCs, breach-notification logs, retention schedules, and compliance attestations.",
+    mistakes: "Having no data map; missing transfer mechanisms; treating PCI as law; ignoring subject-location scope; lacking a breach runbook that meets the 72-hour clock; and confusing controller and processor duties."
+  },
+  q1: {
+    stem: "A US company’s SaaS platform processes the personal data of customers located in the EU. Legal asks the security manager which regulation governs that data and what the highest-priority obligations are. What is the BEST response?",
+    opts: [
+      { t: "Only US state privacy laws apply because the servers are in the US.", ok: false, why: "GDPR has extraterritorial scope; the data subjects’ EU location triggers it regardless of where the servers sit." },
+      { t: "GDPR applies because the data subjects are in the EU; establish a lawful basis, appropriate transfer mechanisms, and a breach-notification capability.", ok: true, why: "It scopes the obligation correctly by subject location and prioritizes the governing duties." },
+      { t: "No regulation applies until the company opens an EU office.", ok: false, why: "GDPR applies to processing the data of EU residents whom the company targets, office or not." },
+      { t: "PCI DSS governs because payment data may be involved.", ok: false, why: "PCI DSS is a contractual standard for cardholder data, not the governing privacy law for personal data." }
+    ],
+    best: "ISC² wants obligations scoped by the data subject’s location (GDPR’s extraterritorial reach), not by server location or corporate presence, and expects you to recognize PCI DSS as contractual rather than a privacy law."
+  },
+  q2: {
+    stem: "A hospital’s IT administrator, angry over a demotion, downloads and sells a database of patient records. Leadership wants the strongest accountability for the theft itself. Which legal avenue and evidentiary standard best fit prosecuting the individual for the act?",
+    opts: [
+      { t: "A civil tort suit decided on a preponderance of evidence.", ok: false, why: "Civil action recovers damages at a lower burden but is not how you ‘prosecute’ the crime itself." },
+      { t: "A criminal prosecution under the applicable computer-crime statute, requiring proof beyond a reasonable doubt.", ok: true, why: "Theft and unauthorized access are crimes prosecuted by the state, with the beyond-a-reasonable-doubt standard." },
+      { t: "An internal administrative/HR action only.", ok: false, why: "HR discipline cannot deliver criminal accountability for a data-theft crime." },
+      { t: "A regulatory fine under HIPAA against the individual.", ok: false, why: "HIPAA enforcement generally targets the covered entity; prosecuting the individual’s criminal act is criminal law." }
+    ],
+    best: "Prosecuting the individual for the theft is criminal law — the state prosecutes, and the standard is beyond a reasonable doubt. Civil action recovers money at a lower burden but isn’t prosecution; HR and regulatory routes don’t deliver criminal accountability for the act."
+  },
+  memory: {
+    mnemonic: "IP = <b>C-P-T-S</b> (Copyright=expression, Patent=invention, Trademark=brand, Secret=secrecy). Burdens: Criminal = Convinced beyond doubt; Civil = Comparatively likely.",
+    visual: "A border checkpoint stamping each data ‘passport’ based on the traveler’s citizenship (the data subject’s location), not where the luggage is stored.",
+    oneLine: "Scope by data-subject location and sector, comply with the strictest, and remember the controller stays accountable.",
+    fiveSec: "GDPR = subject location; controller accountable; criminal beyond-doubt, civil preponderance; PCI is contractual."
+  },
+  flash: [
+    "Legal systems: civil/code (statutes), common (precedent — most tested), religious, customary.",
+    "Criminal = state, beyond reasonable doubt; civil/tort = private, preponderance.",
+    "IP: copyright=expression, patent=invention, trademark=brand, trade secret=secrecy.",
+    "GDPR scopes by data-subject location (extraterritorial); 72-hour breach notice.",
+    "Controller decides why/how and is accountable; processor acts on instructions.",
+    "Transborder transfers need a mechanism (adequacy/SCCs/BCRs).",
+    "PCI DSS and SOC 2 are contractual/industry, not laws.",
+    "Comply with the strictest applicable requirement."
+  ],
+  official: {
+    outline: [
+      "Cybercrimes and data breaches",
+      "Licensing and intellectual property requirements",
+      "Import/export controls",
+      "Transborder data flow",
+      "Privacy (e.g., GDPR, CCPA, PIPL, POPIA)",
+      "Contractual, legal, industry standards, and regulatory requirements"
+    ],
+    note: "The bullets are the official ISC² sub-items for objective 1.4. The legal-system taxonomy, the specific statutes and transfer mechanisms, and the sample questions are added study material — laws change and vary by jurisdiction, so verify current specifics."
+  },
+  refs: [
+    "(ISC)² CISSP CBK — Domain 1",
+    "EU General Data Protection Regulation (2016/679)",
+    "ISO/IEC 27701 and ISO/IEC 27018",
+    "NIST Privacy Framework; US HIPAA Security Rule"
+  ]
+};
+
+CISSP_MODULES["1.5"] = {
+  title: "Understand requirements for investigation types",
+  simple:
+    "When something goes wrong — a crime, a policy violation, a lawsuit, a regulator’s inquiry — you may have to investigate. There are different <b>types</b> of investigation, and each has its own rules, its own standard of proof, and its own person in charge. The type you are in decides how carefully you must handle evidence and what you actually have to prove. So the first move is to recognize which type you’re in — it tells you how to run everything else.",
+  deep: [
+    "<b>Why it exists.</b> The requirements — the evidence standard, who leads, whether law enforcement is involved, and what you must disclose — differ sharply by type. Treating a minor HR matter like a criminal case wastes effort, while treating a criminal case casually destroys the admissibility of your evidence.",
+    "<b>The types (official).</b> Administrative (internal HR/policy matters, the lowest bar). Criminal (society/the state is the victim; proof beyond a reasonable doubt; law enforcement leads; strict chain of custody; warrants). Civil (a private dispute between parties; a preponderance of evidence; discovery/e-discovery; damages). Regulatory (an agency investigates compliance using its own rules and powers and can compel records). Industry-standard investigations (e.g., a PCI Forensic Investigator engagement) are contractual.",
+    "<b>Burdens of proof (common-law framing).</b> Criminal is beyond a reasonable doubt (the highest bar). Civil is a preponderance of the evidence (more likely than not). Administrative is essentially ‘just cause’ or some evidence (the lowest). Regulatory standards vary by agency.",
+    "<b>Evidence discipline.</b> Chain of custody matters in every type but is strictest for criminal because a courtroom will scrutinize it. To be admissible, evidence must be relevant, reliable/authentic, and legally obtained — which is why you work on a verified copy, hash it, and document every handoff, from minute one.",
+    "<b>Who is responsible.</b> Administrative — HR, management, and security. Criminal — law enforcement leads; you preserve evidence and assist. Civil — legal counsel with forensic support. Regulatory — the agency with compliance/legal. Legal counsel typically sets overall strategy.",
+    "<b>Common misconceptions.</b> That internal investigations don’t need evidence discipline (they can escalate to criminal or civil). That ‘tort’ is a third court system (it’s a branch of civil law). That security leads a criminal case (law enforcement does). That you should reboot or ‘clean up’ a compromised system (that destroys volatile evidence).",
+    "<b>Relationship to governance/risk.</b> Which type applies flows from the legal systems in 1.4; mishandling evidence means losing the case and incurring liability, and investigations themselves carry privacy and legal risk that policy must anticipate through clear escalation criteria.",
+    "<b>Cross-domain.</b> Digital forensics (D7) performs the actual collection and handling; audit findings (D6) can trigger an investigation; the legal systems in 1.4 set the burdens; and legal holds affect data retention (D2).",
+    "<b>How ISC² expects you to think.</b> Identify the investigation type first — it dictates the evidence standard and handling. Preserve evidence to the highest standard the matter could reach, because an administrative issue can become criminal. Criminal is beyond a reasonable doubt; civil is a preponderance; and law enforcement leads criminal cases."
+  ],
+  objective:
+    "Match the investigation type to its rules, its burden of proof, and its owner — and preserve evidence to the highest standard the matter might reach.",
+  key:
+    "The investigation type sets the standard of proof and how carefully evidence must be handled — decide it first.",
+  realWorld:
+    "A bank’s fraud team detects an employee funneling funds. The matter can become all four investigation types at once: administrative (terminate the employee), criminal (the state prosecutes the theft — police involved, beyond a reasonable doubt), civil (the bank sues to recover losses — preponderance), and regulatory (a banking-regulator inquiry). Because criminal prosecution is likely, forensics images the drives through write-blockers, hashes them, and maintains chain of custody from the outset, coordinating with law enforcement and counsel. Treating it as a mere HR matter would have destroyed the criminal case.",
+  examScenario:
+    "A security analyst discovers that an employee’s laptop appears to contain stolen trade secrets. Management hasn’t yet decided whether to fire the person, sue, or press charges. What should the analyst do FIRST with the evidence, and why does the uncertainty about the investigation type raise the bar? Weigh: reboot and inspect the laptop; image and hash it while preserving chain of custody; delete the files; or confront the employee.",
+  analogy:
+    "Investigation types are different courts and games played with the same ball. Criminal court, civil court, an HR hearing, and a regulator’s inquiry each have their own rules and their own ‘how sure must you be’ threshold. If you might end up in the strictest court, you handle the ball to that court’s rules from the start.",
+  traps: [
+    "Failing to identify the type first, then running an administrative process that later can’t support a criminal case.",
+    "Confusing the burdens: criminal beyond a reasonable doubt vs civil preponderance vs administrative just cause.",
+    "Thinking a tort is a separate court system — it’s civil law.",
+    "Rebooting or ‘cleaning’ a suspect system, destroying volatile evidence and the chain of custody.",
+    "Confusing entrapment (inducing a crime the person wouldn’t otherwise commit — a legal defense) with enticement (luring someone already willing — lawful).",
+    "Assuming internal investigations can skip chain of custody.",
+    "Believing security leads a criminal case — law enforcement does; you preserve and assist."
+  ],
+  terms: [
+    { t: "Administrative / Criminal / Civil / Regulatory investigation", def: "Internal policy / state crime / private dispute / agency compliance matters.", purpose: "Each sets its own rules and standard.", diff: "Owner and burden differ per type.", exam: "Identify the type first." },
+    { t: "Burden of proof", def: "How convincingly a case must be proven.", purpose: "Defines the evidentiary bar.", diff: "Beyond reasonable doubt > preponderance > just cause.", exam: "Match the bar to the type." },
+    { t: "Chain of custody", def: "The documented, unbroken control of evidence.", purpose: "Prove evidence wasn’t altered.", diff: "Strictest in criminal cases.", exam: "A gap can render evidence inadmissible." },
+    { t: "Admissibility", def: "Whether evidence can be used in a proceeding.", purpose: "Ensure evidence counts.", diff: "Requires relevant + reliable + legally obtained.", exam: "Illegally obtained evidence may be excluded." },
+    { t: "Entrapment vs enticement", def: "Inducing an unwilling person vs luring a willing one.", purpose: "Distinguish a defense from lawful conduct.", diff: "Entrapment is a defense; enticement is legal.", exam: "‘Would not have otherwise’ = entrapment." },
+    { t: "Exigent circumstances", def: "Warrantless action justified to prevent destruction of evidence or harm.", purpose: "Allow urgent preservation.", diff: "An exception to the warrant requirement.", exam: "Narrow and situation-specific." },
+    { t: "e-Discovery", def: "The identification and production of electronically stored information in litigation.", purpose: "Meet civil discovery duties.", diff: "Civil-process specific.", exam: "Legal holds preserve relevant ESI." }
+  ],
+  pairs: [
+    { t: "Criminal vs Civil vs Tort", def: "State-prosecuted crime vs private dispute vs the civil wrong sued over.", similar: "The same act can spawn all three; evidence discipline matters in each.", diff: "Beyond reasonable doubt vs preponderance; tort sits inside civil law.", clue: "‘Jail/prosecute’ → criminal; ‘sue for damages’ → civil/tort.", trick: "Tort is a Type of civil.", ex: "Prosecuting the intruder (criminal) vs suing the negligent vendor (a tort)." },
+    { t: "Beyond reasonable doubt vs Preponderance vs Just cause", def: "Highest vs >50% vs some-evidence standards.", similar: "All are thresholds of proof.", diff: "They rise with the stakes of the proceeding.", clue: "Criminal → highest; administrative → lowest.", trick: "Doubt > Half > Some.", ex: "Convicting a hacker vs winning damages vs firing for policy violation." },
+    { t: "Entrapment vs Enticement", def: "Inducing an unwilling person vs luring a willing one.", similar: "Both involve creating an opportunity to offend.", diff: "Entrapment is a defense; enticement is lawful.", clue: "‘Pushed a reluctant person’ → entrapment.", trick: "Entrapment traps the innocent.", ex: "Pressuring a reluctant employee (entrapment) vs a honeypot for a willing attacker (enticement)." }
+  ],
+  cross: [
+    { d: "D7 → Digital forensics", why: "Forensics (7.1) performs the imaging, hashing, and chain-of-custody handling these investigations require." },
+    { d: "D6 → Assessment & audit", why: "Audit or assessment findings frequently trigger an investigation." },
+    { d: "D1 → Legal systems", why: "The legal frameworks in 1.4 define the burdens and procedural rules each investigation must follow." },
+    { d: "D2 → Legal hold & retention", why: "Investigations impose legal holds that override normal data-retention/destruction schedules." }
+  ],
+  frameworks: [
+    { fw: "ISO/IEC 27037", how: "Guidelines for the identification, collection, acquisition, and preservation of digital evidence — the backbone of defensible handling." },
+    { fw: "ISO/IEC 27041/27042/27043", how: "Assurance of investigation methods, analysis/interpretation of evidence, and overall incident-investigation principles." },
+    { fw: "NIST SP 800-86", how: "Integrating forensic techniques into incident response, including evidence acquisition order and handling." },
+    { fw: "US Federal Rules of Evidence", how: "Define admissibility concepts such as the best-evidence rule and hearsay exceptions for business/computer records." }
+  ],
+  impl: {
+    people: "Legal counsel (strategy), HR (administrative), law enforcement (criminal), forensic examiners, compliance (regulatory), and management (escalation decisions).",
+    process: "Classify the investigation type early; preserve evidence to the highest plausible standard (image, hash, chain of custody); apply legal holds; document everything; coordinate with counsel and law enforcement; and report per legal duties.",
+    tech: "Write-blockers, forensic imaging tools, hashing utilities, evidence-management/chain-of-custody systems, and e-discovery platforms.",
+    evidence: "Forensic images with hash values, chain-of-custody forms, investigation reports, and legal-hold notices.",
+    mistakes: "Acting on the original instead of a copy; no chain of custody; a late legal hold; treating a criminal matter as HR-only; unauthorized ‘hack-back’; and violating employee-privacy laws during collection."
+  },
+  q1: {
+    stem: "A security analyst finds that a departing employee’s workstation likely contains exfiltrated trade secrets. Management has not decided whether to terminate, sue, or refer the matter to law enforcement. What should the analyst do FIRST?",
+    opts: [
+      { t: "Log in to the workstation and open the files to confirm the theft.", ok: false, why: "Working on the original alters timestamps and other metadata and breaks the chain of custody, potentially making the evidence inadmissible." },
+      { t: "Create a forensically sound image, hash it, and preserve the chain of custody before any analysis.", ok: true, why: "Because the matter could become criminal or civil, you preserve evidence to the highest standard from the start." },
+      { t: "Delete the trade-secret files to stop further leakage.", ok: false, why: "This destroys evidence and worsens the organization’s legal exposure." },
+      { t: "Immediately confront the employee to obtain a confession.", ok: false, why: "This tips off the suspect and preserves nothing; it is not the correct first technical action." }
+    ],
+    best: "Because the investigation type is undecided and could reach criminal court (the strictest standard), ISC² expects you to preserve evidence to that bar first — image, hash, and chain of custody — before any examination. A and C destroy evidence; D is premature."
+  },
+  q2: {
+    stem: "During a criminal investigation of an intrusion, a manager wants the incident-response team to lead the case and to reboot the compromised server to restore service quickly. What is the BEST guidance?",
+    opts: [
+      { t: "The IR team should lead the criminal case and reboot to restore uptime.", ok: false, why: "Law enforcement leads criminal cases, and rebooting destroys volatile evidence." },
+      { t: "Preserve volatile and disk evidence (image/hash, document), coordinate with law enforcement who lead the criminal investigation, and restore service from clean media only after evidence is secured.", ok: true, why: "It respects correct ownership and the preserve-before-restore order." },
+      { t: "Restore service first; forensics can be done from backups later.", ok: false, why: "Prioritizing uptime destroys live evidence and the chain of custody." },
+      { t: "Have the IR team obtain a search warrant themselves.", ok: false, why: "Warrants are a law-enforcement/legal function, not an IR responsibility." }
+    ],
+    best: "In criminal matters, law enforcement leads and evidence preservation precedes remediation; rebooting destroys volatile evidence. B respects both ownership and the preserve-before-restore order, while the others mishandle one or both."
+  },
+  memory: {
+    mnemonic: "Types = <b>A-C-C-R-I</b> (Administrative, Criminal, Civil, Regulatory, Industry). Burdens: Doubt > Half > Some.",
+    visual: "Four courtroom doors, each with a different ‘how sure?’ meter above it; the same evidence bag must satisfy the strictest door.",
+    oneLine: "Decide the type first, then preserve evidence to the highest bar the matter might reach.",
+    fiveSec: "Criminal = beyond-doubt + police; civil = preponderance; admin = just-cause; chain of custody always."
+  },
+  flash: [
+    "Types: Administrative, Criminal, Civil, Regulatory, Industry-standard.",
+    "Burdens: criminal beyond reasonable doubt > civil preponderance > administrative just cause.",
+    "Identify the investigation type FIRST.",
+    "Chain of custody matters in all types; strictest for criminal.",
+    "Work on a verified copy; hash it; never the original.",
+    "Law enforcement leads criminal cases; you preserve and assist.",
+    "A tort is a branch of civil law, not a third court.",
+    "Entrapment (induce the unwilling — a defense) vs enticement (lure the willing — lawful)."
+  ],
+  official: {
+    outline: [
+      "Administrative",
+      "Criminal",
+      "Civil",
+      "Regulatory",
+      "Industry standards"
+    ],
+    note: "The five types are the official ISC² sub-items for objective 1.5. The burden-of-proof labels reflect a common-law/US framing and vary by jurisdiction; the evidence-handling detail (ISO 27037, chain of custody) and the sample questions are added study material."
+  },
+  refs: [
+    "(ISC)² CISSP CBK — Domain 1",
+    "ISO/IEC 27037 — digital evidence handling",
+    "NIST SP 800-86 — forensic techniques in incident response",
+    "US Federal Rules of Evidence"
+  ]
+};
+
+CISSP_MODULES["1.6"] = {
+  title: "Develop, document, and implement security policy, standards, procedures, and guidelines",
+  simple:
+    "This is the paperwork hierarchy that turns management’s intent into consistent action. A <b>policy</b> is a short, high-level, mandatory statement of what and why. <b>Standards</b> are the mandatory specifics (exact technologies and settings). <b>Procedures</b> are the mandatory step-by-step how-to. <b>Guidelines</b> are optional advice. Everything below a policy draws its authority from that policy — and only guidelines are optional.",
+  deep: [
+    "<b>Why it exists.</b> Without written, approved documents, security is inconsistent, unenforceable, and legally indefensible. The hierarchy lets leadership set direction once (policy) while the specifics (standards and procedures) can change without re-approving everything. It is the backbone of due care and of auditability.",
+    "<b>The tiers, precisely.</b> A <b>policy</b> is mandatory, high-level management intent, approved by senior management and rarely changed; it comes in organizational (master), issue-specific (e.g., acceptable use), and system-specific flavors. A <b>standard</b> is a mandatory, specific requirement (‘AES-256’, ‘TLS 1.2+’, approved products) that ensures uniformity. A <b>baseline</b> is a mandatory minimum level of security for a category of system (a kind of standard). A <b>procedure</b> is mandatory, detailed, step-by-step instructions. A <b>guideline</b> is recommended, discretionary best practice.",
+    "<b>Who is responsible.</b> Senior management approves and owns policy — that approval is exactly what makes it authoritative and enforceable. Subject-matter experts author standards and procedures; everyone must comply; and security/compliance maintains the set with periodic review and version control.",
+    "<b>Common misconceptions.</b> That all four tiers are mandatory (guidelines are optional). That a procedure is high-level (it’s the detailed how). That an internal ‘standard’ is the same as an external standard like ISO, or the same as a baseline. That any written document is enforceable (it needs management approval, communication, and acknowledgment).",
+    "<b>Relationship to governance.</b> Policy is the primary instrument of governance intent: it must align to strategy, be approved, communicated, enforced, and reviewed. Enforcement requires acknowledgment and defined consequences, which is what makes disciplinary action defensible.",
+    "<b>Relationship to risk.</b> Policies and standards encode risk decisions and required controls; gaps and violations are risk, and the documented, approved set is evidence of due care.",
+    "<b>Cross-domain.</b> Procedures drive daily operations and change management (D7); compliance and audit test against standards and baselines (D6); data-handling standards enforce classification (D2); and secure-coding standards govern development (D8).",
+    "<b>How ISC² expects you to think.</b> Know the exact hierarchy and which tiers are mandatory. ‘Step-by-step how’ is a procedure; ‘optional/recommended’ is a guideline; ‘intent/why’ is a policy. Management approval is what gives a policy authority — so when a document ‘won’t hold up,’ the cause is usually that it was never approved, communicated, or acknowledged."
+  ],
+  objective:
+    "Build and place documents in the mandatory policy → standard → procedure hierarchy (with baselines), plus optional guidelines, to turn management intent into consistent, enforceable, auditable action.",
+  key:
+    "Policy = mandatory intent; standards and procedures = mandatory specifics and steps; only guidelines are optional.",
+  realWorld:
+    "A hospital’s board approves an Information Security Policy stating that all systems handling PHI must protect confidentiality and integrity (the intent). A cryptographic Standard then mandates AES-256 at rest and TLS 1.2+ in transit and lists approved products. A hardening Baseline defines the minimum secure configuration for every clinical workstation. Procedures give IT the exact steps to encrypt a new laptop. A Guideline suggests staff consider a privacy screen in public areas. Auditors test the workstations against the Baseline, and management enforces the policy through signed acknowledgment and a disciplinary process.",
+  examScenario:
+    "A new CISO finds that the company’s acceptable-use ‘policy’ was emailed out by a mid-level manager, never approved by leadership, never acknowledged by staff, and is now being cited to discipline an employee. Why is this likely to fail, and which document-lifecycle steps were missed? Weigh: it’s fine because it’s written; it lacks management approval/communication/acknowledgment; just relabel it a guideline; or it’s actually a standard so it’s binding.",
+  analogy:
+    "The hierarchy is a country’s legal stack: the Constitution (policy — supreme intent, rarely changed), laws (standards — specific mandatory rules), regulations and manuals (procedures — exactly how to comply), and an advice column (guidelines — helpful but optional). You cannot enforce a ‘law’ the legislature never actually passed.",
+  traps: [
+    "Thinking all four documents are mandatory — guidelines are optional and discretionary.",
+    "Calling detailed step-by-step content a ‘policy’ — that is a procedure.",
+    "Confusing an internal Standard (mandatory spec) with an external standard (ISO) or with a Baseline (minimum level).",
+    "Assuming any document is enforceable — it needs management approval, communication, and acknowledgment.",
+    "Mixing up ‘guideline’ (recommended) with ‘baseline’ (mandatory minimum).",
+    "Forgetting periodic review and version control — stale policies fail audits and legal challenges."
+  ],
+  terms: [
+    { t: "Policy", def: "A mandatory, high-level statement of management intent.", purpose: "Set direction and authority.", diff: "The ‘what/why’, not the ‘how’.", exam: "Needs senior-management approval to be enforceable." },
+    { t: "Standard", def: "A mandatory, specific requirement (technology/setting).", purpose: "Ensure uniformity.", diff: "Specific and mandatory, unlike a guideline.", exam: "Internal standard ≠ external ISO standard." },
+    { t: "Baseline", def: "A mandatory minimum level of security for a class of system.", purpose: "Guarantee a security floor.", diff: "A minimum level, not step-by-step.", exam: "CIS Benchmarks are common baselines." },
+    { t: "Procedure", def: "Mandatory, detailed, step-by-step instructions.", purpose: "Make execution consistent and repeatable.", diff: "The detailed ‘how’.", exam: "‘Steps 1–7’ = procedure." },
+    { t: "Guideline", def: "Recommended, discretionary best practice.", purpose: "Offer helpful advice.", diff: "The only optional tier.", exam: "‘Consider / where feasible’ = guideline." },
+    { t: "Acceptable Use Policy (AUP)", def: "Issue-specific policy governing acceptable use of systems.", purpose: "Set user behavior rules.", diff: "A type of policy.", exam: "Must be acknowledged to enforce." },
+    { t: "Exception / waiver", def: "A documented, time-bound approved deviation.", purpose: "Handle justified non-compliance.", diff: "Requires approval and an expiry.", exam: "Undocumented deviation ≠ exception." }
+  ],
+  pairs: [
+    { t: "Policy vs Standard vs Procedure vs Guideline", def: "Mandatory intent vs mandatory specifics vs mandatory steps vs optional advice.", similar: "All are governance documents that flow from policy.", diff: "Only guidelines are optional; procedures are the detailed how.", clue: "‘Step-by-step’ → procedure; ‘consider’ → guideline.", trick: "P-S-P-G: only the last is optional.", ex: "‘Encrypt laptops’ / ‘AES-256’ / ‘BitLocker steps 1–5’ / ‘consider a hardware token’." },
+    { t: "Standard vs Baseline", def: "A specific mandatory requirement vs a mandatory minimum level.", similar: "Both are mandatory and drive uniformity.", diff: "A baseline is the floor for a system class; a standard is a specific rule.", clue: "‘Minimum secure config for all workstations’ → baseline.", trick: "Baseline = the Bottom line.", ex: "‘Use AES-256’ (standard) vs ‘the minimum hardened workstation build’ (baseline)." },
+    { t: "Guideline vs Baseline", def: "Optional advice vs a mandatory minimum.", similar: "Both describe ‘good’ configurations.", diff: "One is discretionary, the other is required.", clue: "‘Recommended’ → guideline; ‘minimum required’ → baseline.", trick: "Guideline = Guidance; Baseline = Binding floor.", ex: "‘Consider MFA everywhere’ (guideline) vs ‘MFA required on all admin accounts’ (baseline/standard)." }
+  ],
+  cross: [
+    { d: "D7 → Operations & change management", why: "Procedures run day-to-day operations, and changes to standards/baselines go through the change-management process." },
+    { d: "D6 → Compliance & audit", why: "Auditors test systems against the organization’s standards and baselines to measure compliance." },
+    { d: "D2 → Data handling", why: "Handling standards per classification level operationalize the data-protection policy." },
+    { d: "D8 → Secure coding", why: "Secure-coding standards translate the software-security policy into enforceable developer requirements." },
+    { d: "D1 → Governance & due care", why: "The approved policy set is the primary instrument of governance intent and evidence of due care." }
+  ],
+  frameworks: [
+    { fw: "ISO/IEC 27001 (Annex A.5)", how: "Requires a documented set of information-security policies, approved by management and reviewed at planned intervals." },
+    { fw: "NIST SP 800-53 (xx-1 controls)", how: "Every control family opens with a Policy and Procedures control (e.g., AC-1), embedding the hierarchy into the control set." },
+    { fw: "NIST SP 800-12 / 800-100", how: "Foundational guidance on developing security policies, standards, and program structure." },
+    { fw: "CIS Benchmarks", how: "Widely used configuration baselines that organizations adopt as their mandatory minimum standards." }
+  ],
+  impl: {
+    people: "Senior management approves policy; subject-matter experts author standards and procedures; security/compliance maintains the set; all staff comply; internal audit tests.",
+    process: "Draft → review → management approval → publish and communicate → acknowledge → enforce → periodically review with version control → manage exceptions with expiry dates.",
+    tech: "A policy-management/GRC platform, e-signature/attestation tooling, configuration-baseline scanners (e.g., CIS benchmarks), and version control.",
+    evidence: "An approved policy set with sign-off, acknowledgment records, baseline configurations and scan results, an exception register, and version/review history.",
+    mistakes: "Unapproved or uncommunicated policies; no acknowledgment; stale, unreviewed documents; procedures that don’t match reality; guidelines written as if mandatory; and no exception process."
+  },
+  q1: {
+    stem: "A company’s acceptable-use rules were drafted and emailed by a team lead, never formally approved by management, never acknowledged by employees, and are now being used to justify terminating an employee. From a policy-governance standpoint, what is the BEST assessment?",
+    opts: [
+      { t: "The rules are valid because they are written and were distributed.", ok: false, why: "Being written and emailed doesn’t make a policy enforceable; it lacks management approval and acknowledgment." },
+      { t: "The rules are likely unenforceable because they were never approved by management, communicated as policy, or acknowledged — the document lifecycle (approve → communicate → acknowledge → enforce) wasn’t followed.", ok: true, why: "It identifies the missing authority and the skipped lifecycle steps that make disciplinary use indefensible." },
+      { t: "Reclassify the document as a guideline so it becomes enforceable.", ok: false, why: "Guidelines are optional — that would make it even less enforceable." },
+      { t: "It’s actually a standard, so it’s automatically binding.", ok: false, why: "Mislabeling it doesn’t create authority, and it still lacks approval and acknowledgment." }
+    ],
+    best: "A policy becomes authoritative only through senior-management approval, communication, and acknowledgment; without those, disciplinary use is indefensible. B names the exact lifecycle failure, while A overvalues mere existence, C weakens it further, and D mislabels it and still lacks approval."
+  },
+  q2: {
+    stem: "An auditor asks how to classify three items: ‘all databases must use AES-256 encryption at rest,’ ‘run steps 1–7 in the DBA console to enable Transparent Data Encryption,’ and ‘consider enabling encrypted backups where feasible.’ How should they be classified?",
+    opts: [
+      { t: "All three are policies.", ok: false, why: "Policies are high-level intent, not specific settings or step-by-step instructions." },
+      { t: "The AES-256 requirement is a standard; the 7-step console instructions are a procedure; the ‘consider…where feasible’ statement is a guideline.", ok: true, why: "Each maps to the correct tier — a specific mandatory spec, mandatory steps, and optional advice." },
+      { t: "AES-256 = procedure; the steps = standard; the advice = baseline.", ok: false, why: "This reverses standard and procedure and mislabels the guideline." },
+      { t: "All three are guidelines because they concern encryption details.", ok: false, why: "Two of them are mandatory (a standard and a procedure); only the ‘consider’ statement is a guideline." }
+    ],
+    best: "The tiers are defined by role, not topic: a specific mandatory requirement is a standard, mandatory step-by-step is a procedure, and optional advice is a guideline. B maps each correctly; the others confuse the tiers."
+  },
+  memory: {
+    mnemonic: "Top-down <b>P-S-P-G</b> — ‘Policies Steer, Procedures Guide’ — only the final G (guideline) is optional.",
+    visual: "A pyramid: Policy at the capstone, then Standards, then Procedures, with Guidelines drawn as a dotted box off to the side (optional).",
+    oneLine: "Intent (policy) → specifics (standard) → steps (procedure) → advice (guideline); only advice is optional.",
+    fiveSec: "Only guidelines are optional; step-by-step = procedure; management approval makes a policy real."
+  },
+  flash: [
+    "Hierarchy: Policy → Standard → Procedure → Guideline (plus Baseline = mandatory minimum).",
+    "Policy = mandatory high-level intent; needs management approval.",
+    "Standard = mandatory specifics; Baseline = mandatory minimum level.",
+    "Procedure = mandatory step-by-step how.",
+    "Guideline = optional / recommended.",
+    "Only guidelines are optional.",
+    "Enforceability needs approval + communication + acknowledgment.",
+    "Review and version documents; manage exceptions with an expiry."
+  ],
+  official: {
+    outline: [
+      "Security policy",
+      "Standards",
+      "Procedures",
+      "Guidelines"
+    ],
+    note: "ISC² states objective 1.6 without further sub-bullets; the four document types named in the objective are the official content. Baselines, the document lifecycle (approve → communicate → acknowledge → enforce → review), and the sample questions are added study material written to standard doctrine."
+  },
+  refs: [
+    "(ISC)² CISSP CBK — Domain 1",
+    "ISO/IEC 27001 — Annex A.5 (policies)",
+    "NIST SP 800-12 and SP 800-53 (xx-1 policy controls)",
+    "CIS Benchmarks (baselines)"
+  ]
+};
+
+CISSP_MODULES["1.7"] = {
+  title: "Identify, analyze, assess, prioritize, and implement Business Continuity (BC) requirements",
+  simple:
+    "Business continuity is planning so the organization can keep operating — or recover quickly — when something disrupts it: a fire, an outage, a cyberattack, a pandemic. This objective is the front end: you run a <b>Business Impact Analysis (BIA)</b> to work out which business processes are most critical, how fast they must come back, and how much data you can afford to lose. Those numbers then drive every recovery plan and every dollar of recovery spending. BC starts with the business, not with IT.",
+  deep: [
+    "<b>Why it exists.</b> Disruptions are inevitable, and unplanned recovery is chaotic and slow. BC ensures the organization survives by deciding what matters most and setting recovery targets before disaster strikes. For many industries it is also a due-care and legal expectation.",
+    "<b>Where it sits.</b> BC planning is a project with phases; this objective is the scoping front end — identify, analyze, assess, prioritize, and implement the requirements — and the BIA is its heart.",
+    "<b>The BIA.</b> It identifies critical business functions and processes, their dependencies (people, systems, suppliers, facilities), and the impact of losing them <i>over time</i> — impact grows the longer a process is down. It produces the recovery metrics: <b>MTD</b> (Maximum Tolerable Downtime — the longest a process can be down before unacceptable harm), <b>RTO</b> (Recovery Time Objective — the target time to restore, which must be ≤ MTD), <b>RPO</b> (Recovery Point Objective — the maximum acceptable data loss measured in time), and <b>WRT</b> (Work Recovery Time — time to verify and catch up after systems return, where RTO + WRT ≤ MTD).",
+    "<b>External dependencies.</b> Suppliers, utilities, telecom, and cloud providers are part of your continuity — their outage is your outage — which links BC to supply-chain risk management (1.11).",
+    "<b>Who is responsible.</b> Senior management sponsors the program and sets priorities (BC is a business decision); a BC coordinator or committee runs the BIA; business-process owners supply the impact data; and IT/DR implements the technical recovery to meet the targets. Management approves the recovery strategy and the residual risk.",
+    "<b>Common misconceptions.</b> That BC equals DR (DR is the IT subset; BC is the whole business). That the BIA is a technical/IT exercise (it measures business impact). That RTO equals RPO (time-to-restore vs data-loss). That you buy recovery technology first (the BIA sets the numbers first). That impact is static (it grows over time).",
+    "<b>Relationship to governance and risk.</b> BC is a governance obligation with board sponsorship and policy, and the BIA quantifies the impact used in risk decisions (1.9); BC is, in effect, the risk treatment for availability.",
+    "<b>Cross-domain.</b> Operations implements the DR strategies (7.10–7.13) that meet the BIA’s targets and tests them (7.12); process criticality feeds asset classification (D2); facilities host the recovery sites (D3); and risk analysis (D1) consumes the BIA’s impact figures.",
+    "<b>How ISC² expects you to think.</b> The BIA comes first and drives strategy and spend — never pick technology before the BIA. RTO must fit inside MTD, and RPO is about data loss, not uptime. Senior management sets priorities because BC is business-led."
+  ],
+  objective:
+    "Run a Business Impact Analysis to identify critical processes and set MTD/RTO/RPO/WRT, which then drive every recovery strategy and investment.",
+  key:
+    "The BIA comes first and sets the numbers (MTD/RTO/RPO); recovery technology is chosen to meet them, never before.",
+  realWorld:
+    "A bank’s BC program starts with executive sponsorship and a BIA workshop with each business line. The trading desk’s order-matching process has an MTD of two hours and an RPO near zero (no lost trades), so IT designs synchronous replication and a hot site. The corporate-newsletter process has an MTD of two weeks, so a cold recovery is fine. External dependencies (the market-data feed, telecom) get continuity clauses in their contracts. Senior management approves the recovery strategy and residual risk, the plan is tested (7.12), and the BIA is revisited annually.",
+  examScenario:
+    "An IT director wants to buy a mirrored hot-site solution for every system ‘to be safe,’ and requests budget this quarter. The CISO pushes back. From a BC standpoint, what should be completed before selecting and funding any recovery solution, and what outputs would justify (or reduce) that hot-site spend? Weigh: buy the hot site now; run the BIA to set MTD/RTO/RPO first; buy insurance; or ask IT to guess the RTOs.",
+  analogy:
+    "The BIA is ER triage for the business: before spending on ambulances and operating rooms (recovery solutions), you assess which ‘patients’ (processes) will die soonest without care (the shortest MTD) and treat those first. Buying equipment before triage wastes money on the wrong patients.",
+  traps: [
+    "Equating BC with DR — DR (IT recovery) is a subset of BC (the whole business).",
+    "Running the BIA as an IT exercise — it’s a business-impact exercise led with process owners.",
+    "Buying recovery technology before the BIA sets the targets.",
+    "Confusing RTO (time to restore service) with RPO (acceptable data loss, in time).",
+    "Setting RTO greater than MTD — RTO must be ≤ MTD, and RTO + WRT ≤ MTD.",
+    "Treating impact as constant — the BIA measures impact growing over time.",
+    "Ignoring external dependencies (supplier, utility, and cloud continuity).",
+    "Thinking IT or the BC coordinator sets priorities — senior management/the business does."
+  ],
+  terms: [
+    { t: "BIA (Business Impact Analysis)", def: "The analysis that ranks processes by impact over time and sets recovery targets.", purpose: "Drive the whole BC/DR strategy.", diff: "Business-impact focused, not threat-focused.", exam: "The BIA is done first." },
+    { t: "MTD", def: "Maximum Tolerable Downtime before unacceptable harm.", purpose: "The outer limit for recovery.", diff: "The ceiling RTO must fit under.", exam: "RTO ≤ MTD." },
+    { t: "RTO", def: "Recovery Time Objective — target time to restore a service.", purpose: "Set the recovery speed goal.", diff: "About uptime, not data.", exam: "Must be ≤ MTD." },
+    { t: "RPO", def: "Recovery Point Objective — maximum acceptable data loss in time.", purpose: "Set backup/replication frequency.", diff: "About data, not uptime.", exam: "RPO near zero → replication." },
+    { t: "WRT", def: "Work Recovery Time — time to verify and catch up after restore.", purpose: "Account for post-restore work.", diff: "Follows RTO.", exam: "RTO + WRT ≤ MTD." },
+    { t: "Critical business function", def: "A process whose loss quickly causes unacceptable harm.", purpose: "Focus recovery on what matters.", diff: "Identified and ranked by the BIA.", exam: "Prioritized by shortest MTD." },
+    { t: "External dependency", def: "A third party (supplier, utility, cloud) your operations rely on.", purpose: "Extend continuity beyond your walls.", diff: "Outside your direct control.", exam: "Links BC to supply-chain risk." }
+  ],
+  pairs: [
+    { t: "BIA vs Risk assessment", def: "Impact over time and recovery needs vs threat × likelihood × impact.", similar: "Both feed planning and both consider impact.", diff: "The BIA measures business impact and sets recovery targets; the RA weighs threats.", clue: "‘MTD/RTO/RPO’ → BIA.", trick: "BIA = Business Impact; RA = Risk (threats).", ex: "‘Payroll intolerable after 48h’ (BIA) vs ‘phishing is likely + high impact’ (RA)." },
+    { t: "MTD vs RTO vs RPO", def: "Downtime ceiling vs restore target vs data-loss ceiling.", similar: "All are time-based BC metrics from the BIA.", diff: "MTD is the limit, RTO the restore goal (≤ MTD), RPO the tolerable data loss.", clue: "‘Restore within’ → RTO; ‘lose no more than’ → RPO.", trick: "RTO looks forward (uptime), RPO looks backward (data).", ex: "MTD 4h, RTO 2h, RPO 15min → replicate every 15min, restore within 2h." },
+    { t: "BCP vs DRP", def: "Keep the business running vs restore the IT.", similar: "Both are recovery plans driven by the BIA.", diff: "DRP is the IT subset of the broader BCP.", clue: "‘Manual workaround for the business’ → BCP; ‘rebuild the datacenter’ → DRP.", trick: "DR is a subset of BC.", ex: "Invoicing manually during an outage (BCP) vs failing over to the hot site (DRP)." }
+  ],
+  cross: [
+    { d: "D7 → DR strategies & testing", why: "Recovery sites, backups, and HA (7.10–7.11) are engineered to meet the BIA’s RTO/RPO, and DR tests (7.12) validate them." },
+    { d: "D2 → Asset classification", why: "Process criticality from the BIA feeds how assets are classified and prioritized for protection." },
+    { d: "D3 → Facility & site design", why: "Physical facilities and recovery sites must be engineered to host the required recovery capability." },
+    { d: "D1 → Risk management", why: "The BIA’s impact figures feed risk analysis (1.9), and BC is the treatment for availability risk." }
+  ],
+  frameworks: [
+    { fw: "ISO 22301", how: "The Business Continuity Management System standard — governance, BIA, strategy, plans, exercising, and improvement." },
+    { fw: "ISO/TS 22317", how: "Specific guidance on conducting the Business Impact Analysis itself." },
+    { fw: "NIST SP 800-34", how: "The contingency-planning process for information systems, including BIA and recovery strategy selection." },
+    { fw: "ISO/IEC 27031", how: "ICT readiness for business continuity — aligning IT recovery capability to business continuity needs." },
+    { fw: "NIST CSF (Recover function)", how: "Outcomes for restoring capabilities and services after an incident, consuming BC/DR targets." }
+  ],
+  impl: {
+    people: "An executive sponsor, a BC coordinator/committee, business-process owners (who supply impact data), IT/DR teams, facilities, and key suppliers.",
+    process: "Charter and policy → identify processes and dependencies → run the BIA (impact over time; set MTD/RTO/RPO/WRT) → prioritize by criticality → select recovery strategies that meet the targets → document the plans → train and test (7.12) → maintain and review at least annually and on change.",
+    tech: "BIA/BC tooling, replication and backup, hot/warm/cold sites or cloud DR, failover/HA, and emergency-notification systems.",
+    evidence: "A BIA report with MTD/RTO/RPO per process, a criticality ranking, dependency maps, recovery-strategy approvals, test results, and current plans.",
+    mistakes: "No executive sponsorship; an IT-only BIA; buying DR before the BIA; setting RTO greater than MTD; ignoring external dependencies; never testing or updating; and treating BC and DR as identical."
+  },
+  q1: {
+    stem: "An IT director proposes buying a fully mirrored hot site for every system ‘to be safe’ and wants budget approval this quarter. As the security leader, what should you insist is completed FIRST, and why?",
+    opts: [
+      { t: "Approve the hot site immediately, because more resilience is always better.", ok: false, why: "Uniform hot sites are wasteful; spending before analysis isn’t risk-based, and many processes don’t need that level of recovery." },
+      { t: "Complete a Business Impact Analysis to set each process’s MTD/RTO/RPO, then match recovery strategies (hot/warm/cold) to those targets.", ok: true, why: "The BIA determines which processes justify a hot site and which don’t, aligning spend to business need." },
+      { t: "Buy cyber-insurance instead of any recovery capability.", ok: false, why: "A transfer doesn’t restore operations or meet availability targets." },
+      { t: "Ask IT to estimate RTOs for each system and proceed.", ok: false, why: "Recovery targets come from business impact (process owners), not IT guesses." }
+    ],
+    best: "BC is business-led and BIA-first: the BIA sets MTD/RTO/RPO, which determine where a hot site is justified versus overkill. B aligns spend to impact, while A overspends blindly, C confuses transfer with recovery, and D sources the targets from the wrong place."
+  },
+  q2: {
+    stem: "A retailer’s BIA finds that its e-commerce order system has an MTD of 4 hours and can lose no more than 5 minutes of transactions, while its internal HR portal has an MTD of 3 days and can tolerate a full day of data loss. Which recovery design BEST fits?",
+    opts: [
+      { t: "Give both systems identical nightly-backup, cold-site recovery.", ok: false, why: "Nightly backups give roughly a 24-hour RPO and slow restores, violating the order system’s 5-minute RPO and 4-hour MTD." },
+      { t: "Order system: near-real-time replication with a hot/warm site (RPO ~minutes, RTO < 4h); HR portal: nightly backup with cold/warm restore (RPO ~1 day, RTO < 3 days).", ok: true, why: "It matches each system’s RTO/RPO to an appropriate, cost-justified strategy." },
+      { t: "Give both systems synchronous replication and hot sites.", ok: false, why: "This over-provisions the HR portal, wasting money for no business benefit." },
+      { t: "Order system: nightly backup; HR portal: real-time replication.", ok: false, why: "This inverts the requirements, missing the critical system’s targets." }
+    ],
+    best: "Recovery design must map to each process’s RTO/RPO from the BIA. B meets the order system’s tight targets while cost-optimizing the tolerant HR portal; A and D miss the critical targets, and C wastes money over-protecting a non-critical system."
+  },
+  memory: {
+    mnemonic: "‘BIA Before Buying.’ Timeline rule: RTO ≤ MTD, and RTO + WRT ≤ MTD; RPO = data you can lose.",
+    visual: "A timeline with the disaster at zero: RPO looks backward (data lost before the event) while RTO and WRT look forward (time to restore) — all of it must fit inside the MTD wall.",
+    oneLine: "The BIA first sets MTD/RTO/RPO; buy recovery to meet them, never before.",
+    fiveSec: "BIA first; RTO ≤ MTD; RPO = data-loss-in-time; BC ⊃ DR."
+  },
+  flash: [
+    "BC keeps the business running; the BIA is its heart.",
+    "The BIA is business-led and identifies critical processes and dependencies.",
+    "Impact grows over time — the BIA measures that.",
+    "MTD = max tolerable downtime; RTO = restore target (≤ MTD).",
+    "RPO = max data loss in time; RTO + WRT ≤ MTD.",
+    "The BIA sets the numbers BEFORE choosing or buying recovery solutions.",
+    "Include external dependencies (suppliers, utilities, cloud).",
+    "DR (IT recovery) is a subset of BC; management sets priorities."
+  ],
+  official: {
+    outline: [
+      "Business Impact Analysis (BIA)",
+      "External dependencies"
+    ],
+    note: "The two bullets are the official ISC² sub-items for objective 1.7. The MTD/RTO/RPO/WRT definitions, the BIA-first heuristic, the framework references, and the sample questions are added study material written to standard doctrine."
+  },
+  refs: [
+    "(ISC)² CISSP CBK — Domain 1",
+    "NIST SP 800-34 Rev.1 — Contingency Planning",
+    "ISO 22301 and ISO/TS 22317 (BIA)",
+    "ISO/IEC 27031 — ICT readiness for business continuity"
+  ]
+};
