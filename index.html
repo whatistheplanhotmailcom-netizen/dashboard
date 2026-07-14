@@ -383,6 +383,37 @@
     #backBtn{bottom:82px}
     #info{bottom:82px}
   }
+  .modwrap{margin:10px 0 2px 30px}
+  .modbtn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;font-family:var(--sans);color:#fff;background:#3B5BDB;border:0;border-radius:9px;padding:8px 13px;cursor:pointer}
+  .modbtn:active{transform:translateY(1px)}
+  .modmount{margin-top:10px}
+  .modmount[hidden]{display:none}
+  .module{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .msec{border-top:1px solid var(--line2)}
+  .msec:first-child{border-top:0}
+  .msec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:11px 14px;font-family:var(--disp);font-weight:600;font-size:13.5px;color:var(--ink)}
+  .msec>summary::-webkit-details-marker{display:none}
+  .msec>summary::after{content:"▸";margin-left:auto;color:var(--faint);transition:transform .15s}
+  .msec[open]>summary::after{transform:rotate(90deg)}
+  .msec .mnum{flex:0 0 auto;font-family:var(--mono);font-size:10px;font-weight:700;color:#fff;background:#3B5BDB;border-radius:6px;padding:3px 7px;min-width:22px;text-align:center}
+  .msec .mbody{padding:0 14px 14px 14px;font-size:13px;line-height:1.62;color:var(--muted)}
+  .msec .mbody>p{margin:0 0 9px}.msec .mbody>p:last-child{margin-bottom:0}
+  .msec .mbody b,.msec .mbody strong,.msec .mbody i{color:var(--ink)}
+  .mgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+  .mgrid>*{min-width:0}
+  .mcard{border:1px solid var(--line);border-left:3px solid var(--c,#3B5BDB);border-radius:9px;padding:9px 11px;background:color-mix(in srgb,var(--c,#3B5BDB) 5%,var(--card))}
+  .mcard .mct{font-weight:700;color:var(--ink);font-size:12.5px;margin-bottom:5px;line-height:1.3}
+  .mkv{display:grid;gap:5px;font-size:12px;line-height:1.5}
+  .mkv .k{font-family:var(--mono);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin-right:4px}
+  .mlist{margin:0;padding-left:18px;display:grid;gap:5px;font-size:12.5px;line-height:1.55}
+  .mq{border:1px solid var(--line);border-radius:11px;padding:11px 12px;background:var(--line2)}
+  .mq .stem{margin:0;color:var(--ink);font-size:13px;line-height:1.55}
+  .mopt{margin-top:8px;border-radius:8px;padding:8px 10px;font-size:12.3px;background:var(--card);border:1px solid var(--line)}
+  .mopt.ok{border-color:#7FB23A;background:color-mix(in srgb,#7FB23A 13%,var(--card))}
+  .mopt .ol{font-weight:700;color:var(--ink)}
+  .mopt .owhy{color:var(--muted);margin-top:4px;line-height:1.5}
+  .mbest{margin-top:9px;font-size:12.3px;color:var(--ink);background:color-mix(in srgb,#2B57C9 9%,var(--card));border:1px solid color-mix(in srgb,#2B57C9 26%,var(--card));border-left:3px solid #2B57C9;border-radius:8px;padding:9px 11px;line-height:1.55}
+  .moff{background:color-mix(in srgb,#5C940D 7%,var(--card));border:1px solid color-mix(in srgb,#5C940D 28%,var(--card));border-radius:9px;padding:10px 12px;font-size:12.5px;line-height:1.55}
   /* ============ DARK THEME ============ */
   header.mast{position:relative}
   :root[data-theme="dark"]{--bg:#0E1116;--card:#171C24;--ink:#E7ECF3;--muted:#9AA6B4;--faint:#6B7784;--line:#2A313C;--line2:#1E242D}
@@ -1834,6 +1865,7 @@ const TTOP={"ALE": "1.9", "SLE": "1.9", "ARO": "1.9", "EF": "1.9", "AV": "1.9", 
 const MTOP={"Risk treatment options": "1.9", "Quantitative risk formulas": "1.9", "Investigation types & burden": "1.5", "Policy document hierarchy": "1.6", "BC metrics": "1.7", "Major legal systems": "1.4", "(ISC)² Code of Ethics canons — in order (CBK)": "1.1", "NIST RMF steps (OSG/X)": "1.9", "Data lifecycle": "2.4", "Data roles": "2.4", "Sanitization strength": "2.4", "Data states → tools": "2.6", "Privacy techniques": "2.6", "Data roles (OSG/CBK)": "2.4", "Security models": "3.2", "Crypto service → mechanism": "3.6", "Fire classes → suppressant": "3.9", "Physical control functions": "3.9", "Cloud shared responsibility (you manage)": "3.5", "Symmetric algorithms (key · block)": "3.6", "Asymmetric algorithms (use · basis)": "3.6", "Hash output sizes": "3.6", "Block cipher modes": "3.6", "Database integrity types": "3.5", "Common Criteria EAL 1–7 (OSG)": "3.3", "Bell-LaPadula vs Biba properties (OSG)": "3.2", "Fire classes → suppression agent (OSG)": "3.9", "Fail states (OSG)": "3.1", "Protection rings (OSG/CBK)": "3.4", "Password hashing / key stretching (OSG)": "3.6", "Cryptographic attacks (OSG)": "3.7", "OSI quick map": "4.1", "Network devices": "4.2", "Secure protocol swaps": "4.1", "Wireless security": "4.2", "Segmentation ladder": "4.1", "Firewall generations": "4.2", "802.11 wireless standards": "4.1", "Wireless security (WEP→WPA3)": "4.2", "WAN technologies": "4.3", "QoS classes (ATM)": "4.3", "IPv4 address classes": "4.1", "Spread spectrum": "4.1", "Cabling types": "4.2", "TCP flags & handshake (OSG)": "4.1", "IAM lifecycle (JML)": "5.5", "Access control models": "5.4", "Auth protocol map": "5.6", "Authentication factors": "5.2", "AAA": "5.2", "Biometric error types": "5.2", "Biometric accuracy vs acceptance": "5.2", "Kerberos components": "5.6", "Network AAA (RADIUS family)": "5.6", "PPP authentication (PAP→EAP)": "5.6", "AAA — 5 elements (OSG)": "5.2", "Authentication factor types (FD/OSG)": "5.2", "Verification methods": "6.2", "AppSec test tools": "6.2", "Metrics": "6.3", "Independence ladder": "6.1", "Incident chain (ISC²)": "7.6", "NIST IR lifecycle": "7.6", "DR test ladder (risk ↑)": "7.12", "Backup types": "7.10", "Recovery sites": "7.10", "Detection stack": "7.2", "RAID levels": "7.10", "Evidence types (admissibility)": "7.1", "NIST 800-61 IR lifecycle (OSG/CBK)": "7.6", "SDLC stages": "8.1", "Pipeline scanners": "8.2", "OWASP Top 10 (2021)": "8.5", "API security basics": "8.5", "Acquired software": "8.4", "CMM maturity levels": "8.1", "OWASP-style top web risks (OSG/NOTES)": "8.5"};
 const T2TC={},T2MC={};Object.values(TTOP).forEach(v=>T2TC[v]=(T2TC[v]||0)+1);Object.values(MTOP).forEach(v=>T2MC[v]=(T2MC[v]||0)+1);function trelBlk(n){const tc=T2TC[n]||0,mc=T2MC[n]||0;if(!tc&&!mc)return '';let c='';if(tc)c+=`<button class="xchip glos sm" data-goglost="${n}">📖 ${tc} term${tc>1?'s':''} →</button>`;if(mc)c+=`<button class="xchip mtx sm" data-gomxt="${n}">▦ ${mc} matri${mc>1?'ces':'x'} →</button>`;return `<div class="trel">${c}</div>`;}
 function timgBlk(n){return `<div class="timgs" id="timg-${n}" data-topic="${n}"><div class="timg-head"><button class="timg-add" data-imgadd="${n}">📎 Add test image</button><span class="timg-count"></span></div><div class="timg-grid"></div></div>`;}
+function modBlk(n){return `<div class="modwrap"><button class="modbtn" data-mod="${n}">📘 Full learning module</button><div class="modmount" id="mod-${n}" hidden></div></div>`;}
 const grid=document.getElementById('grid'),rail=document.getElementById('rail');
 const maxW=Math.max(...DOMAINS.map(d=>d.w));
 function pairHTML(p,compact){
@@ -1870,7 +1902,7 @@ DOMAINS.forEach((d,i)=>{
           ${blk('map','MAP',`<span class="relwrap">${t.rel.map(r=>`<span class="relchip sx maplink" data-mapdom="${r[0]}" title="Go to ${r[0]} in the Study map"><b>${r[0]}</b> — ${r[1]} ↗</span>`).join('')}</span>`)}
         </div>
       </details>
-      ${leaves}</div>`;
+      ${leaves}${modBlk(t.n)}</div>`;
   }).join('');
   card.innerHTML=`
     <button class="dhead" aria-expanded="true">
@@ -2448,6 +2480,46 @@ renderDash();
 /* ---- theme toggle ---- */
 (function(){const btn=document.getElementById('themeBtn');const cur=()=>document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light';const icon=()=>{if(btn)btn.textContent=cur()==='dark'?'☀️':'🌙';};icon();
   if(btn)btn.addEventListener('click',()=>{const n=cur()==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem('cisspTheme',n);}catch(e){}icon();if(mInit&&typeof drawMap==='function')drawMap();});})();
+
+/* ============ Deep learning modules (lazy per-domain) ============ */
+const MODLOADED={};
+function loadModDomain(dm){if(MODLOADED[dm])return MODLOADED[dm];MODLOADED[dm]=new Promise(res=>{const s=document.createElement('script');s.src='modules/'+dm.toLowerCase()+'.js';s.onload=()=>res(true);s.onerror=()=>res(false);document.head.appendChild(s);});return MODLOADED[dm];}
+function mLi(a){return `<ul class="mlist">${(a||[]).map(x=>`<li>${x}</li>`).join('')}</ul>`;}
+function mSec(num,title,inner,open){return `<details class="msec"${open?' open':''}><summary><span class="mnum">${num}</span>${title}</summary><div class="mbody">${inner}</div></details>`;}
+function mKV(rows){return `<div class="mkv">${rows.filter(r=>r[1]).map(r=>`<div><span class="k">${r[0]}</span> ${r[1]}</div>`).join('')}</div>`;}
+function mQ(q,label){if(!q)return '';const L=['A','B','C','D','E','F'];
+  return `<div class="mq"><p class="stem"><b>${label}.</b> ${q.stem}</p>${(q.opts||[]).map((o,i)=>`<div class="mopt${o.ok?' ok':''}"><span class="ol">${L[i]}. ${o.t}</span><div class="owhy">${o.ok?'✓ ':'✗ '}${o.why}</div></div>`).join('')}<div class="mbest"><b>Why ISC² prefers the best answer:</b> ${q.best}</div></div>`;}
+function renderModule(n,m){
+  const s=[];
+  s.push(mSec('1','Simple',`<p>${[].concat(m.simple).join('</p><p>')}</p>`,true));
+  s.push(mSec('2','Deep explanation',`<p>${[].concat(m.deep).join('</p><p>')}</p>`,true));
+  if(m.objective)s.push(mSec('3','Objective',`<p>${m.objective}</p>`));
+  if(m.key)s.push(mSec('4','Key takeaway',`<p>${m.key}</p>`));
+  if(m.realWorld)s.push(mSec('5','Real-world scenario',`<p>${m.realWorld}</p>`));
+  if(m.examScenario)s.push(mSec('6','Exam scenario',`<p>${m.examScenario}</p>`));
+  if(m.analogy)s.push(mSec('7','Analogy',`<p>${m.analogy}</p>`));
+  if(m.traps)s.push(mSec('8','Exam traps',mLi(m.traps)));
+  if(m.terms)s.push(mSec('9','Related terms',`<div class="mgrid">${m.terms.map(t=>`<div class="mcard"><div class="mct">${t.t}</div>${mKV([['Definition',t.def],['Purpose',t.purpose],['Difference',t.diff],['Exam relevance',t.exam]])}</div>`).join('')}</div>`));
+  if(m.pairs)s.push(mSec('10','Confusing pairs',`<div class="mgrid">${m.pairs.map(p=>`<div class="mcard" style="--c:#C2255C"><div class="mct">⚠ ${p.t}</div>${mKV([['Definition',p.def],['Similarities',p.similar],['Differences',p.diff],['Exam clue',p.clue],['Memory trick',p.trick],['Example',p.ex]])}</div>`).join('')}</div>`));
+  if(m.cross)s.push(mSec('11','Cross-domain links',`<div class="mgrid">${m.cross.map(c=>`<div class="mcard" style="--c:#0B7285"><div class="mct">${c.d}</div><div class="owhy">${c.why}</div></div>`).join('')}</div>`));
+  if(m.frameworks)s.push(mSec('12','Framework mapping',`<div class="mgrid">${m.frameworks.map(f=>`<div class="mcard" style="--c:#5C940D"><div class="mct">${f.fw}</div><div class="owhy">${f.how}</div></div>`).join('')}</div>`));
+  if(m.impl)s.push(mSec('13','Practical implementation',mKV([['People',m.impl.people],['Process',m.impl.process],['Technology',m.impl.tech],['Evidence',m.impl.evidence],['Common mistakes',m.impl.mistakes]])));
+  if(m.q1)s.push(mSec('14','Exam question 1',mQ(m.q1,'Q1'),true));
+  if(m.q2)s.push(mSec('15','Exam question 2',mQ(m.q2,'Q2')));
+  if(m.memory)s.push(mSec('16','Memory aids',mKV([['Mnemonic',m.memory.mnemonic],['Visual',m.memory.visual],['One-line recall',m.memory.oneLine],['5-second review',m.memory.fiveSec]])));
+  if(m.flash)s.push(mSec('17','Flash review',mLi(m.flash)));
+  if(m.official)s.push(mSec('18','Official ISC² coverage',`<div class="moff"><div class="mct" style="color:#5C940D">Official ISC² outline sub-items</div>${mLi(m.official.outline)}<p style="margin-top:8px"><b>Additional study material:</b> ${m.official.note}</p></div>`));
+  if(m.refs)s.push(mSec('19','References',mLi(m.refs)));
+  return `<div class="module">${s.join('')}</div>`;
+}
+document.addEventListener('click',async e=>{const b=e.target.closest('.modbtn');if(!b)return;
+  const n=b.dataset.mod,mount=document.getElementById('mod-'+n);if(!mount)return;
+  if(!mount.hasAttribute('hidden')){mount.setAttribute('hidden','');b.textContent='📘 Full learning module';return;}
+  recordStudied(n);renderDash();
+  if(!mount.dataset.rendered){b.textContent='📘 Loading…';const ok=await loadModDomain(domOf(n));const M=ok&&(window.CISSP_MODULES||{})[n];
+    if(M){mount.innerHTML=renderModule(n,M);}else{mount.innerHTML=`<div class="module"><details class="msec" open><summary><span class="mnum">·</span>Coming soon</summary><div class="mbody"><p>The full 19-section learning module for <b>${n}</b> is being written. Until then, the summary layers above (Simple · Explain · Scenario · Analogy · Trap · Pairs · Map) cover this objective.</p></div></details></div>`;}
+    mount.dataset.rendered='1';}
+  mount.removeAttribute('hidden');b.textContent='📘 Hide full module';});
 
 /* ============ Tabs ============ */
 function switchTab(v){
