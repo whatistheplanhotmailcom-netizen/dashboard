@@ -358,6 +358,18 @@
   .weak{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .weakchip{font-size:12px;background:#FFF0F3;color:#C2255C;border:1px solid #F8C4D1;border-radius:8px;padding:5px 10px;cursor:pointer;font-family:var(--sans)}
   .weakchip:active{transform:translateY(1px)}
+  .tab .ti{display:none}
+  @media(max-width:640px){
+    .tabs{position:fixed;inset:auto 0 0 0;top:auto;margin:0;padding:5px 4px calc(5px + env(safe-area-inset-bottom));gap:2px;border-top:1px solid var(--line);border-bottom:0;box-shadow:0 -4px 16px rgba(20,25,34,.06)}
+    .tab{flex:1 1 0;min-width:0;flex-direction:column;align-items:center;gap:2px;border:0;background:none;border-radius:8px;padding:4px 1px;font-size:9px;color:var(--muted)}
+    .tab .ti{display:block;font-size:18px;line-height:1;filter:grayscale(.35);opacity:.75}
+    .tab .tl{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+    .tab.on{background:none;color:#3B5BDB}
+    .tab.on .ti{filter:none;opacity:1}
+    .wrap{padding-bottom:74px}
+    #backBtn{bottom:82px}
+    #info{bottom:82px}
+  }
 </style>
 </head>
 <body>
@@ -378,13 +390,13 @@
   </header>
 
   <nav class="tabs" id="tabs">
-    <button class="tab on" data-v="study">① Study map</button>
-    <button class="tab" data-v="pairs">② ⚠ Pairs</button>
-    <button class="tab" data-v="gloss">③ Glossary</button>
-    <button class="tab" data-v="mx">④ Matrices</button>
-    <button class="tab" data-v="quiz">⑤ Quiz</button>
-    <button class="tab" data-v="map">⑥ Mind map</button>
-    <button class="tab" data-v="table">⑦ Table</button>
+    <button class="tab on" data-v="study"><span class="ti">📚</span><span class="tl">Study map</span></button>
+    <button class="tab" data-v="pairs"><span class="ti">⚠️</span><span class="tl">Pairs</span></button>
+    <button class="tab" data-v="gloss"><span class="ti">📖</span><span class="tl">Glossary</span></button>
+    <button class="tab" data-v="mx"><span class="ti">🧮</span><span class="tl">Matrices</span></button>
+    <button class="tab" data-v="quiz"><span class="ti">🧠</span><span class="tl">Quiz</span></button>
+    <button class="tab" data-v="map"><span class="ti">🗺️</span><span class="tl">Mind map</span></button>
+    <button class="tab" data-v="table"><span class="ti">📋</span><span class="tl">Table</span></button>
   </nav>
 
   <section class="view on" id="v-study">
