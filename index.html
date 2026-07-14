@@ -322,6 +322,42 @@
   #imgLb .lbcap{position:absolute;bottom:16px;left:0;right:0;text-align:center;color:#fff;font-size:13px;font-weight:600;padding:0 18px}
   #imgLb .lbx{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.16);color:#fff;border:0;width:40px;height:40px;border-radius:50%;font-size:22px;cursor:pointer;line-height:1}
   .thead.tflash,.dtitle.tflash,.gk.tflash,.mxt.tflash{padding:2px 6px;margin:-2px -6px}
+  .legendD{margin-top:10px}
+  .legendD>summary{list-style:none;cursor:pointer;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);display:inline-flex;align-items:center;gap:6px}
+  .legendD>summary::-webkit-details-marker{display:none}
+  .legendD>summary::before{content:"▸";transition:transform .15s}
+  .legendD[open]>summary::before{transform:rotate(90deg)}
+  .legendD .legend{margin-top:8px}
+  .filtrow{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+  #studyFilters[hidden]{display:none}
+  #studyFilters{margin-bottom:8px}
+  .dash{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:2px 0 14px}
+  .dash>*{min-width:0}
+  .cont>div:first-child{min-width:0}
+  .cont{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c,#3B5BDB);border-radius:14px;padding:13px 15px;cursor:pointer;box-shadow:0 1px 2px rgba(20,25,34,.05)}
+  .cont:active{transform:translateY(1px)}
+  .cont .cn{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--c,#3B5BDB)}
+  .cont .ct{font-family:var(--disp);font-weight:600;font-size:16px;letter-spacing:-.01em;margin-top:3px;line-height:1.2}
+  .cont .cmeta{font-size:12px;color:var(--muted);margin-top:4px}
+  .cont .cgo{margin-left:auto;flex:0 0 auto;background:var(--ink);color:#fff;border-radius:999px;padding:9px 15px;font-size:13px;font-weight:600;white-space:nowrap}
+  .ov{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 15px}
+  .ov h3{margin:0 0 4px;font-family:var(--disp);font-size:13.5px;font-weight:600;display:flex;align-items:baseline;gap:8px}
+  .ovbig{font-family:var(--disp);font-weight:700;font-size:32px;line-height:1;letter-spacing:-.02em;margin-top:6px}
+  .ovsub{font-size:12px;color:var(--muted);margin-top:5px;font-weight:500}
+  .bigbar{height:9px;background:var(--line2);border-radius:99px;overflow:hidden;margin:11px 0 1px}
+  .bigbar>span{display:block;height:100%;background:linear-gradient(90deg,#3B5BDB,#0C9A6C);border-radius:99px;transition:width .4s ease}
+  .dgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-top:8px}
+  .dgrid>*{min-width:0}
+  .drow{display:flex;align-items:center;gap:9px;cursor:pointer}
+  .drow:active{opacity:.7}
+  .drow .dn{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--c);flex:0 0 22px}
+  .drow .dnm{font-size:12px;color:var(--muted);flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .drow .dbar{flex:0 0 92px;height:7px;background:var(--line2);border-radius:99px;overflow:hidden}
+  .drow .dbar>span{display:block;height:100%;background:var(--c);border-radius:99px;transition:width .4s ease}
+  .drow .dpct{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--muted);flex:0 0 32px;text-align:right}
+  .weak{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .weakchip{font-size:12px;background:#FFF0F3;color:#C2255C;border:1px solid #F8C4D1;border-radius:8px;padding:5px 10px;cursor:pointer;font-family:var(--sans)}
+  .weakchip:active{transform:translateY(1px)}
 </style>
 </head>
 <body>
@@ -330,12 +366,15 @@
   <header class="mast">
     <p class="eyebrow">ISC² · CISSP CBK · 2024 Outline · v19 · centered flash</p>
     <h1><span class="k">CISSP</span> study engine</h1>
-    <p class="sub">Study map (7+ layers per topic, incl. exam-vs-real-world) · 81 confusing pairs · term glossary · cheat matrices · quiz &amp; progress tracking · full-text mind map · structured table. OFFICIAL badges mark ISC² outline items; everything else is my study doctrine — verify against your guide.</p>
-    <div class="legend">
-      <span class="mtag simple">SIMPLE</span><span class="mtag explain">EXPLAIN</span><span class="mtag scen">SCENARIO</span>
-      <span class="mtag an">ANALOGY</span><span class="mtag trap">TRAP</span><span class="mtag pair">⚠ PAIR</span>
-      <span class="mtag map">MAP</span><span class="mtag off">OFFICIAL</span><span class="mtag nt">🆕 MODERN TERM</span><span class="mtag er">EXAM ANSWER</span><span class="mtag rw">REAL WORLD</span><span class="mtag note">⚑ NOTE</span>
-    </div>
+    <p class="sub">Study map · confusing pairs · glossary · cheat matrices · quiz &amp; progress · mind map · table. OFFICIAL badges mark ISC² outline items; the rest is study doctrine — verify against your guide.</p>
+    <details class="legendD">
+      <summary>Legend — what the labels mean</summary>
+      <div class="legend">
+        <span class="mtag simple">SIMPLE</span><span class="mtag explain">EXPLAIN</span><span class="mtag scen">SCENARIO</span>
+        <span class="mtag an">ANALOGY</span><span class="mtag trap">TRAP</span><span class="mtag pair">⚠ PAIR</span>
+        <span class="mtag map">MAP</span><span class="mtag off">OFFICIAL</span><span class="mtag nt">🆕 MODERN TERM</span><span class="mtag er">EXAM ANSWER</span><span class="mtag rw">REAL WORLD</span><span class="mtag note">⚑ NOTE</span>
+      </div>
+    </details>
   </header>
 
   <nav class="tabs" id="tabs">
@@ -354,19 +393,22 @@
       <input id="q" type="search" placeholder="Search everything — e.g. egress, tort, residual, TACACS…" autocomplete="off" spellcheck="false">
       <button id="clear" aria-label="Clear search">×</button>
     </label>
-    <div class="barrow">
-      <nav class="rail" id="rail"></nav>
-      <div class="tools">
-        <button class="tbtn" id="dopen">Domains +</button>
-        <button class="tbtn" id="dclose">Domains −</button>
-        <button class="tbtn" id="lopen">Layers +</button>
-        <button class="tbtn" id="lclose">Layers −</button>
-        <button class="tbtn" id="imgToggle">📎 Images</button>
-        <button class="tbtn cloudopen" id="cloudBtn2">☁ Cloud</button>
-        <span class="count" id="cloudInd2" style="display:inline;margin:0;align-self:center"></span>
+    <div id="studyDash"></div>
+    <div class="filtrow"><button class="tbtn" id="filtToggle">⚙ Filters ▾</button><span class="count" id="count" style="display:inline;margin:0;align-self:center"></span></div>
+    <div id="studyFilters" hidden>
+      <div class="barrow">
+        <nav class="rail" id="rail"></nav>
+        <div class="tools">
+          <button class="tbtn" id="dopen">Domains +</button>
+          <button class="tbtn" id="dclose">Domains −</button>
+          <button class="tbtn" id="lopen">Layers +</button>
+          <button class="tbtn" id="lclose">Layers −</button>
+          <button class="tbtn" id="imgToggle">📎 Images</button>
+          <button class="tbtn cloudopen" id="cloudBtn2">☁ Cloud</button>
+          <span class="count" id="cloudInd2" style="display:inline;margin:0;align-self:center"></span>
+        </div>
       </div>
     </div>
-    <div class="count" id="count"></div>
     <main class="grid" id="grid"></main>
     <div class="nores" id="nores">No topics match that search.</div>
   </section>
@@ -1977,8 +2019,46 @@ let PROG=S.get('cisspv5-prog')||{};
 const PLBL=['NEW','LEARN','WEAK','MASTER'];
 function saveProg(){S.set('cisspv5-prog',PROG);}
 function paintProgress(){document.querySelectorAll('.prog').forEach(b=>{const st=PROG[b.dataset.n]||0;b.textContent=PLBL[st];b.className='prog'+(st?' st'+st:'');});}
-document.addEventListener('click',e=>{const b=e.target.closest('.prog');if(!b)return;e.stopPropagation();const n=b.dataset.n;PROG[n]=((PROG[n]||0)+1)%4;saveProg();paintProgress();});
+document.addEventListener('click',e=>{const b=e.target.closest('.prog');if(!b)return;e.stopPropagation();const n=b.dataset.n;PROG[n]=((PROG[n]||0)+1)%4;saveProg();paintProgress();recordStudied(n);renderDash();});
+/* record "last studied" when a topic's layers are opened, and wire the study dashboard + filters */
+document.addEventListener('click',e=>{
+  const sm=e.target.closest('#v-study details.layers>summary');if(sm){const tp=sm.closest('.topic');if(tp&&tp.id.startsWith('t-'))recordStudied(tp.id.slice(2));}
+  const c=e.target.closest('#studyDash [data-cont]');if(c){recordStudied(c.dataset.cont);goStudyTopic(c.dataset.cont);renderDash();return;}
+  const d=e.target.closest('#studyDash [data-dom]');if(d){goStudyDomain(d.dataset.dom);return;}
+});
+(function(){const ft=document.getElementById('filtToggle'),sf=document.getElementById('studyFilters');
+  if(ft&&sf)ft.addEventListener('click',()=>{const hidden=sf.hasAttribute('hidden');if(hidden)sf.removeAttribute('hidden');else sf.setAttribute('hidden','');ft.textContent=hidden?'⚙ Filters ▴':'⚙ Filters ▾';});})();
 function markWeak(n){if(!n)return;PROG[n]=2;saveProg();paintProgress();}
+/* ---- Continue + progress dashboard (study map) ---- */
+function recordStudied(n){try{localStorage.setItem('cisspLast',JSON.stringify({n:n,ts:Date.now()}));}catch(e){}}
+function relTime(ts){if(!ts)return'';let s=Math.max(1,Math.round((Date.now()-ts)/1000));if(s<60)return'just now';let m=Math.round(s/60);if(m<60)return m+' min ago';let h=Math.round(m/60);if(h<24)return h+'h ago';return Math.round(h/24)+'d ago';}
+function renderDash(){
+  const dash=document.getElementById('studyDash');if(!dash)return;
+  const byTopic={};TROWS.forEach(r=>byTopic[r.t.n]=r);
+  const total=TROWS.length;let mastered=0,learn=0,weak=0;const weakList=[];
+  TROWS.forEach(r=>{const s=PROG[r.t.n]||0;if(s===3)mastered++;else if(s===2){weak++;weakList.push(r);}else if(s===1)learn++;});
+  const pct=total?Math.round(mastered/total*100):0;
+  let last=null;try{last=JSON.parse(localStorage.getItem('cisspLast'));}catch(e){}
+  let target=null,resume=false;
+  if(last&&byTopic[last.n]){target=byTopic[last.n];resume=true;}
+  else{target=TROWS.find(r=>(PROG[r.t.n]||0)!==3)||TROWS[0];}
+  let cont='';
+  if(target){const st=PLBL[PROG[target.t.n]||0];const rel=resume?(' · '+relTime(last.ts)):'';
+    cont=`<div class="cont" style="--c:${target.d.hex}" data-cont="${target.t.n}">
+      <div style="min-width:0"><div class="cn">${resume?'Continue studying':'Start here'}</div>
+      <div class="ct">${target.t.n} ${target.t.t}</div>
+      <div class="cmeta">${target.d.num} · ${target.d.title} · ${st}${rel}</div></div>
+      <div class="cgo">Continue →</div></div>`;}
+  const domHTML=DOMAINS.map(d=>{let m=0;d.topics.forEach(t=>{if((PROG[t.n]||0)===3)m++;});const p=d.topics.length?Math.round(m/d.topics.length*100):0;
+    return `<div class="drow" style="--c:${d.hex}" data-dom="${d.num}"><span class="dn">${d.num}</span><span class="dnm">${d.title}</span><span class="dbar"><span style="width:${p}%"></span></span><span class="dpct">${p}%</span></div>`;}).join('');
+  const weakHTML=weakList.length?`<div class="ov"><h3>⚠ Weak topics <span class="ovsub" style="margin:0">tap to review</span></h3><div class="weak">${weakList.slice(0,6).map(r=>`<button class="weakchip" data-cont="${r.t.n}">${r.t.n} ${trunc(r.t.t,24)}</button>`).join('')}</div></div>`:'';
+  dash.innerHTML=`<div class="dash">${cont}
+    <div class="ov"><h3>Overall progress</h3><div class="ovbig">${pct}%</div>
+      <div class="ovsub">${mastered} of ${total} topics mastered${learn?' · '+learn+' in progress':''}${weak?' · '+weak+' weak':''} · ${total-mastered} left</div>
+      <div class="bigbar"><span style="width:${pct}%"></span></div></div>
+    ${weakHTML}
+    <div class="ov"><h3>Domains</h3><div class="dgrid">${domHTML}</div></div></div>`;
+}
 
 /* ---- glossary ---- */
 const gq=document.getElementById('gq'),gwrap=document.getElementById('gwrap'),gcount=document.getElementById('gcount');
@@ -2122,7 +2202,7 @@ function dl(name,text,type){const b=new Blob([text],{type:type||'text/plain'});c
 document.getElementById('expProg').onclick=()=>dl('cissp-progress.json',JSON.stringify({exported:new Date().toISOString(),progress:PROG},null,2),'application/json');
 document.getElementById('impProg').onclick=()=>document.getElementById('impFile').click();
 document.getElementById('impFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);PROG=j.progress||j;saveProg();paintProgress();quizHome();}catch(err){alert('Invalid JSON');}};r.readAsText(f);});
+  const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);PROG=j.progress||j;saveProg();paintProgress();quizHome();renderDash();}catch(err){alert('Invalid JSON');}};r.readAsText(f);});
 document.getElementById('expAnki').onclick=()=>{
   const lines=[...TERMS.map(x=>[x.k,x.df+(x.f?' | '+x.f:'')]),...PAIRS.map(p=>['⚠ '+p.t,p.d+' TRAP: '+p.tr])]
     .map(r=>r.map(c=>c.replace(/\t/g,' ')).join('\t')).join('\n');
@@ -2236,6 +2316,7 @@ validateContent();
 
 paintProgress();
 quizHome();
+renderDash();
 
 /* ============ Tabs ============ */
 function switchTab(v){
@@ -2244,6 +2325,7 @@ function switchTab(v){
   info.classList.remove('show');
   if(v==='map'&&!mInit)initMap();
   if(v==='quiz')quizHome();
+  if(v==='study')renderDash();
 }
 document.getElementById('tabs').addEventListener('click',e=>{
   const b=e.target.closest('.tab');if(b)switchTab(b.dataset.v);
